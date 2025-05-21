@@ -5,6 +5,8 @@ import { compact, isEmpty, size, trim, uniqBy } from "remeda";
 import { cancel, isCancel, log, text } from "@clack/prompts";
 import { LANDSCAPE_CONFIG_PATH } from "@/consts.ts";
 
+// Adaptation from https://github.com/SAP/app-studio-toolkit/tree/main/packages/app-studio-toolkit/src/devspace-manager/landscape
+
 export type LandscapeConfig = { url: string; default?: boolean };
 
 export function getLanscapesConfig(): LandscapeConfig[] {

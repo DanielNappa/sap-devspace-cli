@@ -12,6 +12,10 @@
     "@clack/prompts": "^0.10.1",
     "@sap/bas-sdk": "^3.11.6",
     "hono": "^4.7.10",
+    "picocolors": "^1.1.1",
     "remeda": "^2.21.8"
+  },
+  "scripts": {
+    "dev": "bun run cli/src/index.ts"
   }
 }
