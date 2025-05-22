@@ -1,7 +1,8 @@
 import { strict as assert } from "assert";
 import { URL } from "node:url";
-import { readFileSync } from "node:fs";
-import { compact, isEmpty, size, trim, uniqBy } from "remeda";
+import { readFileSync, writeFileSync } from "node:fs";
+import { ensureFileSync } from "fs-extra";
+import { uniqueBy } from "@/utils";
 import { cancel, isCancel, log, text } from "@clack/prompts";
 import { LANDSCAPE_CONFIG_PATH } from "@/consts.ts";
 
@@ -9,35 +10,34 @@ import { LANDSCAPE_CONFIG_PATH } from "@/consts.ts";
 
 export type LandscapeConfig = { url: string; default?: boolean };
 
-export function getLanscapesConfig(): LandscapeConfig[] {
+export function getLandscapesConfig(): LandscapeConfig[] {
   //  - new format:  {"url":"https://example.com","default":true}|{"url":"https://example2.com"}
   //  - old format:  https://example.com,https://example2.com
-  const config = readFileSync(LANDSCAPE_CONFIG_PATH, {
+  ensureFileSync(LANDSCAPE_CONFIG_PATH);
+  const configBuffer = readFileSync(LANDSCAPE_CONFIG_PATH, {
     encoding: "utf8",
     flag: "r",
   });
   // check if it is an old format - replace `,` with `|` - TODO: remove this in future (backward compatibility)
-  if (!/.*\{.+\}.*/.test(config)) {
-    config = config.replace(/,/g, "|");
-  }
   // split by | and parse each landscape
-  return uniqBy(
-    compact(
-      config.split("|").map((landscape) => {
-        try {
-          const item: LandscapeConfig = JSON.parse(landscape);
-          return Object.assign(
-            { url: new URL(item.url).toString() },
-            item.default ? { default: item.default } : {},
-          );
-        } catch (e) {
-          // if not a valid JSON - consider it as a URL - TODO: remove this in future (backward compatibility)
-          if (trim(landscape).length > 0) {
-            return { url: landscape };
-          }
+  const config = /.*\{.+\}.*/.test(configBuffer)
+    ? configBuffer
+    : configBuffer.replace(/,/g, "|");
+  return uniqueBy(
+    config.split("|").map((landscape) => {
+      try {
+        const item: LandscapeConfig = JSON.parse(landscape);
+        return Object.assign(
+          { url: new URL(item.url).toString() },
+          item.default ? { default: item.default } : {},
+        );
+      } catch (e) {
+        // if not a valid JSON - consider it as a URL - TODO: remove this in future (backward compatibility)
+        if (landscape.trim().length > 0) {
+          return { url: landscape };
         }
-      }),
-    ),
+      }
+    }).filter(Boolean),
     "url",
   );
 }
@@ -54,7 +54,7 @@ export async function updateLandscapesConfig(
 
 export async function setLandscapeURL(): Promise<void> {
   const landscapeURL: string = await text({
-    message: "Enter your Landscape URL",
+    message: "Enter your Landscape URL:",
     validate(input: string) {
       try {
         const inputURL: string = new URL(input);
@@ -67,7 +67,7 @@ export async function setLandscapeURL(): Promise<void> {
     },
   });
 
-  if (isCancel(input)) {
+  if (isCancel(landscapeURL)) {
     cancel("Operation cancelled.");
     process.exit(0);
   }
@@ -76,7 +76,7 @@ export async function setLandscapeURL(): Promise<void> {
 
   if (landscapeURL) {
     // Need to change this
-    return addLandscape(landscape).finally(
+    return addLandscape(landscapeURL).finally(
       () => {},
     );
   }
@@ -84,7 +84,7 @@ export async function setLandscapeURL(): Promise<void> {
 
 export async function addLandscape(landscapeName: string): Promise<void> {
   const toAdd = new URL(landscapeName).toString();
-  const landscapes = getLanscapesConfig();
+  const landscapes = getLandscapesConfig();
   if (
     !landscapes.find((landscape) => new URL(landscape.url).toString() === toAdd)
   ) {

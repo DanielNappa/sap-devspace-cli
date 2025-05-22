@@ -21,8 +21,9 @@ export const SAP_LOGO: string =
 export const JWT_TIMEOUT = 60 * 1000; // 60s
 export const USER_DATA_FOLDER: string = process.env.APPDATA ||
   (process.platform == "darwin"
-    ? process.env.HOME + join("Library", "Preferences", "sap-devspace-cli")
-    : process.env.HOME + join(".local", "share", "sap-devspace-cli"));
+    ? `${process.env.HOME}/` +
+      join("Library", "Preferences", "sap-devspace-cli")
+    : `${process.env.HOME}/` + join(".local", "share", "sap-devspace-cli"));
 
 export const LANDSCAPE_CONFIG_PATH: string = join(
   USER_DATA_FOLDER,
