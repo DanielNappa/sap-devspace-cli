@@ -1,18 +1,19 @@
 import { strict as assert } from "assert";
-import { existsSync } from "node:fs";
 import { ensureFileSync } from "fs-extra";
 import { intro, log, outro } from "@clack/prompts";
+import type { devspace } from "@sap/bas-sdk";
 import color from "picocolors";
 import { LANDSCAPE_CONFIG_PATH, SAP_LOGO } from "@/consts.ts";
+import { getDevSpaces, selectDevSpace } from "@/devspace";
 import {
   getLandscapesConfig,
-  LandscapeConfig,
+  type LandscapeConfig,
+  selectLandscape,
   setLandscapeURL,
 } from "@/landscape";
 
 // Entry point of CLI
-
-async function main(): void {
+async function main(): Promise<void> {
   intro(color.bgCyan(" sap-devspace-cli "));
   log.message(
     SAP_LOGO.split("\n").map((line) => color.cyanBright(line)).join("\n"),
@@ -24,5 +25,17 @@ async function main(): void {
     await setLandscapeURL();
   }
 
+  const newLandscapesConfig: LandscapeConfig[] = getLandscapesConfig();
+
+  assert(newLandscapesConfig !== null);
+  assert(newLandscapesConfig.length > 0);
+
+  const landscapeSession = await selectLandscape(newLandscapesConfig);
+  const devSpaces: devspace.DevspaceInfo[] = await getDevSpaces(
+    landscapeSession.url,
+    landscapeSession.jwt,
+  );
+  await selectDevSpace(devSpaces);
 }
+
 await main();

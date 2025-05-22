@@ -3,12 +3,99 @@ import { URL } from "node:url";
 import { readFileSync, writeFileSync } from "node:fs";
 import { ensureFileSync } from "fs-extra";
 import { uniqueBy } from "@/utils";
-import { cancel, isCancel, log, text } from "@clack/prompts";
+import {
+  cancel,
+  isCancel,
+  log,
+  type Option,
+  select,
+  text,
+} from "@clack/prompts";
+import { getJWT, hasJWT } from "@/auth";
 import { LANDSCAPE_CONFIG_PATH } from "@/consts.ts";
 
 // Adaptation from https://github.com/SAP/app-studio-toolkit/tree/main/packages/app-studio-toolkit/src/devspace-manager/landscape
 
 export type LandscapeConfig = { url: string; default?: boolean };
+export interface LandscapeInfo {
+  name: string;
+  url: string;
+  isLoggedIn: boolean;
+  default?: boolean;
+}
+export type LandscapeSession = {
+  name: string;
+  url: string;
+  jwt: string;
+};
+
+function isLandscapeLoggedIn(url: string): Promise<boolean> {
+  assert(url !== null);
+  return hasJWT(url);
+}
+
+export async function getLandscapes(): Promise<LandscapeInfo[]> {
+  const landscapes: LandscapeInfo[] = [];
+  for (const landscape of getLandscapesConfig()) {
+    const url = new URL(landscape.url);
+    landscapes.push(
+      Object.assign(
+        {
+          name: url.hostname,
+          url: url.toString(),
+          isLoggedIn: await isLandscapeLoggedIn(landscape.url),
+        },
+        landscape.default ? { default: landscape.default } : {},
+      ),
+    );
+  }
+  return landscapes;
+}
+
+export async function selectLandscape(
+  landscapesConfig: LandscapeConfig[],
+): Promise<LandscapeSession> {
+  assert(landscapesConfig !== null);
+  assert(landscapesConfig.length > 0);
+
+  const landscapes: Option<number | string>[] = [];
+
+  for (let i = 0; i < landscapesConfig.length; i++) {
+    const landscape = landscapesConfig[i] as LandscapeConfig;
+    landscapes.push(
+      Object.assign(
+        {
+          value: i,
+          label: new URL(landscape.url).hostname,
+        },
+        landscape.default ? { hint: "Default" } : {},
+      ),
+    );
+  }
+
+  const selectedLandscapeIndex = await select({
+    message: "Select a landscape:",
+    options: landscapes,
+  });
+
+  if (isCancel(selectedLandscapeIndex)) {
+    cancel("Operation cancelled");
+    return process.exit(0);
+  }
+
+  assert(selectedLandscapeIndex !== null);
+  assert(typeof selectedLandscapeIndex === "number");
+
+  const selectedLandscape =
+    landscapesConfig[selectedLandscapeIndex] as LandscapeConfig;
+  assert(selectedLandscape !== null);
+
+  return {
+    name: new URL(selectedLandscape.url).hostname,
+    url: selectedLandscape.url,
+    jwt: await getJWT(selectedLandscape.url),
+  };
+}
 
 export function getLandscapesConfig(): LandscapeConfig[] {
   //  - new format:  {"url":"https://example.com","default":true}|{"url":"https://example2.com"}
@@ -53,12 +140,12 @@ export async function updateLandscapesConfig(
 }
 
 export async function setLandscapeURL(): Promise<void> {
-  const landscapeURL: string = await text({
+  const landscapeURL: string | symbol = await text({
     message: "Enter your Landscape URL:",
     validate(input: string) {
       try {
-        const inputURL: string = new URL(input);
-        if (inputURL.pathname > 1 || inputURL.search || inputURL.hash) {
+        const inputURL: URL = new URL(input);
+        if (inputURL.pathname.length > 1 || inputURL.search || inputURL.hash) {
           return "Enter the URL origin without any paths or parameters";
         }
       } catch (error) {
