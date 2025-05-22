@@ -2,6 +2,7 @@ import { strict as assert } from "assert";
 import { cancel, isCancel, type Option, select } from "@clack/prompts";
 import { devspace } from "@sap/bas-sdk";
 import { getJWT } from "@/auth";
+import { type DevSpaceNode } from "@/ssh";
 
 export async function getDevSpaces(
   landscapeURL: string,
@@ -17,7 +18,8 @@ export async function getDevSpaces(
 
 export async function selectDevSpace(
   devSpaces: devspace.DevspaceInfo[],
-): Promise<void> {
+  landscapeURL: string,
+): Promise<DevSpaceNode> {
   assert(devSpaces !== null);
   assert(devSpaces.length > 0);
 
@@ -54,9 +56,11 @@ export async function selectDevSpace(
     devSpaces[selectedDevSpaceIndex] as devspace.DevspaceInfo;
   assert(selectedDevSpace !== null);
 
-  //   return {
-  //     name: new URL(selectedDevSpace.url).hostname,
-  //     url: selectedDevSpace.url,
-  //     jwt: await getJWT(selectedDevSpace.url),
-  //   };
+  return {
+    label:
+      `${selectedDevSpace.devspaceDisplayName} (${selectedDevSpace.packDisplayName})`,
+    id: selectedDevSpace.id,
+    landscapeURL: landscapeURL,
+    wsURL: selectedDevSpace.url,
+  };
 }

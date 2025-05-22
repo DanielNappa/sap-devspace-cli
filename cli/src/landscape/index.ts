@@ -5,14 +5,17 @@ import { ensureFileSync } from "fs-extra";
 import { uniqueBy } from "@/utils";
 import {
   cancel,
+  confirm,
   isCancel,
   log,
   type Option,
   select,
   text,
 } from "@clack/prompts";
-import { getJWT, hasJWT } from "@/auth";
+import { closeListener, getJWT, hasJWT } from "@/auth";
 import { LANDSCAPE_CONFIG_PATH } from "@/consts.ts";
+import open from "open";
+import { core } from "@sap/bas-sdk";
 
 // Adaptation from https://github.com/SAP/app-studio-toolkit/tree/main/packages/app-studio-toolkit/src/devspace-manager/landscape
 
@@ -50,6 +53,20 @@ export async function getLandscapes(): Promise<LandscapeInfo[]> {
     );
   }
   return landscapes;
+}
+
+export async function loginToLandscape(landscapeURL: string): Promise<boolean> {
+  const allowOpen: boolean | symbol = await confirm({
+    message: "Open browser to authenticate?",
+  });
+
+  if (isCancel(allowOpen) || !allowOpen) {
+    cancel("Operation cancelled");
+    await closeListener(landscapeURL);
+    return process.exit(0);
+  }
+
+  return !!open(core.getExtLoginPath(landscapeURL));
 }
 
 export async function selectLandscape(
@@ -101,13 +118,13 @@ export function getLandscapesConfig(): LandscapeConfig[] {
   //  - new format:  {"url":"https://example.com","default":true}|{"url":"https://example2.com"}
   //  - old format:  https://example.com,https://example2.com
   ensureFileSync(LANDSCAPE_CONFIG_PATH);
-  const configBuffer = readFileSync(LANDSCAPE_CONFIG_PATH, {
+  const configBuffer: string = readFileSync(LANDSCAPE_CONFIG_PATH, {
     encoding: "utf8",
     flag: "r",
   });
   // check if it is an old format - replace `,` with `|` - TODO: remove this in future (backward compatibility)
   // split by | and parse each landscape
-  const config = /.*\{.+\}.*/.test(configBuffer)
+  const config: string = /.*\{.+\}.*/.test(configBuffer)
     ? configBuffer
     : configBuffer.replace(/,/g, "|");
   return uniqueBy(
@@ -118,7 +135,7 @@ export function getLandscapesConfig(): LandscapeConfig[] {
           { url: new URL(item.url).toString() },
           item.default ? { default: item.default } : {},
         );
-      } catch (e) {
+      } catch (error) {
         // if not a valid JSON - consider it as a URL - TODO: remove this in future (backward compatibility)
         if (landscape.trim().length > 0) {
           return { url: landscape };
@@ -132,11 +149,26 @@ export function getLandscapesConfig(): LandscapeConfig[] {
 export async function updateLandscapesConfig(
   values: LandscapeConfig[],
 ): Promise<void> {
-  const value = values.map((item) => JSON.stringify(item)).join("|");
+  const value: string = values.map((item) => JSON.stringify(item)).join("|");
   assert(value !== null);
 
   writeFileSync(LANDSCAPE_CONFIG_PATH, value);
   log.message(`Landscapes config updated: ${value}`);
+}
+
+export async function removeLandscape(landscapeURL: string): Promise<void> {
+  assert(landscapeURL !== null);
+  const config: LandscapeConfig[] = getLandscapesConfig();
+  assert(config !== null);
+  if (config.length > 0) {
+    const toRemove: string = new URL(landscapeURL).toString();
+    const updated: LandscapeConfig[] = config.filter(
+      (landscape) => new URL(landscape.url).toString() !== toRemove,
+    );
+    if (updated.length !== config.length) {
+      return updateLandscapesConfig(updated);
+    }
+  }
 }
 
 export async function setLandscapeURL(): Promise<void> {
@@ -169,8 +201,8 @@ export async function setLandscapeURL(): Promise<void> {
   }
 }
 
-export async function addLandscape(landscapeName: string): Promise<void> {
-  const toAdd = new URL(landscapeName).toString();
+export async function addLandscape(landscapeURL: string): Promise<void> {
+  const toAdd = new URL(landscapeURL).toString();
   const landscapes = getLandscapesConfig();
   if (
     !landscapes.find((landscape) => new URL(landscape.url).toString() === toAdd)

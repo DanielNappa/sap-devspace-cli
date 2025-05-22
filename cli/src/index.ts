@@ -11,6 +11,12 @@ import {
   selectLandscape,
   setLandscapeURL,
 } from "@/landscape";
+import ssh, {
+  type DevSpaceNode,
+  getSSHConfigurations,
+  type SSHConfigInfo,
+  SSHD_SOCKET_PORT,
+} from "@/ssh";
 
 // Entry point of CLI
 async function main(): Promise<void> {
@@ -35,7 +41,25 @@ async function main(): Promise<void> {
     landscapeSession.url,
     landscapeSession.jwt,
   );
-  await selectDevSpace(devSpaces);
+  const devSpace: DevSpaceNode = await selectDevSpace(
+    devSpaces,
+    landscapeSession.url,
+  );
+  const sshConfig: SSHConfigInfo = await getSSHConfigurations(
+    devSpace,
+    landscapeSession.jwt,
+  );
+  await ssh({
+    host: {
+      url: `port${SSHD_SOCKET_PORT}-${new URL(devSpace.wsURL).hostname}`,
+      port: `${SSHD_SOCKET_PORT}`,
+    },
+    client: {
+      port: sshConfig.port,
+    },
+    username: "user",
+    jwt: landscapeSession.jwt,
+  });
 }
 
 await main();

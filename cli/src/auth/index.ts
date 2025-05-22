@@ -1,12 +1,11 @@
 import { strict as assert } from "assert";
 import { cancel, confirm, isCancel, log } from "@clack/prompts";
 import { core } from "@sap/bas-sdk";
-import type { ChildProcess } from "child_process";
 import { type Context, Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
-import open from "open";
 import { devspaceMessages, JWT_TIMEOUT } from "@/consts.ts";
+import { loginToLandscape } from "@/landscape";
 
 const EXT_LOGIN_PORTNUM = 55532;
 const serverCache = new Map<string, Bun.Server>();
@@ -58,24 +57,10 @@ async function getJWTFromServer(landscapeURL: string): Promise<string> {
   });
 }
 
-async function closeListener(landscapeURL: string): Promise<void> {
+export async function closeListener(landscapeURL: string): Promise<void> {
   await serverCache.get(landscapeURL)?.stop();
   serverCache.delete(landscapeURL);
   // log.info(`Closed server for ${landscapeURL}`);
-}
-
-async function loginToLandscape(landscapeURL: string): Promise<boolean> {
-  const allowOpen = await confirm({
-    message: `Open browser to authenticate?`,
-  });
-
-  if (isCancel(allowOpen) || !allowOpen) {
-    cancel("Operation cancelled");
-    await closeListener(landscapeURL);
-    return process.exit(0);
-  }
-
-  return !!open(core.getExtLoginPath(landscapeURL));
 }
 
 async function getJWTFromServerWithTimeout(

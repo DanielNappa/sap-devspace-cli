@@ -31,6 +31,15 @@ export const LANDSCAPE_CONFIG_PATH: string = join(
 );
 
 export const devspaceMessages = {
+  info_obtaining_key: `Obtaining SSH key…`,
+  info_save_pk_to_file: `Saving PK to file…`,
+  info_update_config_file_with_ssh_connection:
+    `Updating the config file with the SSH connection…`,
+  info_ssh_config_file_updated: `SSH Config file updated!`,
+  info_closing_old_tunnel: `Closing the old tunnel to the dev space…`,
+  info_staring_new_tunnel: `Starting a new tunnel to the dev space…`,
+  err_devspace_connect_new_window: (landscape: string, reason: string) =>
+    `Can't connect the devspace ${landscape}: ${reason}`,
   lbl_dev_space_explorer_no_dev_spaces:
     `Could not find any dev spaces in this landscape.`,
   lbl_dev_space_explorer_authentication_failure:

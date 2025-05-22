@@ -10,12 +10,18 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.10.1",
+    "@microsoft/dev-tunnels-ssh": "^3.12.5",
+    "@microsoft/dev-tunnels-ssh-tcp": "^3.12.5",
     "@sap/bas-sdk": "^3.11.6",
+    "@types/websocket": "^1.0.10",
+    "child_process": "^1.0.2",
     "fs-extra": "^11.3.0",
     "hono": "^4.7.10",
     "open": "^10.1.2",
     "picocolors": "^1.1.1",
-    "remeda": "^2.21.8"
+    "remeda": "^2.21.8",
+    "ssh-config": "^5.0.3",
+    "websocket": "^1.0.35"
   },
   "scripts": {
     "dev": "bun run cli/src/index.ts"
