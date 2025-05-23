@@ -124,7 +124,6 @@ export function updateSSHConfig(
     )[0]!,
   );
   // save the SSH config object back to file
-  console.log(sshConfig.stringify(config));
   writeFileSync(sshConfigFile, sshConfig.stringify(config));
   return { name: sectionName, port: `${port}` } as SSHConfigInfo;
 }
@@ -199,23 +198,22 @@ export async function getSSHConfigurations(
 //     );
 // }
 
-// export async function runChannelClient(opt: {
-//   host: string;
-//   landscape: string;
-//   localPort: string;
-// }): Promise<void> {
-//   return getJWT(opt.landscape).then((jwt) => {
-//     void ssh({
-//       host: { url: opt.host, port: `${SSH_SOCKET_PORT}` },
-//       client: { port: opt.localPort },
-//       username: "user",
-//       jwt,
-//     });
-//     log.info(
-//       `Start dev-channel client for ${opt.host} on port ${SSH_SOCKET_PORT}`,
-//     );
-//   });
-// }
+export async function runChannelClient(opt: {
+  host: string;
+  landscape: string;
+  localPort: string;
+  jwt: string;
+}): Promise<void> {
+  await ssh({
+    host: { url: opt.host, port: `${SSH_SOCKET_PORT}` },
+    client: { port: opt.localPort },
+    username: "user",
+    jwt: opt.jwt,
+  });
+    log.info(
+      `Start dev-channel client for ${opt.host} on port ${SSH_SOCKET_PORT}`,
+    );
+}
 
 export function getRandomArbitrary(min?: number, max?: number): number {
   max = max || 33654;

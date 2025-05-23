@@ -14,6 +14,8 @@ import {
 import ssh, {
   type DevSpaceNode,
   getSSHConfigurations,
+  runChannelClient,
+  SSH_SOCKET_PORT,
   type SSHConfigInfo,
   SSHD_SOCKET_PORT,
 } from "@/ssh";
@@ -49,16 +51,11 @@ async function main(): Promise<void> {
     devSpace,
     landscapeSession.jwt,
   );
-  await ssh({
-    host: {
-      url: `port${SSHD_SOCKET_PORT}-${new URL(devSpace.wsURL).hostname}`,
-      port: `${SSHD_SOCKET_PORT}`,
-    },
-    client: {
-      port: sshConfig.port,
-    },
-    username: "user",
-    jwt: landscapeSession.jwt,
+  await runChannelClient({
+    host: `port${SSHD_SOCKET_PORT}-${new URL(devSpace.wsURL).hostname}`,
+    landscape: devSpace.landscapeURL,
+    localPort: sshConfig.port,
+    jwt: landscapeSession.jwt
   });
 }
 
