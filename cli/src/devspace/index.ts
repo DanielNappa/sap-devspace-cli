@@ -1,8 +1,9 @@
-import { strict as assert } from "assert";
+import { strict as assert } from "node:assert";
+import process from "node:process";
 import { cancel, isCancel, type Option, select } from "@clack/prompts";
 import { devspace } from "@sap/bas-sdk";
-import { getJWT } from "@/auth";
-import { type DevSpaceNode } from "@/ssh";
+import { getJWT } from "@/auth/index.ts";
+import { type DevSpaceNode } from "@/ssh/index.ts";
 
 export async function getDevSpaces(
   landscapeURL: string,

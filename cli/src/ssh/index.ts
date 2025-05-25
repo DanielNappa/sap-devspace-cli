@@ -29,6 +29,7 @@ export interface DevSpaceNode {
 export interface SSHConfigInfo {
   name: string;
   port: string;
+  pkFilePath: string;
 }
 
 function getSSHConfigFilePath(): string {
@@ -75,7 +76,7 @@ export function deletePK(wsURL: string): void {
   if (existsSync(fileName)) {
     unlinkSync(fileName);
   } else {
-    message = `Private key file ${fileName} doesn't exists`;
+    message = `Private key file ${fileName} doesn't exist`;
   }
   log.info(message);
 }
@@ -84,11 +85,10 @@ function getSSHConfig(sshConfigFile: string): sshConfig | undefined {
   let configData: Buffer;
   if (existsSync(sshConfigFile)) {
     configData = readFileSync(sshConfigFile);
-    log.info(`SSH Config file ${sshConfigFile} exists`);
   } else {
     configData = Buffer.from(``, `utf8`);
     log.info(
-      `SSH Config file ${sshConfigFile} doest exist, creating new file`,
+      `SSH Config file ${sshConfigFile} doesn't exist, creating new file`,
     );
   }
   return sshConfig.parse(configData.toString());
@@ -157,62 +157,25 @@ export async function getSSHConfigurations(
   );
   const sshConfig = updateSSHConfig(pkFilePath, devSpace);
   spinIndicator.stop(devspaceMessages.info_ssh_config_file_updated);
-  return sshConfig;
+  return { ...sshConfig, pkFilePath };
 }
 
-// export async function updateRemotePlatformSetting(
-//   config: SSHConfigInfo
-// ): Promise<void> {
-//   const remotePlatform: any = {};
-//   remotePlatform[config.name] = "linux";
-
-//   const remotePlatformsList =
-//     workspace.getConfiguration().get(KEY_SSH_REMOTE_PLATFORM) || {};
-//   assign(remotePlatformsList, remotePlatform);
-//   await workspace
-//     .getConfiguration()
-//     .update(
-//       KEY_SSH_REMOTE_PLATFORM,
-//       remotePlatformsList,
-//       ConfigurationTarget.Global
-//     );
-// }
-
-// export async function cleanRemotePlatformSetting(
-//   devSpace: DevSpaceNode
-// ): Promise<void> {
-//   const remotePlatform =
-//     workspace.getConfiguration().get(KEY_SSH_REMOTE_PLATFORM) || {};
-//   const sectionName = composeSSHConfigSectionName(
-//     devSpace.landscapeURL,
-//     devSpace.id
-//   );
-//   unset(remotePlatform, sectionName);
-
-//   await workspace
-//     .getConfiguration()
-//     .update(
-//       KEY_SSH_REMOTE_PLATFORM,
-//       remotePlatform,
-//       ConfigurationTarget.Global
-//     );
-// }
-
 export async function runChannelClient(opt: {
+  displayName: string;
   host: string;
   landscape: string;
   localPort: string;
   jwt: string;
+  pkFilePath: string;
 }): Promise<void> {
   await ssh({
+    displayName: opt.displayName,
     host: { url: opt.host, port: `${SSH_SOCKET_PORT}` },
     client: { port: opt.localPort },
     username: "user",
     jwt: opt.jwt,
+    pkFilePath: opt.pkFilePath,
   });
-    log.info(
-      `Start dev-channel client for ${opt.host} on port ${SSH_SOCKET_PORT}`,
-    );
 }
 
 export function getRandomArbitrary(min?: number, max?: number): number {

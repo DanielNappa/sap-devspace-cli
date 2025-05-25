@@ -32,6 +32,65 @@ export type LandscapeSession = {
   jwt: string;
 };
 
+enum LandscapeMenuOption {
+  ADD,
+  DELETE,
+  LOGIN,
+}
+
+export async function landscapeMenu(): Promise<LandscapeSession | void> {
+  ensureFileSync(LANDSCAPE_CONFIG_PATH);
+  const landscapesConfig: LandscapeConfig[] = getLandscapesConfig();
+  if (!landscapesConfig || landscapesConfig.length === 0) {
+    await setLandscapeURL();
+  }
+
+  const newLandscapesConfig: LandscapeConfig[] = getLandscapesConfig();
+
+  assert(newLandscapesConfig !== null);
+  assert(newLandscapesConfig.length > 0);
+
+  const selectedOption: LandscapeMenuOption = await select({
+    message: "Select an option:",
+    options: [
+      {
+        value: LandscapeMenuOption.LOGIN,
+        label: "Login to landscape",
+      },
+      {
+        value: LandscapeMenuOption.ADD,
+        label: "Add landscape",
+      },
+      {
+        value: LandscapeMenuOption.DELETE,
+        label: "Delete landscape",
+      },
+    ],
+  });
+
+  if (isCancel(selectedOption)) {
+    cancel("Operation cancelled");
+    return process.exit(0);
+  }
+
+  assert(selectedOption !== null);
+  assert(typeof selectedOption === "number");
+
+  switch (selectedOption) {
+    case LandscapeMenuOption.LOGIN:
+      const landscapeSession: LandscapeSession = await selectLandscape(
+        newLandscapesConfig,
+      );
+      return landscapeSession;
+    case LandscapeMenuOption.ADD:
+      await setLandscapeURL();
+      break;
+    case LandscapeMenuOption.DELETE:
+    default:
+      // Should'nt even reach here
+  }
+}
+
 function isLandscapeLoggedIn(url: string): Promise<boolean> {
   assert(url !== null);
   return hasJWT(url);

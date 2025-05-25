@@ -1,14 +1,16 @@
-import { strict as assert } from "assert";
-import { cancel, confirm, isCancel, log } from "@clack/prompts";
+import { strict as assert } from "node:assert";
+import { clearTimeout, setTimeout } from "node:timers";
+import { log } from "@clack/prompts";
 import { core } from "@sap/bas-sdk";
 import { type Context, Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
+import { serve, type ServerType } from "@hono/node-server";
 import { devspaceMessages, JWT_TIMEOUT } from "@/consts.ts";
-import { loginToLandscape } from "@/landscape";
+import { loginToLandscape } from "@/landscape/index.ts";
 
 const EXT_LOGIN_PORTNUM = 55532;
-const serverCache = new Map<string, Bun.Server>();
+const serverCache = new Map<string, ServerType>();
 
 async function getJWTFromServer(landscapeURL: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -34,23 +36,15 @@ async function getJWTFromServer(landscapeURL: string): Promise<string> {
           resolve(jwt);
           return context.json({ status: "ok" });
         }
-      } catch (error) {
+      } catch (_error: unknown) {
         context.status(400);
         log.error(devspaceMessages.err_incorrect_jwt(landscapeURL));
         reject(new Error(devspaceMessages.err_incorrect_jwt(landscapeURL)));
       }
     });
-    const server: Bun.Server = Bun.serve({
-      port: EXT_LOGIN_PORTNUM,
+    const server: ServerType = serve({
       fetch: app.fetch,
-      error(this: Bun.Server, error: Bun.ErrorLike) {
-        log.error(devspaceMessages.err_listening(error.message, landscapeURL));
-        reject(
-          new Error(
-            devspaceMessages.err_listening(error.message, landscapeURL),
-          ),
-        );
-      },
+      port: EXT_LOGIN_PORTNUM,
     });
 
     serverCache.set(landscapeURL, server);
@@ -58,7 +52,7 @@ async function getJWTFromServer(landscapeURL: string): Promise<string> {
 }
 
 export async function closeListener(landscapeURL: string): Promise<void> {
-  await serverCache.get(landscapeURL)?.stop();
+  await serverCache.get(landscapeURL)?.close();
   serverCache.delete(landscapeURL);
   // log.info(`Closed server for ${landscapeURL}`);
 }
@@ -68,7 +62,7 @@ async function getJWTFromServerWithTimeout(
   promise: Promise<string>,
 ): Promise<string> {
   // Create a promise that rejects in <ms> milliseconds
-  const timeout = new Promise<string>((resolve, reject) => {
+  const timeout = new Promise<string>((_resolve, reject) => {
     const delay = setTimeout(() => {
       clearTimeout(delay);
       reject(new Error(devspaceMessages.err_get_jwt_timeout(ms)));

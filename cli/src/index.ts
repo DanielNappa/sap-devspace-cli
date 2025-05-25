@@ -1,16 +1,11 @@
-import { strict as assert } from "assert";
+import { strict as assert } from "node:assert";
 import { ensureFileSync } from "fs-extra";
-import { intro, log, outro } from "@clack/prompts";
-import type { devspace } from "@sap/bas-sdk";
+import { intro, log } from "@clack/prompts";
+import { devspace } from "@sap/bas-sdk";
 import color from "picocolors";
 import { LANDSCAPE_CONFIG_PATH, SAP_LOGO } from "@/consts.ts";
-import { getDevSpaces, selectDevSpace } from "@/devspace";
-import {
-  getLandscapesConfig,
-  type LandscapeConfig,
-  selectLandscape,
-  setLandscapeURL,
-} from "@/landscape";
+import { getDevSpaces, selectDevSpace } from "@/devspace/index.ts";
+import { landscapeMenu, type LandscapeSession } from "@/landscape/index.ts";
 import ssh, {
   type DevSpaceNode,
   getSSHConfigurations,
@@ -18,27 +13,16 @@ import ssh, {
   SSH_SOCKET_PORT,
   type SSHConfigInfo,
   SSHD_SOCKET_PORT,
-} from "@/ssh";
+} from "@/ssh/index.ts";
 
 // Entry point of CLI
 async function main(): Promise<void> {
   intro(color.bgCyan(" sap-devspace-cli "));
   log.message(
-    SAP_LOGO.split("\n").map((line) => color.cyanBright(line)).join("\n"),
+    SAP_LOGO.split("\n").map((line) => color.cyan(line)).join("\n"),
   );
 
-  ensureFileSync(LANDSCAPE_CONFIG_PATH);
-  const landscapesConfig: LandscapeConfig[] = getLandscapesConfig();
-  if (!landscapesConfig || landscapesConfig.length === 0) {
-    await setLandscapeURL();
-  }
-
-  const newLandscapesConfig: LandscapeConfig[] = getLandscapesConfig();
-
-  assert(newLandscapesConfig !== null);
-  assert(newLandscapesConfig.length > 0);
-
-  const landscapeSession = await selectLandscape(newLandscapesConfig);
+  const landscapeSession: LandscapeSession = await landscapeMenu();
   const devSpaces: devspace.DevspaceInfo[] = await getDevSpaces(
     landscapeSession.url,
     landscapeSession.jwt,
@@ -47,15 +31,20 @@ async function main(): Promise<void> {
     devSpaces,
     landscapeSession.url,
   );
+
   const sshConfig: SSHConfigInfo = await getSSHConfigurations(
     devSpace,
     landscapeSession.jwt,
   );
+  assert(sshConfig !== null);
+
   await runChannelClient({
+    displayName: devSpace.label,
     host: `port${SSHD_SOCKET_PORT}-${new URL(devSpace.wsURL).hostname}`,
     landscape: devSpace.landscapeURL,
     localPort: sshConfig.port,
-    jwt: landscapeSession.jwt
+    jwt: landscapeSession.jwt,
+    pkFilePath: sshConfig.pkFilePath,
   });
 }
 

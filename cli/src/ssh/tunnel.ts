@@ -1,5 +1,6 @@
 import { spawn } from "child_process";
-import { client as WebSocketClient, connection as WebSocket } from "websocket";
+import WebSocket from "websocket";
+
 import {
   BaseStream,
   ObjectDisposedError,
@@ -11,7 +12,7 @@ import {
   type Stream,
 } from "@microsoft/dev-tunnels-ssh";
 import { PortForwardingService } from "@microsoft/dev-tunnels-ssh-tcp";
-import { log, outro } from "@clack/prompts";
+import { log, outro, spinner } from "@clack/prompts";
 
 const sessionMap: Map<string, SshClientSession> = new Map();
 
@@ -26,11 +27,11 @@ export function closeSessions(sessions?: string[]): void {
 }
 
 /* istanbul ignore next */
-class WebSocketClientStream extends BaseStream {
-  public constructor(private readonly websocket: WebSocket) {
+class connectionClientStream extends BaseStream {
+  public constructor(private readonly connection: WebSocket.connection) {
     super();
 
-    websocket.on(
+    connection.on(
       "message",
       (data: { type: string; binaryData: Buffer<ArrayBufferLike> }) => {
         if (data.type === "binary") {
@@ -38,7 +39,7 @@ class WebSocketClientStream extends BaseStream {
         }
       },
     );
-    websocket.on("close", (code?: number, reason?: string) => {
+    connection.on("close", (code?: number, reason?: string) => {
       if (!code) {
         this.onEnd();
       } else {
@@ -57,7 +58,7 @@ class WebSocketClientStream extends BaseStream {
       throw new TypeError("Data is required.");
     }
 
-    this.websocket.send(data);
+    this.connection.send(data);
     return Promise.resolve();
   }
 
@@ -67,9 +68,9 @@ class WebSocketClientStream extends BaseStream {
     }
 
     if (!error) {
-      this.websocket.close();
+      this.connection.close();
     } else {
-      this.websocket.drop((<any> error).code, error.message);
+      this.connection.drop((<any> error).code, error.message);
     }
     this.disposed = true;
     this.closedEmitter.fire({ error });
@@ -79,7 +80,7 @@ class WebSocketClientStream extends BaseStream {
 
   public dispose(): void {
     if (!this.disposed) {
-      this.websocket.close();
+      this.connection.close();
     }
     super.dispose();
   }
@@ -87,6 +88,7 @@ class WebSocketClientStream extends BaseStream {
 
 /* istanbul ignore next */
 export async function ssh(opts: {
+  displayName: string;
   host: {
     url: string;
     port: string;
@@ -96,7 +98,10 @@ export async function ssh(opts: {
   };
   username: string;
   jwt: string;
+  pkFilePath: string;
 }): Promise<void> {
+  const spinIndicator = spinner();
+  spinIndicator.start(`Connecting to ${opts.displayName}...`);
   const serverUri = `wss://${opts.host.url}:${opts.host.port}`;
   // close the opened session if exists
   const isContinue = new Promise((res) => {
@@ -123,14 +128,14 @@ export async function ssh(opts: {
 
   config.addService(PortForwardingService);
 
-  const wsClient = new WebSocketClient();
+  const wsClient = new WebSocket.client();
 
-  wsClient.connect(serverUri, "ssh", undefined, {
+  wsClient.connect(serverUri, "ssh", null, {
     Authorization: `bearer ${opts.jwt}`,
   });
   const stream = await new Promise<Stream>((resolve, reject) => {
-    wsClient.on("connect", (connection: WebSocket) => {
-      resolve(new WebSocketClientStream(connection));
+    wsClient.on("connect", (connection: WebSocket.connection) => {
+      resolve(new connectionClientStream(connection));
     });
     wsClient.on("connectFailed", function error(error: any) {
       reject(new Error(`Failed to connect to server at ${serverUri}:${error}`));
@@ -161,24 +166,32 @@ export async function ssh(opts: {
       "127.0.0.1", // local host
       2222, // remote port (the dev-space’s SSHD)
     );
-    log.info(`SSH session connected`);
+    spinIndicator.stop(
+      `SSH connected to ${opts.displayName} on port ${localPort}`,
+    );
     sessionMap.set(serverUri, session);
 
     const sshProcess = spawn("ssh", [
+      "-i",
+      opts.pkFilePath,
       "-p",
       `${localPort}`,
+      "-o",
+      "StrictHostKeyChecking=no", // For first connection to localhost
+      "-o",
+      "UserKnownHostsFile=/dev/null", // Avoids polluting known_hosts for localhost ports
       `${opts.username}@127.0.0.1`,
     ], {
       stdio: "inherit",
       env: process.env,
     });
 
-    // 6) when the user’s ssh exits, close the tunneled session cleanly
+    // When the user’s ssh exits, close the tunneled session cleanly
     sshProcess.on(
       "exit",
       (code: number | null, signal: NodeJS.Signals | null) => {
         outro(
-          `🔒 SSH process exited (code=${code}, signal=${signal}), closing tunnel…`,
+          `SSH process exited (code=${code}, signal=${signal}), closing tunnel…`,
         );
         void session.close(SshDisconnectReason.byApplication)
           .catch((err) => console.error("Error closing SSH session:", err));
