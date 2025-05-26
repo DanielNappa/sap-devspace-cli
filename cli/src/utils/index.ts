@@ -1,3 +1,4 @@
+import { strict as assert } from "node:assert";
 import os from "node:os";
 
 export async function rootCertificateInjection(): Promise<void> {
@@ -7,6 +8,8 @@ export async function rootCertificateInjection(): Promise<void> {
       const api = ca.default || ca;
 
       if (api && typeof api.inject === "function") {
+        assert(api !== null);
+        assert(typeof api.inject === "function");
         api.inject("+");
       } else {
         log.error('Could not find "inject" method for "win-ca" library');

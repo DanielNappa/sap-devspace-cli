@@ -36,6 +36,7 @@ enum LandscapeMenuOption {
   ADD,
   DELETE,
   LOGIN,
+  EXIT,
 }
 
 export async function landscapeMenu(): Promise<LandscapeSession | void> {
@@ -45,49 +46,62 @@ export async function landscapeMenu(): Promise<LandscapeSession | void> {
     await setLandscapeURL();
   }
 
-  const newLandscapesConfig: LandscapeConfig[] = getLandscapesConfig();
+  while (true) {
+    const newLandscapesConfig: LandscapeConfig[] = getLandscapesConfig();
 
-  assert(newLandscapesConfig !== null);
-  assert(newLandscapesConfig.length > 0);
+    assert(newLandscapesConfig !== null);
+    assert(newLandscapesConfig.length > 0);
 
-  const selectedOption: LandscapeMenuOption = await select({
-    message: "Select an option:",
-    options: [
-      {
-        value: LandscapeMenuOption.LOGIN,
-        label: "Login to landscape",
-      },
-      {
-        value: LandscapeMenuOption.ADD,
-        label: "Add landscape",
-      },
-      {
-        value: LandscapeMenuOption.DELETE,
-        label: "Delete landscape",
-      },
-    ],
-  });
+    const selectedOption: LandscapeMenuOption = await select({
+      message: "Select an option:",
+      options: [
+        {
+          value: LandscapeMenuOption.LOGIN,
+          label: "Login to landscape",
+        },
+        {
+          value: LandscapeMenuOption.ADD,
+          label: "Add landscape",
+        },
+        {
+          value: LandscapeMenuOption.DELETE,
+          label: "Delete landscape",
+        },
+        {
+          value: LandscapeMenuOption.EXIT,
+          label: "Exit",
+        },
+      ],
+    });
 
-  if (isCancel(selectedOption)) {
-    cancel("Operation cancelled");
-    return process.exit(0);
-  }
+    if (isCancel(selectedOption)) {
+      cancel("Exiting...");
+      return process.exit(0);
+    }
 
-  assert(selectedOption !== null);
-  assert(typeof selectedOption === "number");
+    assert(selectedOption !== null);
+    assert(typeof selectedOption === "number");
 
-  switch (selectedOption) {
-    case LandscapeMenuOption.LOGIN:
-      const landscapeSession: LandscapeSession = await selectLandscape(
-        newLandscapesConfig,
-      );
-      return landscapeSession;
-    case LandscapeMenuOption.ADD:
-      await setLandscapeURL();
-      break;
-    case LandscapeMenuOption.DELETE:
-    default:
-      // Should'nt even reach here
+    switch (selectedOption) {
+      case LandscapeMenuOption.LOGIN:
+        const landscapeSession: LandscapeSession = await selectLandscapeLogin(
+          newLandscapesConfig,
+        );
+        return landscapeSession;
+      case LandscapeMenuOption.ADD:
+        await setLandscapeURL();
+        break;
+      case LandscapeMenuOption.DELETE:
+        await deleteLandscape(newLandscapesConfig);
+        break;
+      case LandscapeMenuOption.EXIT:
+        cancel("Exiting...");
+        return process.exit(0);
+      default:
+        // Shouldn't even reach here
+        cancel("Exiting...");
+        return process.exit(0);
+    }
   }
 }
 
@@ -128,12 +142,14 @@ export async function loginToLandscape(landscapeURL: string): Promise<boolean> {
   return !!open(core.getExtLoginPath(landscapeURL));
 }
 
-export async function selectLandscape(
+async function selectLandscape(
   landscapesConfig: LandscapeConfig[],
-): Promise<LandscapeSession> {
-  assert(landscapesConfig !== null);
-  assert(landscapesConfig.length > 0);
-
+  landscapeMenuOption: number,
+): Promise<LandscapeConfig> {
+  assert(
+    landscapeMenuOption === LandscapeMenuOption.DELETE ||
+      landscapeMenuOption === LandscapeMenuOption.LOGIN,
+  );
   const landscapes: Option<number | string>[] = [];
 
   for (let i = 0; i < landscapesConfig.length; i++) {
@@ -150,7 +166,9 @@ export async function selectLandscape(
   }
 
   const selectedLandscapeIndex = await select({
-    message: "Select a landscape:",
+    message: `Select a landscape${
+      landscapeMenuOption === LandscapeMenuOption.DELETE ? " to delete" : ""
+    }:`,
     options: landscapes,
   });
 
@@ -164,6 +182,38 @@ export async function selectLandscape(
 
   const selectedLandscape =
     landscapesConfig[selectedLandscapeIndex] as LandscapeConfig;
+  assert(selectedLandscape !== null);
+  return selectedLandscape;
+}
+
+export async function deleteLandscape(
+  landscapesConfig: LandscapeConfig[],
+): Promise<void> {
+  assert(landscapesConfig !== null);
+  assert(landscapesConfig.length > 0);
+
+  const selectedLandscape: LandscapeConfig = await selectLandscape(
+    landscapesConfig,
+    LandscapeMenuOption.DELETE,
+  );
+
+  assert(selectedLandscape !== null);
+
+  await removeLandscape(selectedLandscape.url);
+  log.info(`Deleted ${selectedLandscape.url}`);
+}
+
+export async function selectLandscapeLogin(
+  landscapesConfig: LandscapeConfig[],
+): Promise<LandscapeSession> {
+  assert(landscapesConfig !== null);
+  assert(landscapesConfig.length > 0);
+
+  const selectedLandscape: LandscapeConfig = await selectLandscape(
+    landscapesConfig,
+    LandscapeMenuOption.LOGIN,
+  );
+
   assert(selectedLandscape !== null);
 
   return {
@@ -212,7 +262,7 @@ export async function updateLandscapesConfig(
   assert(value !== null);
 
   writeFileSync(LANDSCAPE_CONFIG_PATH, value);
-  log.message(`Landscapes config updated: ${value}`);
+  log.message(`Landscapes config updated`);
 }
 
 export async function removeLandscape(landscapeURL: string): Promise<void> {
