@@ -14,6 +14,7 @@ import ssh, {
   type SSHConfigInfo,
   SSHD_SOCKET_PORT,
 } from "@/ssh/index.ts";
+import { rootCertificateInjection } from "@/utils/index.ts";
 
 // Entry point of CLI
 async function main(): Promise<void> {

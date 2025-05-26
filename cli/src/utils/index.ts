@@ -1,3 +1,24 @@
+import os from "node:os";
+
+export async function rootCertificateInjection(): Promise<void> {
+  if (os.platform() === "win32") {
+    try {
+      const ca = await import("win-ca");
+      const api = ca.default || ca;
+
+      if (api && typeof api.inject === "function") {
+        api.inject("+");
+      } else {
+        log.error('Could not find "inject" method for "win-ca" library');
+      }
+    } catch (error) {
+      log.error(
+        `Failed to initialize "win-ca" for system certificates: ${error.message}`,
+      );
+    }
+  }
+}
+
 // From https://stackoverflow.com/questions/40801349/converting-lodashs-uniqby-to-native-javascript
 export const uniqueBy = (array: any[], predicate: string) => {
   if (!Array.isArray(array)) return [];
