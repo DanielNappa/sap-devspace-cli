@@ -23,7 +23,9 @@ export interface DevSpaceNode {
   label: string;
   id: string;
   landscapeURL: string;
+  wsName: string;
   wsURL: string;
+  status: string;
 }
 
 export interface SSHConfigInfo {

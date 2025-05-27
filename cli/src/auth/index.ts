@@ -12,6 +12,10 @@ import { loginToLandscape } from "@/landscape/index.ts";
 const EXT_LOGIN_PORTNUM = 55532;
 const serverCache = new Map<string, ServerType>();
 
+interface RequestBody {
+  jwt?: string | undefined;
+}
+
 async function getJWTFromServer(landscapeURL: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     const app: Hono = new Hono();
@@ -21,8 +25,8 @@ async function getJWTFromServer(landscapeURL: string): Promise<string> {
 
     app.post("/ext-login", async (context: Context) => {
       try {
-        const body: Promise<any> = await context.req.json();
-        const jwt: string | undefined = body?.jwt;
+        const body: RequestBody = await context.req.json();
+        const jwt: string | undefined = await body?.jwt;
         assert(jwt !== null);
 
         if (!jwt || jwt.startsWith("<html>")) {
@@ -31,7 +35,6 @@ async function getJWTFromServer(landscapeURL: string): Promise<string> {
           log.error(devspaceMessages.err_incorrect_jwt(landscapeURL));
           reject(new Error(devspaceMessages.err_incorrect_jwt(landscapeURL)));
         } else {
-          // log.info(`JWT received from remote for ${landscapeURL}`);
           log.info("Received JWT");
           resolve(jwt);
           return context.json({ status: "ok" });
@@ -54,7 +57,6 @@ async function getJWTFromServer(landscapeURL: string): Promise<string> {
 export async function closeListener(landscapeURL: string): Promise<void> {
   await serverCache.get(landscapeURL)?.close();
   serverCache.delete(landscapeURL);
-  // log.info(`Closed server for ${landscapeURL}`);
 }
 
 async function getJWTFromServerWithTimeout(

@@ -39,7 +39,7 @@ enum LandscapeMenuOption {
   EXIT,
 }
 
-export async function landscapeMenu(): Promise<LandscapeSession | void> {
+export async function landscapeMenu(): Promise<LandscapeSession> {
   ensureFileSync(LANDSCAPE_CONFIG_PATH);
   const landscapesConfig: LandscapeConfig[] = getLandscapesConfig();
   if (!landscapesConfig || landscapesConfig.length === 0) {
@@ -52,7 +52,7 @@ export async function landscapeMenu(): Promise<LandscapeSession | void> {
     assert(newLandscapesConfig !== null);
     assert(newLandscapesConfig.length > 0);
 
-    const selectedOption: LandscapeMenuOption = await select({
+    const selectedOption: symbol | LandscapeMenuOption = await select({
       message: "Select an option:",
       options: [
         {

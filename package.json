@@ -3,7 +3,8 @@
   "module": "./cli/src/index.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/win-ca": "^3.5.4"
   },
   "peerDependencies": {
     "typescript": "^5"

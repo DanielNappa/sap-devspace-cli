@@ -1,19 +1,15 @@
 import { strict as assert } from "node:assert";
-import { ensureFileSync } from "fs-extra";
 import { intro, log } from "@clack/prompts";
 import { devspace } from "@sap/bas-sdk";
 import color from "picocolors";
-import { LANDSCAPE_CONFIG_PATH, SAP_LOGO } from "@/consts.ts";
-import { getDevSpaces, selectDevSpace } from "@/devspace/index.ts";
+import { SAP_LOGO } from "@/consts.ts";
+import {
+  getDevSpaces,
+  selectDevSpace,
+  selectDevSpaceAction,
+} from "@/devspace/index.ts";
 import { landscapeMenu, type LandscapeSession } from "@/landscape/index.ts";
-import ssh, {
-  type DevSpaceNode,
-  getSSHConfigurations,
-  runChannelClient,
-  SSH_SOCKET_PORT,
-  type SSHConfigInfo,
-  SSHD_SOCKET_PORT,
-} from "@/ssh/index.ts";
+import { type DevSpaceNode } from "@/ssh/index.ts";
 import { rootCertificateInjection } from "@/utils/index.ts";
 
 // Entry point of CLI
@@ -27,29 +23,19 @@ async function main(): Promise<void> {
   );
 
   const landscapeSession: LandscapeSession = await landscapeMenu();
+  assert(landscapeSession !== null);
+
   const devSpaces: devspace.DevspaceInfo[] = await getDevSpaces(
     landscapeSession.url,
     landscapeSession.jwt,
   );
-  const devSpace: DevSpaceNode = await selectDevSpace(
+  assert(devSpaces !== null);
+  const devSpaceNode: DevSpaceNode = await selectDevSpace(
     devSpaces,
     landscapeSession.url,
   );
-
-  const sshConfig: SSHConfigInfo = await getSSHConfigurations(
-    devSpace,
-    landscapeSession.jwt,
-  );
-  assert(sshConfig !== null);
-
-  await runChannelClient({
-    displayName: devSpace.label,
-    host: `port${SSHD_SOCKET_PORT}-${new URL(devSpace.wsURL).hostname}`,
-    landscape: devSpace.landscapeURL,
-    localPort: sshConfig.port,
-    jwt: landscapeSession.jwt,
-    pkFilePath: sshConfig.pkFilePath,
-  });
+  assert(devSpaceNode !== null);
+  await selectDevSpaceAction(devSpaceNode, landscapeSession.jwt);
 }
 
 await main();

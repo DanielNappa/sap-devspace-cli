@@ -1,3 +1,4 @@
+import { log } from "@clack/prompts";
 import { strict as assert } from "node:assert";
 import os from "node:os";
 
@@ -15,9 +16,11 @@ export async function rootCertificateInjection(): Promise<void> {
         log.error('Could not find "inject" method for "win-ca" library');
       }
     } catch (error) {
-      log.error(
-        `Failed to initialize "win-ca" for system certificates: ${error.message}`,
-      );
+      if (error instanceof Error) {
+        log.error(
+          `Failed to initialize "win-ca" for system certificates: ${error.message}`,
+        );
+      }
     }
   }
 }
