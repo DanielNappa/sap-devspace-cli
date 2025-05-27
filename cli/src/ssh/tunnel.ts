@@ -101,7 +101,7 @@ export async function ssh(opts: {
   pkFilePath: string;
 }): Promise<void> {
   const spinIndicator = spinner();
-  spinIndicator.start(`Connecting to ${opts.displayName}...`);
+  spinIndicator.start(`Connecting to ${opts.displayName}`);
   const serverUri = `wss://${opts.host.url}:${opts.host.port}`;
   // close the opened session if exists
   const isContinue = new Promise((res) => {
@@ -199,6 +199,8 @@ export async function ssh(opts: {
       },
     );
   } catch (error) {
-    outro(`SSH session dropped : ${error?.message}`);
+    if (error instanceof Error) {
+      outro(`SSH session dropped : ${error?.message}`);
+    }
   }
 }

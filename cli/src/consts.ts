@@ -31,7 +31,7 @@ export const LANDSCAPE_CONFIG_PATH: string = join(
 );
 
 export const devspaceMessages = {
-  info_obtaining_key: `Obtaining SSH key…`,
+  info_obtaining_key: `Obtaining SSH key`,
   info_save_pk_to_file: `Saving PK to file…`,
   info_update_config_file_with_ssh_connection:
     `Updating the config file with the SSH connection…`,
@@ -100,7 +100,11 @@ export const devspaceMessages = {
     `URL ${url} has incorrect format`,
   err_open_devspace_in_code: (reason: string) =>
     `Can't open the devspace: ${reason}`,
-
+  info_devspace_state_inital_message: (
+    wsName: string,
+    wsId: string,
+    suspend: boolean,
+  ) => `${suspend ? "Stopping" : "Starting"} ${wsName} (${wsId}) dev space`,
   info_devspace_state_updated: (
     wsName: string,
     wsId: string,

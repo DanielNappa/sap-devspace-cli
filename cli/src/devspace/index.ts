@@ -121,13 +121,27 @@ async function updateDevSpace(
   jwt: string,
   suspend: boolean,
 ): Promise<void> {
+  const spinIndicator = spinner();
+  spinIndicator.start(
+    devspaceMessages.info_devspace_state_inital_message(wsName, wsID, suspend),
+  );
   return devspace
     .updateDevSpace(landscapeURL, jwt, wsID, {
       Suspended: suspend,
       WorkspaceDisplayName: wsName,
     })
-    .then(() => {
-      log.info(
+    .then(async () => {
+      // While the status of the Dev Space hasn't changed depending on the suspend variable
+      while (
+        (await devspace.getDevspaceInfo({
+          landscapeUrl: landscapeURL,
+          jwt: jwt,
+          wsId: wsID,
+        })).status !== (suspend
+          ? devspace.DevSpaceStatus.STOPPED
+          : devspace.DevSpaceStatus.RUNNING)
+      );
+      spinIndicator.stop(
         devspaceMessages.info_devspace_state_updated(wsName, wsID, suspend),
       );
     }).catch((error) => {
@@ -172,30 +186,38 @@ export async function selectDevSpaceAction(
   assert(devSpaceNode.status !== null);
   assert(jwt !== null);
 
-  const isReady = devSpaceNode.status === devspace.DevSpaceStatus.RUNNING;
-
-  const options: Option<number | string>[] = [
-    isReady
-      ? {
-        value: DevSpaceMenuOption.CONNECT,
-        label: "Connect to Dev Space (SSH)",
-      }
-      : {
-        value: DevSpaceMenuOption.START,
-        label: "Start Dev Space",
-      },
-    ...(isReady
-      ? [{
-        value: DevSpaceMenuOption.STOP,
-        label: "Stop Dev Space",
-      }]
-      : []),
-    {
-      value: DevSpaceMenuOption.DELETE,
-      label: "Delete Dev Space",
-    },
-  ];
   while (true) {
+    // Need to get the Dev Space's status on each iteration
+    const devSpaceStatus: string = (await devspace.getDevspaceInfo({
+      landscapeUrl: devSpaceNode.landscapeURL,
+      jwt: jwt,
+      wsId: devSpaceNode.id,
+    })).status;
+
+    const isReady = devSpaceStatus === devspace.DevSpaceStatus.RUNNING;
+
+    const options: Option<number | string>[] = [
+      isReady
+        ? {
+          value: DevSpaceMenuOption.CONNECT,
+          label: "Connect to Dev Space (SSH)",
+        }
+        : {
+          value: DevSpaceMenuOption.START,
+          label: "Start Dev Space",
+        },
+      ...(isReady
+        ? [{
+          value: DevSpaceMenuOption.STOP,
+          label: "Stop Dev Space",
+        }]
+        : []),
+      {
+        value: DevSpaceMenuOption.DELETE,
+        label: "Delete Dev Space",
+      },
+    ];
+
     const selectedOption: symbol | number | string = await select({
       message: "Select an option:",
       options: options,
