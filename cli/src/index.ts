@@ -14,7 +14,7 @@ import { rootCertificateInjection } from "@/utils/index.ts";
 
 // Entry point of CLI
 async function main(): Promise<void> {
-  // Runs only for Win32 to inject system certificates to address issues with corporate networks
+  // Runs only on Win32 systems to inject system certificates to address issues with corporate networks
   await rootCertificateInjection();
 
   intro(color.bgCyan(" sap-devspace-cli "));
