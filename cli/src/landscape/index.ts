@@ -19,7 +19,11 @@ import { core } from "@sap/bas-sdk";
 
 // Adaptation from https://github.com/SAP/app-studio-toolkit/tree/main/packages/app-studio-toolkit/src/devspace-manager/landscape
 
-export type LandscapeConfig = { url: string; default?: boolean };
+export type LandscapeConfig = {
+  url: string;
+  jwt: string | undefined;
+  default?: boolean;
+};
 export interface LandscapeInfo {
   name: string;
   url: string;
@@ -216,10 +220,24 @@ export async function selectLandscapeLogin(
 
   assert(selectedLandscape !== null);
 
+  // If jwt exists and is not expired then use it otherwise update existing
+  // LandscapeConfig with new JWT
+  const jwt: string =
+    selectedLandscape?.jwt && selectedLandscape.jwt.length > 1 &&
+      !core.isJwtExpired(selectedLandscape.jwt)
+      ? selectedLandscape.jwt
+      : await getJWT(selectedLandscape.url);
+
+  // Update existing config if JWT didn't previously exist for landscape URL
+  if (!selectedLandscape?.jwt) {
+    await removeLandscape(selectedLandscape.url);
+    await addLandscape(selectedLandscape.url, jwt);
+  }
+
   return {
     name: new URL(selectedLandscape.url).hostname,
     url: selectedLandscape.url,
-    jwt: await getJWT(selectedLandscape.url),
+    jwt: jwt,
   };
 }
 
@@ -242,6 +260,7 @@ export function getLandscapesConfig(): LandscapeConfig[] {
         const item: LandscapeConfig = JSON.parse(landscape);
         return Object.assign(
           { url: new URL(item.url).toString() },
+          { jwt: item.jwt ?? "" },
           item.default ? { default: item.default } : {},
         );
       } catch (error) {
@@ -310,13 +329,16 @@ export async function setLandscapeURL(): Promise<void> {
   }
 }
 
-export async function addLandscape(landscapeURL: string): Promise<void> {
+export async function addLandscape(
+  landscapeURL: string,
+  jwt?: string,
+): Promise<void> {
   const toAdd = new URL(landscapeURL).toString();
   const landscapes = getLandscapesConfig();
   if (
     !landscapes.find((landscape) => new URL(landscape.url).toString() === toAdd)
   ) {
-    landscapes.push({ url: toAdd });
+    landscapes.push({ url: toAdd, jwt: jwt });
     return updateLandscapesConfig(landscapes);
   }
 }

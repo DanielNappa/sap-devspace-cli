@@ -12,7 +12,7 @@ import {
   type Stream,
 } from "@microsoft/dev-tunnels-ssh";
 import { PortForwardingService } from "@microsoft/dev-tunnels-ssh-tcp";
-import { log, outro, spinner } from "@clack/prompts";
+import { outro, spinner } from "@clack/prompts";
 
 const sessionMap: Map<string, SshClientSession> = new Map();
 
