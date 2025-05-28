@@ -223,13 +223,13 @@ export async function selectLandscapeLogin(
   // If jwt exists and is not expired then use it otherwise update existing
   // LandscapeConfig with new JWT
   const jwt: string =
-    selectedLandscape?.jwt && selectedLandscape.jwt.length > 1 &&
-      !core.isJwtExpired(selectedLandscape.jwt)
+    !!(selectedLandscape?.jwt && selectedLandscape.jwt.length > 1 &&
+      !core.isJwtExpired(selectedLandscape.jwt))
       ? selectedLandscape.jwt
       : await getJWT(selectedLandscape.url);
 
   // Update existing config if JWT didn't previously exist for landscape URL
-  if (!selectedLandscape?.jwt) {
+  if (!selectedLandscape.hasOwnProperty("jwt") || !selectedLandscape?.jwt) {
     await removeLandscape(selectedLandscape.url);
     await addLandscape(selectedLandscape.url, jwt);
   }
