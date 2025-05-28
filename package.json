@@ -1,13 +1,21 @@
 {
   "name": "sap-devspace-cli",
+  "description": "An editor-agnostic, pure CLI adaptation of the SAP Business Application Studio Toolkit extension for VSCode.",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "main": "./dist/index.js",
   "module": "./cli/src/index.ts",
   "type": "module",
+  "bin": {
+    "sap-devspace-cli": "./dist/index.js"
+  },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/win-ca": "^3.5.4"
+    "esbuild": "^0.25.5",
+    "node-rsa": "^1.1.1"
   },
-  "peerDependencies": {
-    "typescript": "^5"
+  "engines": {
+    "node": ">=22"
   },
   "dependencies": {
     "@clack/prompts": "^0.10.1",
@@ -17,8 +25,8 @@
     "@sap/bas-sdk": "^3.11.6",
     "@types/fs-extra": "^11.0.4",
     "@types/websocket": "^1.0.5",
+    "@types/win-ca": "^3.5.4",
     "@types/ws": "^8.18.1",
-    "child_process": "^1.0.2",
     "fs-extra": "^11.3.0",
     "hono": "^4.7.10",
     "open": "^10.1.2",
@@ -30,6 +38,28 @@
     "ws": "^8.18.2"
   },
   "scripts": {
-    "dev": "npx tsx cli/src/index.ts"
-  }
+    "build": "node build.mjs",
+    "build:dev": "NODE_ENV=development node build.mjs --dev && NODE_OPTIONS=--enable-source-maps node dist/cli-dev.js",
+    "dev": "npx tsx cli/src/index.ts",
+    "test": "npm run build && node dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DanielNappa/sap-devspace-cli"
+  },
+  "keywords": [
+    "sap",
+    "bas",
+    "business application studio",
+    "dev space",
+    "ssh",
+    "sap ssh tunnel",
+    "cli",
+    "btp"
+  ]
 }
