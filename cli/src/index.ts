@@ -11,6 +11,7 @@ import {
 import { landscapeMenu, type LandscapeSession } from "@/landscape/index.ts";
 import { type DevSpaceNode } from "@/ssh/index.ts";
 import { rootCertificateInjection } from "@/utils/index.ts";
+import "@/utils/process.ts";
 
 // Entry point of CLI
 async function main(): Promise<void> {
