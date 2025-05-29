@@ -7,7 +7,7 @@
   "module": "./cli/src/index.ts",
   "type": "module",
   "bin": {
-    "sap-devspace-cli": "./dist/index.js"
+    "sap-devspace-cli": "dist/index.js"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -39,9 +39,9 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "build:dev": "NODE_ENV=development node build.mjs --dev && NODE_OPTIONS=--enable-source-maps node dist/cli-dev.js",
     "dev": "npx tsx cli/src/index.ts",
-    "test": "npm run build && node dist/index.js"
+    "test": "npm run build && node dist/index.js",
+    "test:dev": "NODE_ENV=development node build.mjs --dev && NODE_OPTIONS=--enable-source-maps node dist/index-dev.js"
   },
   "files": [
     "dist",
@@ -50,7 +50,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/DanielNappa/sap-devspace-cli"
+    "url": "git+https://github.com/DanielNappa/sap-devspace-cli.git"
   },
   "keywords": [
     "sap",
