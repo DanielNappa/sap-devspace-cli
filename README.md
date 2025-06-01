@@ -1,4 +1,4 @@
-<h1 align="center">SAP DevSpace CLI</h1>
+<h1 align="center">sap-devspace-cli</h1>
 <p align="center">A lightweight, editor-agnostic CLI for SSH access to SAP Business Application Studio Dev Spaces.</p>
 
 <p align="center"><code>npm i -g sap-devspace-cli</code></p>
@@ -10,7 +10,7 @@
 
 <!-- Begin ToC -->
 
-- [Why SAP DevSpace CLI?](#why-sap-devspace-cli)
+- [Why sap-devspace-cli?](#why-sap-devspace-cli)
 - [Features](#features)
 - [Quickstart](#quickstart)
 - [System Requirements](#system-requirements)
@@ -33,9 +33,9 @@
 
 ---
 
-## Why SAP DevSpace CLI?
+## Why sap-devspace-cli?
 
-SAP DevSpace CLI provides a fast, terminal-based way to connect to your SAP Business Application Studio (BAS) Dev Spaces via SSH. It's built for developers who:
+sap-devspace-cli provides a fast, terminal-based way to connect to your SAP Business Application Studio (BAS) Dev Spaces via SSH. It's built for developers who:
 
 -   Prefer terminal-centric workflows and editors like Neovim, Vim, or Emacs.
 -   Want a lightweight alternative to opening the full BAS or VSCode for quick SSH access.
