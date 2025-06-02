@@ -5,6 +5,12 @@
 
 ---
 
+## Disclaimer
+
+**This is an unofficial, community-driven CLI tool and is not affiliated with, endorsed, or sponsored by SAP SE or its affiliates. It is provided "as-is" without any warranty. Use at your own discretion and risk.**
+
+---
+
 <details>
 <summary><strong>Table of contents</strong></summary>
 
