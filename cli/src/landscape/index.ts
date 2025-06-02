@@ -19,12 +19,12 @@ import { core } from "@sap/bas-sdk";
 
 // Adaptation from https://github.com/SAP/app-studio-toolkit/tree/main/packages/app-studio-toolkit/src/devspace-manager/landscape
 
-export type LandscapeConfig = {
+type LandscapeConfig = {
   url: string;
   jwt: string | undefined;
   default?: boolean;
 };
-export interface LandscapeInfo {
+interface LandscapeInfo {
   name: string;
   url: string;
   isLoggedIn: boolean;
@@ -114,7 +114,7 @@ function isLandscapeLoggedIn(url: string): Promise<boolean> {
   return hasJWT(url);
 }
 
-export async function getLandscapes(): Promise<LandscapeInfo[]> {
+async function getLandscapes(): Promise<LandscapeInfo[]> {
   const landscapes: LandscapeInfo[] = [];
   for (const landscape of getLandscapesConfig()) {
     const url = new URL(landscape.url);
@@ -190,7 +190,7 @@ async function selectLandscape(
   return selectedLandscape;
 }
 
-export async function deleteLandscape(
+async function deleteLandscape(
   landscapesConfig: LandscapeConfig[],
 ): Promise<void> {
   assert(landscapesConfig !== null);
@@ -207,7 +207,7 @@ export async function deleteLandscape(
   log.info(`Deleted ${selectedLandscape.url}`);
 }
 
-export async function selectLandscapeLogin(
+async function selectLandscapeLogin(
   landscapesConfig: LandscapeConfig[],
 ): Promise<LandscapeSession> {
   assert(landscapesConfig !== null);
@@ -224,7 +224,7 @@ export async function selectLandscapeLogin(
   // LandscapeConfig with new JWT
   const jwt: string =
     !!(selectedLandscape?.jwt && selectedLandscape.jwt.length > 1 &&
-      !core.isJwtExpired(selectedLandscape.jwt))
+        !core.isJwtExpired(selectedLandscape.jwt))
       ? selectedLandscape.jwt
       : await getJWT(selectedLandscape.url);
 
@@ -241,7 +241,7 @@ export async function selectLandscapeLogin(
   };
 }
 
-export function getLandscapesConfig(): LandscapeConfig[] {
+function getLandscapesConfig(): LandscapeConfig[] {
   //  - new format:  {"url":"https://example.com","default":true}|{"url":"https://example2.com"}
   //  - old format:  https://example.com,https://example2.com
   ensureFileSync(LANDSCAPE_CONFIG_PATH);
@@ -274,7 +274,7 @@ export function getLandscapesConfig(): LandscapeConfig[] {
   );
 }
 
-export async function updateLandscapesConfig(
+async function updateLandscapesConfig(
   values: LandscapeConfig[],
 ): Promise<void> {
   const value: string = values.map((item) => JSON.stringify(item)).join("|");
@@ -284,7 +284,7 @@ export async function updateLandscapesConfig(
   log.message(`Landscapes config updated`);
 }
 
-export async function removeLandscape(landscapeURL: string): Promise<void> {
+async function removeLandscape(landscapeURL: string): Promise<void> {
   assert(landscapeURL !== null);
   const config: LandscapeConfig[] = getLandscapesConfig();
   assert(config !== null);
@@ -299,7 +299,7 @@ export async function removeLandscape(landscapeURL: string): Promise<void> {
   }
 }
 
-export async function setLandscapeURL(): Promise<void> {
+async function setLandscapeURL(): Promise<void> {
   const landscapeURL: string | symbol = await text({
     message: "Enter your Landscape URL:",
     validate(input: string) {
@@ -329,7 +329,7 @@ export async function setLandscapeURL(): Promise<void> {
   }
 }
 
-export async function addLandscape(
+async function addLandscape(
   landscapeURL: string,
   jwt?: string,
 ): Promise<void> {

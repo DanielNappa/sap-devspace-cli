@@ -16,8 +16,7 @@ import sshConfig from "ssh-config";
 import { devspaceMessages } from "@/consts";
 import { ssh } from "./tunnel";
 export const SSHD_SOCKET_PORT = 33765;
-export const SSH_SOCKET_PORT = 443;
-export default ssh;
+const SSH_SOCKET_PORT = 443;
 
 export interface DevSpaceNode {
   label: string;
@@ -44,7 +43,7 @@ function getSSHConfigFolderPath(): string {
   return parse(getSSHConfigFilePath()).dir;
 }
 
-export async function getPK(
+async function getPK(
   landscapeURL: string,
   jwt: string,
   wsId: string,
@@ -56,7 +55,7 @@ function composeKeyFileName(folder: string, url: string): string {
   return join(folder, `${new URL(url).host}.key`);
 }
 
-export function savePK(pk: string, urlStr: string): string {
+function savePK(pk: string, urlStr: string): string {
   //construct file named "<ws-url>.key"
   const sshFolderPath: string = getSSHConfigFolderPath();
   if (!existsSync(sshFolderPath)) {
@@ -72,7 +71,7 @@ export function savePK(pk: string, urlStr: string): string {
   return fileName;
 }
 
-export function deletePK(wsURL: string): void {
+function deletePK(wsURL: string): void {
   const fileName: string = composeKeyFileName(getSSHConfigFolderPath(), wsURL);
   let message = `Private key file ${fileName} deleted`;
   if (existsSync(fileName)) {
@@ -100,7 +99,7 @@ function composeSSHConfigSectionName(landscape: string, wsId: string): string {
   return `${new URL(landscape).host}.${wsId}`;
 }
 
-export function updateSSHConfig(
+function updateSSHConfig(
   sshKeyFilePath: string,
   devSpace: DevSpaceNode,
 ): SSHConfigInfo {
@@ -130,7 +129,7 @@ export function updateSSHConfig(
   return { name: sectionName, port: `${port}` } as SSHConfigInfo;
 }
 
-export function removeSSHConfig(devSpace: DevSpaceNode): void {
+function removeSSHConfig(devSpace: DevSpaceNode): void {
   const sshConfigFile: string = getSSHConfigFilePath();
   // get ssh config object form ssh config file
   const config = getSSHConfig(sshConfigFile) as sshConfig;
@@ -180,7 +179,7 @@ export async function runChannelClient(opt: {
   });
 }
 
-export function getRandomArbitrary(min?: number, max?: number): number {
+function getRandomArbitrary(min?: number, max?: number): number {
   max = max || 33654;
   min = min || 30432;
   // verify max is larger than min

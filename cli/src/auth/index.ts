@@ -111,7 +111,7 @@ async function receiveJWT(opt: {
   return opt.jwtPromise.finally(() => void onJWTReceived(opt));
 }
 
-export function retrieveJWT(landscapeURL: string): Promise<string | void> {
+function retrieveJWT(landscapeURL: string): Promise<string | void> {
   return retrieveJWTFromRemote(landscapeURL).catch((error) => {
     log.error(error.message);
   });

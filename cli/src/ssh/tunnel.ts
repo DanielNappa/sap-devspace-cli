@@ -16,7 +16,7 @@ import { outro, spinner } from "@clack/prompts";
 
 const sessionMap: Map<string, SshClientSession> = new Map();
 
-export function closeSessions(sessions?: string[]): void {
+function closeSessions(sessions?: string[]): void {
   Array.from(sessionMap.entries()).forEach(([key, session]) => {
     if (sessions && !sessions.includes(key)) {
       return;

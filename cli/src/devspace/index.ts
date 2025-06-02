@@ -89,7 +89,7 @@ export async function selectDevSpace(
   };
 }
 
-export async function canDevSpaceStart(
+async function canDevSpaceStart(
   landscapeURL: string,
   jwt: string,
 ): Promise<boolean | string> {
