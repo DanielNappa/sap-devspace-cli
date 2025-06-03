@@ -121,7 +121,7 @@ function updateSSHConfig(
   Port ${port}
   IdentityFile ${sshKeyFilePath}
   User user
-  NoHostAuthenticationForLocalhost yes`,
+  NoHostAuthenticationForLocalhost yes\n`,
     )[0]!,
   );
   // save the SSH config object back to file
