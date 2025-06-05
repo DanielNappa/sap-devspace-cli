@@ -19,8 +19,8 @@ without any warranty. Use at your own discretion and risk.**
 <!-- Begin ToC -->
 
 - [Why sap-devspace-cli?](#why-sap-devspace-cli)
-- [Features](#features)
 - [Quickstart](#quickstart)
+- [Features](#features)
 - [System Requirements](#system-requirements)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -56,27 +56,6 @@ This tool replicates the core SSH tunneling functionality found in the official
 "SAP Business Application Studio Toolkit" VSCode extension, but as a standalone,
 editor-agnostic command-line interface.
 
-## Features
-
-- **Interactive Landscape & Dev Space Selection:** Easily choose your target
-  landscape and dev space.
-- **Automatic JWT Authentication:** Handles the browser-based JWT acquisition
-  flow for landscape authentication. Caches JWTs for quicker subsequent
-  connections and refreshes them when expired.
-- **SSH Tunnel Management:** Automatically fetches the necessary SSH private key
-  for your selected dev space, configures your local SSH client, and establishes
-  a secure tunnel.
-- **Dev Space State Management:**
-  - **Start** stopped dev spaces.
-  - **Stop** running dev spaces.
-  - **Connect** to running dev spaces (initiates an SSH session).
-  - **Delete** dev spaces.
-- **Dynamic Menu Options:** The available actions for a dev space (start, stop,
-  connect) dynamically update based on its current state.
-- **Cross-Platform (with considerations):** Works on macOS and Windows. Includes
-  workarounds for common Windows corporate proxy (e.g., Zscaler) SSL
-  interception issues.
-
 ## Quickstart
 
 1. **Install globally:**
@@ -99,6 +78,27 @@ editor-agnostic command-line interface.
 
    If you choose "Connect," an SSH session will be established in your current
    terminal.
+
+## Features
+
+- **Interactive Landscape & Dev Space Selection:** Easily choose your target
+  landscape and dev space.
+- **Automatic JWT Authentication:** Handles the browser-based JWT acquisition
+  flow for landscape authentication. Caches JWTs for quicker subsequent
+  connections and refreshes them when expired.
+- **SSH Tunnel Management:** Automatically fetches the necessary SSH private key
+  for your selected dev space, configures your local SSH client, and establishes
+  a secure tunnel.
+- **Dev Space State Management:**
+  - **Start** stopped dev spaces.
+  - **Stop** running dev spaces.
+  - **Connect** to running dev spaces (initiates an SSH session).
+  - **Delete** dev spaces.
+- **Dynamic Menu Options:** The available actions for a dev space (start, stop,
+  connect) dynamically update based on its current state.
+- **Cross-Platform (with considerations):** Works on macOS and Windows. Includes
+  workarounds for common Windows corporate proxy (e.g., Zscaler) SSL
+  interception issues.
 
 ---
 
@@ -169,13 +169,18 @@ The CLI will then present you with interactive prompts to:
        spinner.
      - **Delete:** Deletes the dev space (with confirmation).
 
-### Future Enhancements (Potential)
+### Future Enhancements (Potential) and Known Issues
 
 - Non-interactive mode for scripting (e.g.,
   `sap-devspace-cli connect --landscape <url_or_alias> --devspace <name_or_id>`).
 - Configuration file for more advanced settings.
 - More detailed error reporting and verbose logging options configurable by
-  arguments.
+- Return back to main selection after deleting a dev space.
+- Assertion failure occurs when there a no dev spaces in the landscape.
+- Assertion failure occurs when deleting the only remaining landscape in the
+  configuration.
+- ERR_Invalid_URL is thrown on newly created dev spaces when attempting to
+  connect.
 
 ---
 

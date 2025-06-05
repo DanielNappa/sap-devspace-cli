@@ -26,9 +26,8 @@ if (fs.existsSync(outPath)) {
   fs.rmSync(outPath, { recursive: true, force: true });
 }
 
-const shebangLine = isDevBuild
-  ? "#!/usr/bin/env -S NODE_OPTIONS=--enable-source-maps node\n"
-  : "#!/usr/bin/env node\n";
+const shebangLine =
+  "#!/usr/bin/env -S node --no-warnings --enable-source-maps \n";
 
 esbuild
   .build({
