@@ -177,8 +177,6 @@ The CLI will then present you with interactive prompts to:
 - More detailed error reporting and verbose logging options configurable by
 - Return back to main selection after deleting a dev space.
 - Assertion failure occurs when there a no dev spaces in the landscape.
-- Assertion failure occurs when deleting the only remaining landscape in the
-  configuration.
 - ERR_Invalid_URL is thrown on newly created dev spaces when attempting to
   connect.
 

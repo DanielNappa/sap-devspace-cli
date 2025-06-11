@@ -97,7 +97,12 @@ export async function landscapeMenu(): Promise<LandscapeSession> {
         break;
       case LandscapeMenuOption.DELETE:
         await deleteLandscape(newLandscapesConfig);
-        break;
+        const afterDeleteLandscapes = getLandscapesConfig();
+        if (!afterDeleteLandscapes || afterDeleteLandscapes.length === 0) {
+            await setLandscapeURL();
+        }
+        // Don't break or return; the loop will continue
+        continue;   
       case LandscapeMenuOption.EXIT:
         cancel("Exiting...");
         return process.exit(0);
