@@ -43,6 +43,9 @@ export async function selectDevSpace(
   landscapeURL: string,
 ): Promise<DevSpaceNode> {
   assert(devSpaces !== null);
+  if (devSpaces.length === 0) {
+    process.exit(0);
+  }
   assert(devSpaces.length > 0);
 
   const devSpaceOptions: Option<number | string>[] = [];
@@ -232,7 +235,7 @@ export async function selectDevSpaceAction(
     assert(typeof selectedOption === "number");
 
     switch (selectedOption) {
-      case DevSpaceMenuOption.CONNECT:
+      case DevSpaceMenuOption.CONNECT: {
         const sshConfig: SSHConfigInfo = await getSSHConfigurations(
           devSpaceNode,
           jwt,
@@ -248,6 +251,7 @@ export async function selectDevSpaceAction(
           jwt: jwt,
           pkFilePath: sshConfig.pkFilePath,
         });
+      }
       case DevSpaceMenuOption.START:
         await startDevSpace(devSpaceNode, jwt, false);
         break;
@@ -260,7 +264,7 @@ export async function selectDevSpaceAction(
           true,
         );
         break;
-      case DevSpaceMenuOption.DELETE:
+      case DevSpaceMenuOption.DELETE: {
         const allowOpen: boolean | symbol = await confirm({
           message: `Are you sure you want to delete ${devSpaceNode.label}?`,
         });
@@ -278,6 +282,7 @@ export async function selectDevSpaceAction(
           spinIndicator.stop(`Deleted ${devSpaceNode.label}`);
         }
         break;
+      }
       default:
         // Shouldn't even reach here
         cancel("Exiting...");
