@@ -34,6 +34,7 @@ async function main(): Promise<void> {
   const devSpaceNode: DevSpaceNode = await selectDevSpace(
     devSpaces,
     landscapeSession.url,
+    landscapeSession.jwt,
   );
   assert(devSpaceNode !== null);
   await selectDevSpaceAction(devSpaceNode, landscapeSession.jwt);

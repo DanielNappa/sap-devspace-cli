@@ -8,8 +8,15 @@ import {
   type Option,
   select,
   spinner,
+  text,
 } from "@clack/prompts";
 import { devspace } from "@sap/bas-sdk";
+import { getDevSpacesSpec } from "@sap/bas-sdk/dist/src/apis/get-devspace";
+import type {
+  DevSpaceExtension,
+  DevSpacePack,
+  DevSpaceSpec,
+} from "@sap/bas-sdk/dist/src/utils/devspace-utils";
 import { devspaceMessages } from "@/consts.ts";
 import {
   type DevSpaceNode,
@@ -26,6 +33,19 @@ enum DevSpaceMenuOption {
   DELETE,
 }
 
+interface PackMetadata {
+  predefined: {
+    tagline: string;
+    description: string;
+    extensions: DevSpaceExtension[];
+  };
+  additional: {
+    tagline: string;
+    description: string;
+    extensions: DevSpaceExtension[];
+  };
+}
+
 export async function getDevSpaces(
   landscapeURL: string,
   jwt: string,
@@ -38,13 +58,132 @@ export async function getDevSpaces(
   return await devspace.getDevSpaces(landscapeURL, jwt);
 }
 
+async function createDevSpace(
+  landscapeURL: string,
+  jwt: string,
+): Promise<DevSpaceNode> {
+  const devSpaceName: string | symbol = await text({
+    message: "Enter Dev Space name:",
+    validate(input: string) {
+      try {
+        if (!(/^[a-zA-Z0-9][a-zA-Z0-9_]{0,39}$/.test(input))) {
+          return devspaceMessages.err_invalid_devspace_name;
+        }
+      } catch (error) {
+        return (error as Error).toString();
+      }
+    },
+  });
+
+  if (isCancel(devSpaceName)) {
+    cancel("Operation cancelled.");
+    process.exit(0);
+  }
+  assert(devSpaceName !== null);
+  const devSpacesSpec = await getDevSpacesSpec(
+    landscapeURL,
+    jwt,
+  ) as DevSpaceSpec;
+
+  for (const pack of devSpacesSpec.packs) {
+    const organizedExtensions = organizePackExtensions(
+      pack.name,
+      devSpacesSpec.packs,
+      devSpacesSpec.extensions,
+    ) as PackMetadata;
+    console.log(pack.name.toUpperCase());
+    console.log(organizedExtensions.predefined.tagline);
+    console.log(organizedExtensions.predefined.description);
+    for (const extension of organizedExtensions.predefined.extensions) {
+      console.log(`\t${extension.tagline}`);
+    }
+    console.log(organizedExtensions.additional.tagline);
+    console.log(organizedExtensions.additional.description);
+    for (const extension of organizedExtensions.additional.extensions) {
+      console.log(`\t${extension.tagline}`);
+      // console.log(extension.description);
+    }
+  }
+}
+
+function organizePackExtensions(
+  selectedPackName: string,
+  allPacks: DevSpacePack[],
+  allExtensions: DevSpaceExtension[],
+): PackMetadata | null {
+  assert(selectedPackName !== null);
+  assert(allPacks !== null);
+  assert(allExtensions !== null);
+
+  const selectedPack: DevSpacePack | undefined = allPacks.find((
+    pack: DevSpacePack,
+  ) => pack.name === selectedPackName);
+
+  if (!selectedPack) {
+    log.error(`The Pack named "${selectedPackName}" not found`);
+    return null;
+  }
+
+  const predefinedExtensions = selectedPack.extensions.map((packExtension) => {
+    return allExtensions.find((extension: DevSpaceExtension) =>
+      `${extension.namespace}/${extension.name}` ===
+        `${packExtension.namespace}/${packExtension.name}`
+    );
+  }) as DevSpaceExtension[];
+
+  assert(predefinedExtensions !== null);
+
+  const additionalExtensionCandidates: DevSpaceExtension[] = allExtensions
+    .filter(
+      (extension: DevSpaceExtension) =>
+        extension.standalone === true && extension.mode === "optional",
+    );
+
+  assert(additionalExtensionCandidates !== null);
+  const predefinedExtensionIDs: Set<String> = new Set(
+    predefinedExtensions.map((extension: DevSpaceExtension) =>
+      `${extension.namespace}/${extension.name}`
+    ),
+  );
+
+  const additionalExtensions = additionalExtensionCandidates.filter((
+    extension: DevSpaceExtension,
+  ) => !predefinedExtensionIDs.has(`${extension.namespace}/${extension.name}`));
+
+  return {
+    predefined: {
+      tagline: "SAP Predefined Extensions",
+      description: "The following extensions are enabled by default.",
+      extensions: predefinedExtensions,
+    },
+    additional: {
+      tagline: "Additional SAP Extensions",
+      description: "Select additional extensions to enhance your space.",
+      extensions: additionalExtensions,
+    },
+  };
+}
+
 export async function selectDevSpace(
   devSpaces: devspace.DevspaceInfo[],
   landscapeURL: string,
+  jwt: string,
 ): Promise<DevSpaceNode> {
   assert(devSpaces !== null);
+  assert(landscapeURL !== null);
+  assert(jwt !== null);
+
   if (devSpaces.length === 0) {
-    process.exit(0);
+    const allowOpen: boolean | symbol = await confirm({
+      message:
+        "There are no Dev Spaces in this landscape. Create a new Dev Space?",
+    });
+
+    if (isCancel(allowOpen) || !allowOpen) {
+      cancel("Operation cancelled");
+      return process.exit(0);
+    }
+    await createDevSpace(landscapeURL, jwt);
   }
   assert(devSpaces.length > 0);
 
