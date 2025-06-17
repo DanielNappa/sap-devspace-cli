@@ -504,7 +504,7 @@ export async function selectDevSpaceAction(
           jwt,
         );
         assert(sshConfig !== null);
-        
+
         return await runChannelClient({
           displayName: devSpaceNode.label,
           host: `port${SSHD_SOCKET_PORT}-${
