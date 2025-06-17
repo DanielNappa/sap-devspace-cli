@@ -14,6 +14,7 @@ import {
 import { devspace } from "@sap/bas-sdk";
 import { getDevSpacesSpec } from "@sap/bas-sdk/dist/src/apis/get-devspace";
 import type {
+  DevSpaceCreation,
   DevSpaceExtension,
   DevSpacePack,
   DevSpaceSpec,
@@ -35,6 +36,7 @@ enum DevSpaceMenuOption {
 }
 
 interface PackMetadata {
+  allPredefinedExtensions: DevSpaceExtension[];
   predefined: {
     tagline: string;
     description: string;
@@ -135,6 +137,46 @@ async function createDevSpace(
     cancel("Operation cancelled");
     process.exit(0);
   }
+
+  const predefinedExtensions: string[] = organizedData.allPredefinedExtensions
+    .map((
+      extension: DevSpaceExtension,
+    ) => `${extension.namespace}/${extension.name}`);
+  const optionalExtensions: string[] = selectedAdditionalExtensions.map((
+    extension: DevSpaceExtension,
+  ) => `${extension.namespace}/${extension.name}`);
+  // Find all technical extensions (required but not necessarily standalone/visible)
+  const technicalExts: DevSpaceExtension[] = devSpacesSpec.extensions.filter(
+    (
+      extension: DevSpaceExtension,
+    ) => (extension.mode === "required" && extension.standalone === true),
+  );
+  const technicalExtensions: string[] = technicalExts.map((
+    extension: DevSpaceExtension,
+  ) => `${extension.namespace}/${extension.name}`);
+
+  const allExtensions: string[] = [
+    ...new Set([
+      ...predefinedExtensions,
+      ...optionalExtensions,
+      ...technicalExtensions,
+    ]),
+  ];
+  assert(allExtensions !== null);
+  assert(allExtensions.length > 0);
+
+  const devSpacePayload: DevSpaceCreation = {
+    workspacedisplayname: devSpaceName,
+    id: "",
+    memoryLimitBytes: 2147483648,
+    extensions: allExtensions,
+    annotations: {
+      pack: selectedPack.name,
+      packTagline: selectedPack.tagline || "",
+      optionalExtensions: JSON.stringify(optionalExtensions),
+      technicalExtensions: JSON.stringify(technicalExtensions),
+    },
+  };
 }
 
 function organizePackExtensions(
@@ -168,7 +210,7 @@ function organizePackExtensions(
   assert(allPredefinedExtensions !== null);
 
   // Need to further filter out hidden extensions from the TUI
-  const predefinedExtensions = allPredefinedExtensions.filter((
+  const visiblePredefinedExtensions = allPredefinedExtensions.filter((
     extension: DevSpaceExtension,
   ) => (!extension.versions[0]?.extendedInfo?.hasOwnProperty("hidden") ||
     Object(extension.versions[0]?.extendedInfo)?.hidden === "false")
@@ -183,7 +225,7 @@ function organizePackExtensions(
 
   assert(additionalExtensionCandidates !== null);
   const predefinedExtensionIDs: Set<String> = new Set(
-    predefinedExtensions.map((extension: DevSpaceExtension) =>
+    visiblePredefinedExtensions.map((extension: DevSpaceExtension) =>
       `${extension.namespace}/${extension.name}`
     ),
   );
@@ -193,10 +235,11 @@ function organizePackExtensions(
   ) => !predefinedExtensionIDs.has(`${extension.namespace}/${extension.name}`));
 
   return {
+    allPredefinedExtensions: allPredefinedExtensions,
     predefined: {
       tagline: "SAP Predefined Extensions",
       description: "The following extensions are enabled by default.",
-      extensions: predefinedExtensions,
+      extensions: visiblePredefinedExtensions,
     },
     additional: {
       tagline: "Additional SAP Extensions",
