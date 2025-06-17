@@ -12,7 +12,10 @@ import {
   text,
 } from "@clack/prompts";
 import { devspace } from "@sap/bas-sdk";
-import { getDevSpacesSpec } from "@sap/bas-sdk/dist/src/apis/get-devspace";
+import {
+  createDevSpace,
+  getDevSpacesSpec,
+} from "@sap/bas-sdk/dist/src/apis/get-devspace";
 import type {
   DevSpaceCreation,
   DevSpaceExtension,
@@ -61,10 +64,10 @@ export async function getDevSpaces(
   return await devspace.getDevSpaces(landscapeURL, jwt);
 }
 
-async function createDevSpace(
+async function createDevSpaceWrapper(
   landscapeURL: string,
   jwt: string,
-): Promise<DevSpaceNode> {
+): Promise<devspace.DevspaceInfo[]> {
   const devSpaceName: string | symbol = await text({
     message: "Enter Dev Space name:",
     validate(input: string) {
@@ -96,12 +99,12 @@ async function createDevSpace(
       label: pack.tagline || pack.name,
       hint: pack.name,
     }));
+  assert(packOptions !== null);
 
   const selectedPack = await select({
     message: "What kind of application do you want to create?",
     options: packOptions,
   }) as DevSpacePack;
-
   assert(selectedPack !== null);
 
   // Organize extensions based on the selected pack
@@ -123,12 +126,11 @@ async function createDevSpace(
     label: `${extension.tagline || extension.name}`,
     hint: extension.description,
   }));
-
   assert(additionalExtensionOptions !== null);
   assert(additionalExtensionOptions.length > 0);
 
   const selectedAdditionalExtensions = await multiselect({
-    message: "Select additional extensions to enhance your space:",
+    message: organizedData.additional.description,
     options: additionalExtensionOptions,
     required: false,
   }) as DevSpaceExtension[];
@@ -177,6 +179,30 @@ async function createDevSpace(
       technicalExtensions: JSON.stringify(technicalExtensions),
     },
   };
+  const spinIndicator = spinner();
+  spinIndicator.start(
+    devspaceMessages.info_devspace_creating(devSpaceName),
+  );
+  try {
+    await createDevSpace(landscapeURL, jwt, devSpacePayload);
+    spinIndicator.stop(
+      devspaceMessages.info_devspace_creating(devSpaceName),
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      const message = devspaceMessages.err_devspace_creation(
+        devSpaceName,
+        error.toString(),
+      );
+      console.trace(error);
+    }
+  }
+  const devSpaces: devspace.DevspaceInfo[] = await getDevSpaces(
+    landscapeURL,
+    jwt,
+  );
+  assert(devSpaces !== null);
+  return devSpaces;
 }
 
 function organizePackExtensions(
@@ -268,7 +294,9 @@ export async function selectDevSpace(
       cancel("Operation cancelled");
       return process.exit(0);
     }
-    await createDevSpace(landscapeURL, jwt);
+    const updatedDevSpaces: devspace.DevspaceInfo[] =
+      await createDevSpaceWrapper(landscapeURL, jwt);
+    devSpaces.splice(0, devSpaces.length, ...updatedDevSpaces);
   }
   assert(devSpaces.length > 0);
 
@@ -460,11 +488,23 @@ export async function selectDevSpaceAction(
 
     switch (selectedOption) {
       case DevSpaceMenuOption.CONNECT: {
+        // Poll the API until it gives us a non-empty wsURL
+        while (devSpaceNode.wsURL.length === 0) {
+          const info: devspace.DevspaceInfo = await devspace.getDevspaceInfo({
+            landscapeUrl: devSpaceNode.landscapeURL,
+            jwt,
+            wsId: devSpaceNode.id,
+          });
+          assert(info !== null);
+          devSpaceNode.wsURL = info.url;
+        }
+
         const sshConfig: SSHConfigInfo = await getSSHConfigurations(
           devSpaceNode,
           jwt,
         );
         assert(sshConfig !== null);
+        
         return await runChannelClient({
           displayName: devSpaceNode.label,
           host: `port${SSHD_SOCKET_PORT}-${
