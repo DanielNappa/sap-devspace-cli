@@ -121,7 +121,9 @@ function isLandscapeLoggedIn(url: string): Promise<boolean> {
 
 async function getLandscapes(): Promise<LandscapeInfo[]> {
   const landscapes: LandscapeInfo[] = [];
-  for (const landscape of getLandscapesConfig()) {
+  const landscapeConfig: LandscapeConfig[] = getLandscapesConfig();
+
+  for (const landscape of landscapeConfig) {
     const url = new URL(landscape.url);
     landscapes.push(
       Object.assign(

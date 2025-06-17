@@ -5,6 +5,7 @@ import {
   confirm,
   isCancel,
   log,
+  multiselect,
   type Option,
   select,
   spinner,
@@ -79,30 +80,60 @@ async function createDevSpace(
     cancel("Operation cancelled.");
     process.exit(0);
   }
+
   assert(devSpaceName !== null);
   const devSpacesSpec = await getDevSpacesSpec(
     landscapeURL,
     jwt,
   ) as DevSpaceSpec;
 
-  for (const pack of devSpacesSpec.packs) {
-    const organizedExtensions = organizePackExtensions(
-      pack.name,
-      devSpacesSpec.packs,
-      devSpacesSpec.extensions,
-    ) as PackMetadata;
-    console.log(pack.name.toUpperCase());
-    console.log(organizedExtensions.predefined.tagline);
-    console.log(organizedExtensions.predefined.description);
-    for (const extension of organizedExtensions.predefined.extensions) {
-      console.log(`\t${extension.tagline}`);
-    }
-    console.log(organizedExtensions.additional.tagline);
-    console.log(organizedExtensions.additional.description);
-    for (const extension of organizedExtensions.additional.extensions) {
-      console.log(`\t${extension.tagline}`);
-      // console.log(extension.description);
-    }
+  const packOptions: Option<string | DevSpacePack>[] = devSpacesSpec.packs
+    .filter((pack: DevSpacePack) => pack.name !== "PlatformTest")
+    .map((pack: DevSpacePack) => ({
+      value: pack,
+      label: pack.tagline || pack.name,
+      hint: pack.name,
+    }));
+
+  const selectedPack = await select({
+    message: "What kind of application do you want to create?",
+    options: packOptions,
+  }) as DevSpacePack;
+
+  assert(selectedPack !== null);
+
+  // Organize extensions based on the selected pack
+  const organizedData = organizePackExtensions(
+    selectedPack.name,
+    devSpacesSpec.packs,
+    devSpacesSpec.extensions,
+  ) as PackMetadata;
+
+  if (!organizedData) {
+    log.error("Could not process extension data for the selected pack.");
+    process.exit(0);
+  }
+
+  const additionalExtensionOptions = organizedData.additional.extensions.map((
+    extension,
+  ) => ({
+    value: extension,
+    label: `${extension.tagline || extension.name}`,
+    hint: extension.description,
+  }));
+
+  assert(additionalExtensionOptions !== null);
+  assert(additionalExtensionOptions.length > 0);
+
+  const selectedAdditionalExtensions = await multiselect({
+    message: "Select additional extensions to enhance your space:",
+    options: additionalExtensionOptions,
+    required: false,
+  }) as DevSpaceExtension[];
+
+  if (isCancel(selectedAdditionalExtensions)) {
+    cancel("Operation cancelled");
+    process.exit(0);
   }
 }
 
@@ -124,15 +155,26 @@ function organizePackExtensions(
     return null;
   }
 
-  const predefinedExtensions = selectedPack.extensions.map((packExtension) => {
-    return allExtensions.find((extension: DevSpaceExtension) =>
-      `${extension.namespace}/${extension.name}` ===
-        `${packExtension.namespace}/${packExtension.name}`
-    );
-  }) as DevSpaceExtension[];
+  const allPredefinedExtensions = selectedPack.extensions.map(
+    (packExtension) => {
+      return allExtensions.find((
+        extension: DevSpaceExtension,
+      ) => (`${extension.namespace}/${extension.name}` ===
+        `${packExtension.namespace}/${packExtension.name}`)
+      );
+    },
+  ) as DevSpaceExtension[];
 
-  assert(predefinedExtensions !== null);
+  assert(allPredefinedExtensions !== null);
 
+  // Need to further filter out hidden extensions from the TUI
+  const predefinedExtensions = allPredefinedExtensions.filter((
+    extension: DevSpaceExtension,
+  ) => (!extension.versions[0]?.extendedInfo?.hasOwnProperty("hidden") ||
+    Object(extension.versions[0]?.extendedInfo)?.hidden === "false")
+  );
+
+  // Additional SAP Extensions
   const additionalExtensionCandidates: DevSpaceExtension[] = allExtensions
     .filter(
       (extension: DevSpaceExtension) =>
