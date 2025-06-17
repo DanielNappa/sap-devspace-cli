@@ -124,7 +124,7 @@ async function createDevSpaceWrapper(
   ) => ({
     value: extension,
     label: `${extension.tagline || extension.name}`,
-    hint: extension.description,
+    // hint: extension.description,
   }));
   assert(additionalExtensionOptions !== null);
   assert(additionalExtensionOptions.length > 0);
@@ -545,7 +545,7 @@ export async function selectDevSpaceAction(
           );
           spinIndicator.stop(`Deleted ${devSpaceNode.label}`);
         }
-        break;
+        return;
       }
       default:
         // Shouldn't even reach here
