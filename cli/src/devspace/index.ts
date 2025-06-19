@@ -194,7 +194,7 @@ async function createDevSpaceWrapper(
         devSpaceName,
         error.toString(),
       );
-      console.trace(error);
+      log.error(message);
     }
   }
   const devSpaces: devspace.DevspaceInfo[] = await getDevSpaces(
