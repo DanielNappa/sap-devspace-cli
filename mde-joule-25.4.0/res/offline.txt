@@ -1,0 +1,14 @@
+function: sap.isLocal() 
+description: check if an entity is local.
+
+function: sap.hasPendingChanges()
+description: check if an entity has any pending change requests in the request queue.
+
+function: sap.inErrorState()
+description:  check if an entity is in the error state.
+
+function: sap.entityExists(_:)
+description: check if a related entity exists.
+
+function: sap.upsertedLastDownload()
+description: check if an entity was upserted (inserted or updated) in the last download.

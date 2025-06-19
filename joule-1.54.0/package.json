@@ -1,0 +1,177 @@
+{
+  "name": "joule",
+  "publisher": "SAPSE",
+  "version": "1.54.0",
+  "displayName": "SAP Joule",
+  "description": "SAP Joule",
+  "engines": {
+    "vscode": "^1.76.0"
+  },
+  "categories": [
+		"Other"
+	],
+  "main": "./out/extension.js",
+  "activationEvents": [],
+  "contributes": {
+		"configuration": {
+			"id": "com.sap.joule",
+			"type": "object",
+			"title": "Joule",
+			"properties": {
+				"joule.loggingLevel": {
+					"type": "string",
+					"enum": [
+						"off",
+						"fatal",
+						"error",
+						"warn",
+						"info",
+						"debug",
+						"trace"
+					],
+					"default": "error",
+					"description": "The verbosity of logging according to the following order: trace > debug > info > warn > error > fatal > off.",
+					"scope": "resource"
+				},
+				"joule.sourceLocationTracking": {
+					"type": "boolean",
+					"default": false,
+					"description": "If chosen, the location of the source code is added to log entries. Warning – this action may slow your extension. We recommend you use it only for debugging.",
+					"scope": "resource"
+				},
+				"joule.displayModeOfCodeActions": {
+					"type": "string",
+					"enum": [
+						"text",
+						"icons"
+					],
+					"default": "text",
+					"description": "Specify how to display the actions above the response code blocks.",
+					"scope": "resource"
+				}
+			}
+		},
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "joule",
+          "title": "Joule",
+          "icon": "media/Joule_icon.svg"
+        }
+      ]
+    },
+
+    "views": {
+      "joule": [
+        {
+          "type": "webview",
+          "id": "joule.panel",
+          "name": "Joule"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "joule.clear-chat",
+        "title": "Reset Conversation",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "joule.help",
+        "title": "Open Documentation",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "joule.show-chat",
+        "title": "Show Chat",
+        "icon": "$(hubot)"
+      },
+      {
+        "command": "joule.isServiceAvailable",
+        "title": "Check Service Availablity"
+      },
+      {
+        "command": "joule.getGenie",
+        "title": "Get the specified genie"
+      },
+      {
+        "command": "joule.sendRequest",
+        "title": "Send request"
+      },
+      {
+        "command": "joule.getActiveEnv",
+        "title": "Get the active Env"
+      },
+      {
+        "command": "joule.detectGenies",
+        "title": "Get the available genies"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "joule.isServiceAvailable",
+          "when": "false"
+        },
+        {
+          "command": "joule.getGenie",
+          "when": "false"
+        },
+        {
+          "command": "joule.sendRequest",
+          "when": "false"
+        },
+        {
+          "command": "joule.getActiveEnv",
+          "when": "false"
+        },
+        {
+          "command": "joule.detectGenies",
+          "when": "false"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "joule.clear-chat",
+          "when": "view == joule.panel && joule.inChat",
+          "group": "navigation@1"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "../bin/build.sh",
+    "watch": "npm run watch --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present",
+    "install": "npm run install --workspaces --if-present",
+    "package": "vsce package --ignoreFile .vscodeignore",
+    "build-dev": "tsc --build --verbose",
+    "lint": "npm run lint --workspaces --if-present",
+    "fix": "npm run fix --workspaces --if-present",
+    "compile": "npm run compile --workspaces --if-present",
+    "test": "npm run test  --workspaces --if-present"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.tools.sap/LCAP/joule.git"
+  },
+  "keywords": [
+    "GPT",
+    "Generative AI",
+    "Chat"
+  ],
+  "author": "SAP SE",
+  "license": "ISC",
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@types/node": "20.4.5",
+    "typescript": "5.1.6",
+    "@vscode/vsce": "2.29.0"
+  },
+  "extensionDependencies": [
+    "SAPOSS.app-studio-toolkit"
+  ]
+}
