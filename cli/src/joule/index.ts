@@ -1,18 +1,25 @@
 import { log } from "@clack/prompts";
-import { ai } from "@sap/bas-sdk";
+import sendAiRequest from "@/bas-sdk/src/apis/ai.ts";
 
-export async function handlePromptMode(prompt: string): Promise<void> {
-  
+export async function handlePromptMode(
+  prompt: string,
+  useProxy: boolean,
+  jwt?: string,
+): Promise<void> {
   try {
-    const response = await ai.sendAiRequest({
-      path: 'v2/lm/deployments',
-      method: 'GET'
-    });
-    
-    console.log('Final Response Data:');
-    console.log(process.env.WS_BASE_URL, JSON.stringify(response?.data?.resources, null, 2) || []);
+    const response = await sendAiRequest.default(
+      {
+        path: "v2/lm/deployments",
+        method: "GET",
+      },
+      useProxy,
+      jwt,
+    );
+
+    console.log("Final Response Data:");
+    console.log(JSON.stringify(response?.data?.resources, null, 2) || []);
   } catch (error) {
     log.error(`Failed to get deployments: ${error}`);
     return;
-  } 
+  }
 }

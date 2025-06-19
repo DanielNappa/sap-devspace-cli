@@ -16,10 +16,10 @@ import "@/utils/process.ts";
 
 // Entry point of CLI
 async function main(): Promise<void> {
-  
   // Add argument parsing
-  const promptIndex: number = process.argv.indexOf('-p');
-  const isPromptMode: boolean = promptIndex !== -1 && !!process.argv[promptIndex + 1];
+  const promptIndex: number = process.argv.indexOf("-p");
+  const isPromptMode: boolean = promptIndex !== -1 &&
+    !!process.argv[promptIndex + 1];
 
   // Runs only on Win32 systems to inject system certificates to address issues with corporate networks
   await rootCertificateInjection();
@@ -28,6 +28,14 @@ async function main(): Promise<void> {
   log.message(
     SAP_LOGO.split("\n").map((line) => color.cyan(line)).join("\n"),
   );
+  
+  // Test if we're actually using BAS before spoofing the SDK
+  if (process.env.H2O_URL && isPromptMode) {
+    const prompt = process.argv[promptIndex + 1] as string;
+    assert(prompt != null);
+    assert(prompt.length > 0);
+    await handlePromptMode(prompt, false);
+  }
 
   const landscapeSession: LandscapeSession = await landscapeMenu();
   assert(landscapeSession != null);
@@ -37,7 +45,7 @@ async function main(): Promise<void> {
     landscapeSession.jwt,
   );
   assert(devSpaces != null);
-  
+
   const devSpaceNode: DevSpaceNode = await selectDevSpace(
     devSpaces,
     landscapeSession.url,
@@ -52,7 +60,14 @@ async function main(): Promise<void> {
     assert(devSpaceNode.wsURL.length > 0);
     // Assign devSpaceNode.wsURL to process.env.WS_BASE_URL to pass the internal environment checks within @sap/bas-sdk
     process.env.WS_BASE_URL = devSpaceNode.wsURL;
-    await handlePromptMode(prompt);
+    process.env.H2O_URL = devSpaceNode.wsURL;
+    await handlePromptMode(prompt, false);
+    process.env.H2O_URL = landscapeSession.url;
+    await handlePromptMode(prompt, false);
+    process.env.H2O_URL = devSpaceNode.wsURL;
+    await handlePromptMode(prompt, true, landscapeSession.jwt);
+    process.env.H2O_URL = landscapeSession.url;
+    await handlePromptMode(prompt, true, landscapeSession.jwt);
   } else {
     await selectDevSpaceAction(devSpaceNode, landscapeSession.jwt);
   }
