@@ -9,7 +9,7 @@ export async function handlePromptMode(prompt: string): Promise<void> {
       method: 'GET'
     });
     
-    console.log('📋 Final Response Data:');
+    console.log('Final Response Data:');
     console.log(process.env.WS_BASE_URL, JSON.stringify(response?.data?.resources, null, 2) || []);
   } catch (error) {
     log.error(`Failed to get deployments: ${error}`);
