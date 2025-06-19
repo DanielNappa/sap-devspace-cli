@@ -28,13 +28,14 @@ async function main(): Promise<void> {
   log.message(
     SAP_LOGO.split("\n").map((line) => color.cyan(line)).join("\n"),
   );
-  
+
   // Test if we're actually using BAS before spoofing the SDK
   if (process.env.H2O_URL && isPromptMode) {
     const prompt = process.argv[promptIndex + 1] as string;
     assert(prompt != null);
     assert(prompt.length > 0);
     await handlePromptMode(prompt, false);
+    await handlePromptMode(prompt, true);
   }
 
   const landscapeSession: LandscapeSession = await landscapeMenu();
