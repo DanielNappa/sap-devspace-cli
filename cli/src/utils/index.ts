@@ -9,7 +9,7 @@ export async function rootCertificateInjection(): Promise<void> {
       const api = ca.default || ca;
 
       if (api && typeof api.inject === "function") {
-        assert(api !== null);
+        assert(api != null);
         assert(typeof api.inject === "function");
         api.inject("+");
       } else {

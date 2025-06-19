@@ -145,7 +145,7 @@ export async function getSSHConfigurations(
   devSpace: DevSpaceNode,
   jwt: string,
 ): Promise<SSHConfigInfo> {
-  assert(jwt !== null);
+  assert(jwt != null);
   const spinIndicator = spinner();
   spinIndicator.start(devspaceMessages.info_obtaining_key);
   const pk = await getPK(devSpace.landscapeURL, jwt, devSpace.id);

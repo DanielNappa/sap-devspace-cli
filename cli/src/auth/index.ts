@@ -27,7 +27,7 @@ async function getJWTFromServer(landscapeURL: string): Promise<string> {
       try {
         const body: RequestBody = await context.req.json();
         const jwt: string | undefined = await body?.jwt;
-        assert(jwt !== null);
+        assert(jwt != null);
 
         if (!jwt || jwt.startsWith("<html>")) {
           context.status(400);

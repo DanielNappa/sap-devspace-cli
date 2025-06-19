@@ -60,7 +60,7 @@ export async function getDevSpaces(
   assert(!(inputURL.pathname.length > 1));
   assert(!inputURL.search);
   assert(!inputURL.hash);
-  assert(jwt !== null);
+  assert(jwt != null);
   return await devspace.getDevSpaces(landscapeURL, jwt);
 }
 
@@ -86,7 +86,7 @@ async function createDevSpaceWrapper(
     process.exit(0);
   }
 
-  assert(devSpaceName !== null);
+  assert(devSpaceName != null);
   const devSpacesSpec = await getDevSpacesSpec(
     landscapeURL,
     jwt,
@@ -99,13 +99,13 @@ async function createDevSpaceWrapper(
       label: pack.tagline || pack.name,
       hint: pack.name,
     }));
-  assert(packOptions !== null);
+  assert(packOptions != null);
 
   const selectedPack = await select({
     message: "What kind of application do you want to create?",
     options: packOptions,
   }) as DevSpacePack;
-  assert(selectedPack !== null);
+  assert(selectedPack != null);
 
   // Organize extensions based on the selected pack
   const organizedData = organizePackExtensions(
@@ -126,7 +126,7 @@ async function createDevSpaceWrapper(
     label: `${extension.tagline || extension.name}`,
     // hint: extension.description,
   }));
-  assert(additionalExtensionOptions !== null);
+  assert(additionalExtensionOptions != null);
   assert(additionalExtensionOptions.length > 0);
 
   const selectedAdditionalExtensions = await multiselect({
@@ -164,7 +164,7 @@ async function createDevSpaceWrapper(
       ...technicalExtensions,
     ]),
   ];
-  assert(allExtensions !== null);
+  assert(allExtensions != null);
   assert(allExtensions.length > 0);
 
   const devSpacePayload: DevSpaceCreation = {
@@ -201,7 +201,7 @@ async function createDevSpaceWrapper(
     landscapeURL,
     jwt,
   );
-  assert(devSpaces !== null);
+  assert(devSpaces != null);
   return devSpaces;
 }
 
@@ -210,9 +210,9 @@ function organizePackExtensions(
   allPacks: DevSpacePack[],
   allExtensions: DevSpaceExtension[],
 ): PackMetadata | null {
-  assert(selectedPackName !== null);
-  assert(allPacks !== null);
-  assert(allExtensions !== null);
+  assert(selectedPackName != null);
+  assert(allPacks != null);
+  assert(allExtensions != null);
 
   const selectedPack: DevSpacePack | undefined = allPacks.find((
     pack: DevSpacePack,
@@ -233,7 +233,7 @@ function organizePackExtensions(
     },
   ) as DevSpaceExtension[];
 
-  assert(allPredefinedExtensions !== null);
+  assert(allPredefinedExtensions != null);
 
   // Need to further filter out hidden extensions from the TUI
   const visiblePredefinedExtensions = allPredefinedExtensions.filter((
@@ -249,7 +249,7 @@ function organizePackExtensions(
         extension.standalone === true && extension.mode === "optional",
     );
 
-  assert(additionalExtensionCandidates !== null);
+  assert(additionalExtensionCandidates != null);
   const predefinedExtensionIDs: Set<String> = new Set(
     visiblePredefinedExtensions.map((extension: DevSpaceExtension) =>
       `${extension.namespace}/${extension.name}`
@@ -280,9 +280,9 @@ export async function selectDevSpace(
   landscapeURL: string,
   jwt: string,
 ): Promise<DevSpaceNode> {
-  assert(devSpaces !== null);
-  assert(landscapeURL !== null);
-  assert(jwt !== null);
+  assert(devSpaces != null);
+  assert(landscapeURL != null);
+  assert(jwt != null);
 
   if (devSpaces.length === 0) {
     const allowOpen: boolean | symbol = await confirm({
@@ -326,12 +326,12 @@ export async function selectDevSpace(
     return process.exit(0);
   }
 
-  assert(selectedDevSpaceIndex !== null);
+  assert(selectedDevSpaceIndex != null);
   assert(typeof selectedDevSpaceIndex === "number");
 
   const selectedDevSpace =
     devSpaces[selectedDevSpaceIndex] as devspace.DevspaceInfo;
-  assert(selectedDevSpace !== null);
+  assert(selectedDevSpace != null);
 
   return {
     label:
@@ -348,8 +348,8 @@ async function canDevSpaceStart(
   landscapeURL: string,
   jwt: string,
 ): Promise<boolean | string> {
-  assert(landscapeURL !== null);
-  assert(jwt !== null);
+  assert(landscapeURL != null);
+  assert(jwt != null);
   const devSpaces: devspace.DevspaceInfo[] = await getDevSpaces(
     landscapeURL,
     jwt,
@@ -411,8 +411,8 @@ async function startDevSpace(
   jwt: string,
   suspend: boolean,
 ): Promise<void> {
-  assert(devSpace !== null);
-  assert(jwt !== null);
+  assert(devSpace != null);
+  assert(jwt != null);
 
   const canRun = await canDevSpaceStart(devSpace.landscapeURL, jwt);
   if (typeof canRun === `boolean` && canRun === true) {
@@ -432,14 +432,14 @@ export async function selectDevSpaceAction(
   devSpaceNode: DevSpaceNode,
   jwt: string,
 ): Promise<void> {
-  assert(devSpaceNode !== null);
-  assert(devSpaceNode.label !== null);
-  assert(devSpaceNode.id !== null);
-  assert(devSpaceNode.landscapeURL !== null);
-  assert(devSpaceNode.wsName !== null);
-  assert(devSpaceNode.wsURL !== null);
-  assert(devSpaceNode.status !== null);
-  assert(jwt !== null);
+  assert(devSpaceNode != null);
+  assert(devSpaceNode.label != null);
+  assert(devSpaceNode.id != null);
+  assert(devSpaceNode.landscapeURL != null);
+  assert(devSpaceNode.wsName != null);
+  assert(devSpaceNode.wsURL != null);
+  assert(devSpaceNode.status != null);
+  assert(jwt != null);
 
   while (true) {
     // Need to get the Dev Space's status on each iteration
@@ -483,7 +483,7 @@ export async function selectDevSpaceAction(
       return process.exit(0);
     }
 
-    assert(selectedOption !== null);
+    assert(selectedOption != null);
     assert(typeof selectedOption === "number");
 
     switch (selectedOption) {
@@ -495,7 +495,7 @@ export async function selectDevSpaceAction(
             jwt,
             wsId: devSpaceNode.id,
           });
-          assert(info !== null);
+          assert(info != null);
           devSpaceNode.wsURL = info.url;
         }
 
@@ -503,7 +503,7 @@ export async function selectDevSpaceAction(
           devSpaceNode,
           jwt,
         );
-        assert(sshConfig !== null);
+        assert(sshConfig != null);
 
         return await runChannelClient({
           displayName: devSpaceNode.label,

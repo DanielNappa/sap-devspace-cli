@@ -53,7 +53,7 @@ export async function landscapeMenu(): Promise<LandscapeSession> {
   while (true) {
     const newLandscapesConfig: LandscapeConfig[] = getLandscapesConfig();
 
-    assert(newLandscapesConfig !== null);
+    assert(newLandscapesConfig != null);
     assert(newLandscapesConfig.length > 0);
 
     const selectedOption: symbol | LandscapeMenuOption = await select({
@@ -83,7 +83,7 @@ export async function landscapeMenu(): Promise<LandscapeSession> {
       return process.exit(0);
     }
 
-    assert(selectedOption !== null);
+    assert(selectedOption != null);
     assert(typeof selectedOption === "number");
 
     switch (selectedOption) {
@@ -115,7 +115,7 @@ export async function landscapeMenu(): Promise<LandscapeSession> {
 }
 
 function isLandscapeLoggedIn(url: string): Promise<boolean> {
-  assert(url !== null);
+  assert(url != null);
   return hasJWT(url);
 }
 
@@ -188,19 +188,19 @@ async function selectLandscape(
     return process.exit(0);
   }
 
-  assert(selectedLandscapeIndex !== null);
+  assert(selectedLandscapeIndex != null);
   assert(typeof selectedLandscapeIndex === "number");
 
   const selectedLandscape =
     landscapesConfig[selectedLandscapeIndex] as LandscapeConfig;
-  assert(selectedLandscape !== null);
+  assert(selectedLandscape != null);
   return selectedLandscape;
 }
 
 async function deleteLandscape(
   landscapesConfig: LandscapeConfig[],
 ): Promise<void> {
-  assert(landscapesConfig !== null);
+  assert(landscapesConfig != null);
   assert(landscapesConfig.length > 0);
 
   const selectedLandscape: LandscapeConfig = await selectLandscape(
@@ -208,7 +208,7 @@ async function deleteLandscape(
     LandscapeMenuOption.DELETE,
   );
 
-  assert(selectedLandscape !== null);
+  assert(selectedLandscape != null);
 
   await removeLandscape(selectedLandscape.url);
   log.info(`Deleted ${selectedLandscape.url}`);
@@ -217,7 +217,7 @@ async function deleteLandscape(
 async function selectLandscapeLogin(
   landscapesConfig: LandscapeConfig[],
 ): Promise<LandscapeSession> {
-  assert(landscapesConfig !== null);
+  assert(landscapesConfig != null);
   assert(landscapesConfig.length > 0);
 
   const selectedLandscape: LandscapeConfig = await selectLandscape(
@@ -225,7 +225,7 @@ async function selectLandscapeLogin(
     LandscapeMenuOption.LOGIN,
   );
 
-  assert(selectedLandscape !== null);
+  assert(selectedLandscape != null);
 
   // If jwt exists and is not expired then use it otherwise update existing
   // LandscapeConfig with new JWT
@@ -285,16 +285,16 @@ async function updateLandscapesConfig(
   values: LandscapeConfig[],
 ): Promise<void> {
   const value: string = values.map((item) => JSON.stringify(item)).join("|");
-  assert(value !== null);
+  assert(value != null);
 
   writeFileSync(LANDSCAPE_CONFIG_PATH, value);
   log.message(`Landscapes config updated`);
 }
 
 async function removeLandscape(landscapeURL: string): Promise<void> {
-  assert(landscapeURL !== null);
+  assert(landscapeURL != null);
   const config: LandscapeConfig[] = getLandscapesConfig();
-  assert(config !== null);
+  assert(config != null);
   if (config.length > 0) {
     const toRemove: string = new URL(landscapeURL).toString();
     const updated: LandscapeConfig[] = config.filter(
@@ -326,7 +326,7 @@ async function setLandscapeURL(): Promise<void> {
     process.exit(0);
   }
 
-  assert(landscapeURL !== null);
+  assert(landscapeURL != null);
 
   if (landscapeURL) {
     // Need to change this
