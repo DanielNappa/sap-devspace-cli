@@ -18,7 +18,6 @@ import open from "open";
 import { core } from "@sap/bas-sdk";
 
 // Adaptation from https://github.com/SAP/app-studio-toolkit/tree/main/packages/app-studio-toolkit/src/devspace-manager/landscape
-
 type LandscapeConfig = {
   url: string;
   jwt: string | undefined;

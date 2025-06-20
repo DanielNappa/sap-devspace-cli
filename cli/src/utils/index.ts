@@ -46,3 +46,16 @@ export const uniqueBy = (array: any[], predicate: string) => {
 
   return [...pickedObjects];
 };
+
+export function getRandomArbitrary(min?: number, max?: number): number {
+  max = max || 33654;
+  min = min || 30432;
+  // verify max is larger than min
+  const tmp: number = Math.max(min, max);
+  if (tmp !== max) {
+    // swap min <-> max
+    min = max;
+    max = tmp;
+  }
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}

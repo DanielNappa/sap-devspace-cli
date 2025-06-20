@@ -10,13 +10,13 @@ import { homedir } from "node:os";
 import { join, parse } from "node:path";
 import { URL } from "node:url";
 import { remotessh } from "@sap/bas-sdk";
-import { getJWT } from "@/auth";
 import { log, spinner } from "@clack/prompts";
 import sshConfig from "ssh-config";
 import { devspaceMessages } from "@/consts";
-import { ssh } from "./tunnel";
+import { getRandomArbitrary } from "@/utils/index.ts";
+import { ssh } from "./tunnel.ts";
 export const SSHD_SOCKET_PORT = 33765;
-const SSH_SOCKET_PORT = 443;
+export const SSH_SOCKET_PORT = 443;
 
 export interface DevSpaceNode {
   label: string;
@@ -177,17 +177,4 @@ export async function runChannelClient(opt: {
     jwt: opt.jwt,
     pkFilePath: opt.pkFilePath,
   });
-}
-
-function getRandomArbitrary(min?: number, max?: number): number {
-  max = max || 33654;
-  min = min || 30432;
-  // verify max is larger than min
-  const tmp: number = Math.max(min, max);
-  if (tmp !== max) {
-    // swap min <-> max
-    min = max;
-    max = tmp;
-  }
-  return Math.floor(Math.random() * (max - min + 1)) + min;
 }

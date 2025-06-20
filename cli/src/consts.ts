@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { getRandomArbitrary } from "@/utils/index.ts";
 
 export const SAP_LOGO: string =
   `+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -18,6 +19,9 @@ export const SAP_LOGO: string =
 ###############################                          
 `;
 
+export const BAS_INTERNAL_PROXY_PORT: number = 8887;
+// Forward BAS's internal proxy for Joule
+export const PROXY_LOCAL_PORT: number = getRandomArbitrary();
 export const JWT_TIMEOUT = 60 * 1000; // 60s
 const USER_DATA_FOLDER: string = process.env.APPDATA ||
   (process.platform == "darwin"

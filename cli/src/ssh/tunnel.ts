@@ -13,6 +13,7 @@ import {
 } from "@microsoft/dev-tunnels-ssh";
 import { PortForwardingService } from "@microsoft/dev-tunnels-ssh-tcp";
 import { outro, spinner } from "@clack/prompts";
+import { BAS_INTERNAL_PROXY_PORT, PROXY_LOCAL_PORT } from "@/consts.ts";
 
 const sessionMap: Map<string, SshClientSession> = new Map();
 
@@ -171,6 +172,13 @@ export async function ssh(opts: {
     );
     sessionMap.set(serverUri, session);
 
+    await pfs.forwardToRemotePort(
+      "127.0.0.1", // remote host inside the dev-space
+      PROXY_LOCAL_PORT,
+      "127.0.0.1",
+      BAS_INTERNAL_PROXY_PORT, // BAS internal proxy port
+    );
+
     const sshProcess = spawn("ssh", [
       "-i",
       opts.pkFilePath,
@@ -197,6 +205,93 @@ export async function ssh(opts: {
           .catch((err) => console.error("Error closing SSH session:", err));
         sessionMap.delete(serverUri);
       },
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      outro(`SSH session dropped : ${error?.message}`);
+    }
+  }
+}
+
+/* istanbul ignore next */
+export async function forwardBASInternalProxy(opts: {
+  displayName: string;
+  host: {
+    url: string;
+    port: string;
+  };
+  username: string;
+  jwt: string;
+}): Promise<void> {
+  const spinIndicator = spinner();
+  spinIndicator.start(`Connecting to ${opts.displayName}`);
+  const serverUri = `wss://${opts.host.url}:${opts.host.port}`;
+  // close the opened session if exists
+  const isContinue = new Promise((res) => {
+    const session = sessionMap.get(serverUri);
+    if (session) {
+      void session
+        .close(SshDisconnectReason.byApplication)
+        .finally(() => res(true));
+    } else {
+      res(true);
+    }
+  });
+  await isContinue;
+
+  const config = new SshSessionConfiguration();
+  config.keyExchangeAlgorithms.push(
+    SshAlgorithms.keyExchange.ecdhNistp521Sha512!,
+  );
+  config.publicKeyAlgorithms.push(SshAlgorithms.publicKey.ecdsaSha2Nistp521!);
+  config.publicKeyAlgorithms.push(SshAlgorithms.publicKey.rsa2048!);
+  config.encryptionAlgorithms.push(SshAlgorithms.encryption.aes256Gcm!);
+  config.protocolExtensions.push(SshProtocolExtensionNames.sessionReconnect);
+  config.protocolExtensions.push(SshProtocolExtensionNames.sessionLatency);
+
+  config.addService(PortForwardingService);
+
+  const wsClient = new WebSocket.client();
+
+  wsClient.connect(serverUri, "ssh", null, {
+    Authorization: `bearer ${opts.jwt}`,
+  });
+  const stream = await new Promise<Stream>((resolve, reject) => {
+    wsClient.on("connect", (connection: WebSocket.connection) => {
+      resolve(new connectionClientStream(connection));
+    });
+    wsClient.on("connectFailed", function error(error: any) {
+      reject(new Error(`Failed to connect to server at ${serverUri}:${error}`));
+    });
+  });
+
+  const session = new SshClientSession(config);
+  try {
+    await session.connect(stream);
+    void session.onAuthenticating((error) => {
+      // there is no authentication in this solution
+      error.authenticationPromise = Promise.resolve({});
+    });
+
+    // authorise client by name 'user'
+    await session.authenticateClient({
+      username: opts.username,
+      publicKeys: [],
+    });
+
+    const pfs: PortForwardingService = session.activateService(
+      PortForwardingService,
+    );
+    sessionMap.set(serverUri, session);
+
+    await pfs.forwardToRemotePort(
+      "127.0.0.1", // remote host inside the dev-space
+      PROXY_LOCAL_PORT,
+      "127.0.0.1",
+      BAS_INTERNAL_PROXY_PORT, // BAS internal proxy port
+    );
+    spinIndicator.stop(
+      `PortForwardingService connected to ${opts.displayName} on port ${PROXY_LOCAL_PORT}`,
     );
   } catch (error) {
     if (error instanceof Error) {
