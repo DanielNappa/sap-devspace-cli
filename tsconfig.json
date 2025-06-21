@@ -8,7 +8,7 @@
     "jsx": "react-jsx",
     "allowJs": false,
     "paths": {
-      "@/*": ["./cli/src/*"]
+      "@/*": ["./cli/src/*", "./cli-next/src/*"]
     },
 
     // Bundler mode

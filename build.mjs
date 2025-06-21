@@ -7,6 +7,26 @@ import * as fs from "fs";
 import * as path from "path";
 
 const OUT_DIR = "dist";
+/**
+ * ink attempts to import react-devtools-core in an ESM-unfriendly way:
+ *
+ * https://github.com/vadimdemedes/ink/blob/eab6ef07d4030606530d58d3d7be8079b4fb93bb/src/reconciler.ts#L22-L45
+ *
+ * to make this work, we have to strip the import out of the build.
+ */
+const ignoreReactDevToolsPlugin = {
+  name: "ignore-react-devtools",
+  setup(build) {
+    // When an import for 'react-devtools-core' is encountered,
+    // return an empty module.
+    build.onResolve({ filter: /^react-devtools-core$/ }, (args) => {
+      return { path: args.path, namespace: "ignore-devtools" };
+    });
+    build.onLoad({ filter: /.*/, namespace: "ignore-devtools" }, () => {
+      return { contents: "", loader: "js" };
+    });
+  },
+};
 // ----------------------------------------------------------------------------
 // Build mode detection (production vs development)
 //
@@ -46,6 +66,7 @@ esbuild
     outfile: isDevBuild ? `${OUT_DIR}/index-dev.js` : `${OUT_DIR}/index.js`,
     minify: !isDevBuild,
     sourcemap: isDevBuild ? "inline" : true,
+    plugins: [ignoreReactDevToolsPlugin],
     inject: ["./require-shim.ts"],
   })
   .catch(() => process.exit(1));

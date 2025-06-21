@@ -11,6 +11,10 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/fs-extra": "^11.0.4",
+    "@types/react": "^19.1.8",
+    "@types/websocket": "^1.0.10",
+    "@types/win-ca": "^3.5.4",
     "esbuild": "^0.25.5",
     "node-rsa": "^1.1.1"
   },
@@ -20,23 +24,25 @@
   "dependencies": {
     "@clack/prompts": "^0.10.1",
     "@hono/node-server": "^1.14.2",
+    "@inkjs/ui": "^2.0.0",
     "@microsoft/dev-tunnels-ssh": "^3.12.5",
     "@microsoft/dev-tunnels-ssh-tcp": "^3.12.5",
     "@sap/bas-sdk": "^3.11.6",
-    "@types/fs-extra": "^11.0.4",
-    "@types/websocket": "^1.0.5",
-    "@types/win-ca": "^3.5.4",
     "fs-extra": "^11.3.0",
     "hono": "^4.7.10",
+    "ink": "^6.0.0",
+    "meow": "^13.2.0",
     "open": "^10.1.2",
     "picocolors": "^1.1.1",
+    "react": "^19.1.0",
     "ssh-config": "^5.0.3",
     "websocket": "1.0.34",
     "win-ca": "^3.5.1"
   },
   "scripts": {
     "build": "node build.mjs",
-    "dev": "npx tsx cli/src/index.ts",
+    "dev": "npx tsx --watch cli-next/src/index.tsx",
+    "dev:old": "npx tsx cli/src/index.ts",
     "test": "npm run build && node dist/index.js",
     "test:dev": "NODE_ENV=development node build.mjs --dev && NODE_OPTIONS=--enable-source-maps node dist/index-dev.js"
   },
