@@ -49,6 +49,7 @@ async function main(): Promise<void> {
     landscapeSession.jwt,
   );
   assert(devSpaceNode != null);
+
   if (isPromptMode) {
     const prompt = process.argv[promptIndex + 1] as string;
     assert(prompt != null);

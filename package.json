@@ -28,6 +28,7 @@
     "@microsoft/dev-tunnels-ssh": "^3.12.5",
     "@microsoft/dev-tunnels-ssh-tcp": "^3.12.5",
     "@sap/bas-sdk": "^3.11.6",
+    "chalk": "^5.4.1",
     "fs-extra": "^11.3.0",
     "hono": "^4.7.10",
     "ink": "^6.0.0",

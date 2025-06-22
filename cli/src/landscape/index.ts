@@ -113,31 +113,6 @@ export async function landscapeMenu(): Promise<LandscapeSession> {
   }
 }
 
-function isLandscapeLoggedIn(url: string): Promise<boolean> {
-  assert(url != null);
-  return hasJWT(url);
-}
-
-async function getLandscapes(): Promise<LandscapeInfo[]> {
-  const landscapes: LandscapeInfo[] = [];
-  const landscapeConfig: LandscapeConfig[] = getLandscapesConfig();
-
-  for (const landscape of landscapeConfig) {
-    const url = new URL(landscape.url);
-    landscapes.push(
-      Object.assign(
-        {
-          name: url.hostname,
-          url: url.toString(),
-          isLoggedIn: await isLandscapeLoggedIn(landscape.url),
-        },
-        landscape.default ? { default: landscape.default } : {},
-      ),
-    );
-  }
-  return landscapes;
-}
-
 export async function loginToLandscape(landscapeURL: string): Promise<boolean> {
   const allowOpen: boolean | symbol = await confirm({
     message: "Open browser to authenticate?",
