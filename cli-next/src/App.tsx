@@ -2,7 +2,6 @@ import { type JSX, useMemo, useState } from "react";
 import { Box, Text, useApp } from "ink";
 import LandscapeMenu from "@/components/Landscape/LandscapeMenu";
 import { NavigationContext } from "@/hooks/NavigationContext.ts";
-import { BAS_LOGO } from "@/utils/consts";
 import { onExit } from "@/utils/terminal.ts";
 import { CLI_VERSION } from "@/utils/version";
 
@@ -32,12 +31,7 @@ export default function App({ prompt }: Props): JSX.Element {
           </Text>
         </Box>
       </Box>
-      <Box flexDirection="row" gap={5} width={"95%"}>
-        <Box flexDirection="column" width={"70%"}>
-          <Text color="cyan">{BAS_LOGO}</Text>
-        </Box>
-        {component}
-      </Box>
+      {component}
     </NavigationContext.Provider>
   );
 }

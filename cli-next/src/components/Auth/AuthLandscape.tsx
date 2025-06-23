@@ -1,12 +1,12 @@
 import { type JSX, use, useEffect, useState } from "react";
 import { Box, Text } from "ink";
-import { ConfirmInput } from "@inkjs/ui";
+import { Alert, ConfirmInput } from "@inkjs/ui";
 import { core } from "@sap/bas-sdk";
 import open from "open";
 import { addLandscape, removeLandscape } from "@/components/Landscape/utils.ts";
 import { closeListener, getJWT } from "@/hooks/Auth.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
-import type { LandscapeConfig } from "@/utils/types.ts";
+import type { LandscapeConfig, LandscapeSession } from "@/utils/types.ts";
 
 function AuthLandscape(
   { selectedLandscape }: { selectedLandscape: LandscapeConfig },
@@ -19,6 +19,7 @@ function AuthLandscape(
   const [message, setMessage] = useState<string>(
     "Open browser to authenticate?",
   );
+  const [receivedJWT, setReceivedJWT] = useState<boolean>(false);
 
   useEffect(() => {
     if (loginToLandscape) {
@@ -40,11 +41,13 @@ function AuthLandscape(
           await addLandscape(selectedLandscape.url, jwt);
         }
 
-        // return {
-        //   name: new URL(selectedLandscape.url).hostname,
-        //   url: selectedLandscape.url,
-        //   jwt: jwt,
-        // };
+        setReceivedJWT(true);
+
+        const landscapeSession: LandscapeSession = {
+          name: new URL(selectedLandscape.url).hostname,
+          url: selectedLandscape.url,
+          jwt: jwt,
+        };
       })();
     } else {
       (async (): Promise<void> => {
@@ -53,21 +56,39 @@ function AuthLandscape(
     }
   }, [loginToLandscape]);
 
+  useEffect(() => {
+    if (receivedJWT) {
+      setMessage("Received JWT");
+    }
+  }, [receivedJWT]);
+
   return (
     <Box justifyContent="center" flexDirection="column">
-      <Text color={showCancellationMessage ? "red" : "null"}>
-        {message}
-      </Text>
-      <ConfirmInput
-        onConfirm={() => {
-          setLoginToLandscape(true);
-        }}
-        onCancel={() => {
-          setLoginToLandscape(false);
-          setMessage("Operation cancelled");
-          setShowCancellationMessage(true);
-        }}
-      />
+      {receivedJWT
+        ? (
+          <Box justifyContent="center" flexDirection="column" width={64}>
+            <Alert variant="success">
+              {message}
+            </Alert>
+          </Box>
+        )
+        : (
+          <Text color={showCancellationMessage ? "red" : "null"}>
+            {message}
+          </Text>
+        )}
+      {!receivedJWT && (
+        <ConfirmInput
+          onConfirm={() => {
+            setLoginToLandscape(true);
+          }}
+          onCancel={() => {
+            setLoginToLandscape(false);
+            setMessage("Operation cancelled");
+            setShowCancellationMessage(true);
+          }}
+        />
+      )}
     </Box>
   );
 }

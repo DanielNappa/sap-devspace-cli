@@ -4,12 +4,14 @@ export type LandscapeConfig = {
   jwt: string | undefined;
   default?: boolean;
 };
+
 export interface LandscapeInfo {
   name: string;
   url: string;
   isLoggedIn: boolean;
   default?: boolean;
 }
+
 export type LandscapeSession = {
   name: string;
   url: string;

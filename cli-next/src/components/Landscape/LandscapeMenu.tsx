@@ -2,12 +2,12 @@ import { type JSX, useEffect, useMemo, useState } from "react";
 import { Select } from "@inkjs/ui";
 import { ensureFileSync } from "fs-extra";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
-import { LANDSCAPE_CONFIG_PATH } from "@/utils/consts.ts";
+import { BAS_LOGO, LANDSCAPE_CONFIG_PATH } from "@/utils/consts.ts";
 import { type LandscapeConfig, LandscapeMenuOption } from "@/utils/types.ts";
 import { getLandscapesConfig } from "./utils.ts";
 import LandscapeSelect from "./LandscapeSelect.tsx";
 import LandscapeURL from "./LandscapeURL.tsx";
-import { Box } from "ink";
+import { Box, Text } from "ink";
 
 function LandscapeMenu(): JSX.Element {
   const { navigate } = useNavigation();
@@ -54,30 +54,35 @@ function LandscapeMenu(): JSX.Element {
   }, [selectedOption, navigate]);
 
   return (
-    <Box justifyContent="center" flexDirection="column">
-      <Select
-        options={[
-          {
-            value: "LOGIN",
-            label: "Login to landscape",
-          },
-          {
-            value: "ADD",
-            label: "Add landscape",
-          },
-          {
-            value: "DELETE",
-            label: "Delete landscape",
-          },
-          {
-            value: "EXIT",
-            label: "Exit",
-          },
-        ]}
-        onChange={(value: string) => {
-          setSelectedOption(value);
-        }}
-      />
+    <Box flexDirection="row" gap={5} width={"95%"}>
+      <Box flexDirection="column" width={"70%"}>
+        <Text color="cyan">{BAS_LOGO}</Text>
+      </Box>
+      <Box justifyContent="center" flexDirection="column">
+        <Select
+          options={[
+            {
+              value: "LOGIN",
+              label: "Login to landscape",
+            },
+            {
+              value: "ADD",
+              label: "Add landscape",
+            },
+            {
+              value: "DELETE",
+              label: "Delete landscape",
+            },
+            {
+              value: "EXIT",
+              label: "Exit",
+            },
+          ]}
+          onChange={(value: string) => {
+            setSelectedOption(value);
+          }}
+        />
+      </Box>
     </Box>
   );
 }

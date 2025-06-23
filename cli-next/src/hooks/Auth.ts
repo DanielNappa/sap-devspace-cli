@@ -36,7 +36,6 @@ async function getJWTFromServer(landscapeURL: string): Promise<string> {
           );
           reject(new Error(devspaceMessages.err_incorrect_jwt(landscapeURL)));
         } else {
-          console.log("Received JWT");
           resolve(jwt);
           return context.json({ status: "ok" });
         }
