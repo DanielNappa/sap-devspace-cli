@@ -1,8 +1,10 @@
-import { type JSX, use, useEffect, useState } from "react";
+import { type JSX, useEffect, useState } from "react";
 import { Box, Text } from "ink";
-import { Alert, ConfirmInput } from "@inkjs/ui";
-import { core } from "@sap/bas-sdk";
 import open from "open";
+import { Alert, ConfirmInput } from "@inkjs/ui";
+import { core, devspace } from "@sap/bas-sdk";
+import DevSpaceMenu from "@/components/DevSpace/DevSpaceMenu.tsx";
+import { getDevSpaces } from "@/components/DevSpace/utils.ts";
 import { addLandscape, removeLandscape } from "@/components/Landscape/utils.ts";
 import { closeListener, getJWT } from "@/hooks/Auth.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
@@ -48,6 +50,16 @@ function AuthLandscape(
           url: selectedLandscape.url,
           jwt: jwt,
         };
+        const devSpaces: devspace.DevspaceInfo[] = await getDevSpaces(
+          landscapeSession.url,
+          landscapeSession.jwt,
+        );
+        navigate(
+          <DevSpaceMenu
+            devSpaces={devSpaces}
+            landscapeSession={landscapeSession}
+          />,
+        );
       })();
     } else {
       (async (): Promise<void> => {
