@@ -6,7 +6,6 @@ import { core, devspace } from "@sap/bas-sdk";
 import DevSpaceMenu from "@/components/DevSpace/DevSpaceMenu.tsx";
 import { getDevSpaces } from "@/components/DevSpace/utils.ts";
 import { addLandscape, removeLandscape } from "@/components/Landscape/utils.ts";
-import Nav from "@/components/UI/Nav";
 import { closeListener, getJWT } from "@/hooks/Auth.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
 import type { LandscapeConfig, LandscapeSession } from "@/utils/types.ts";
@@ -56,13 +55,9 @@ function AuthLandscape(
           landscapeSession.jwt,
         );
         navigate(
-          <Nav
-            component={
-              <DevSpaceMenu
-                devSpaces={devSpaces}
-                landscapeSession={landscapeSession}
-              />
-            }
+          <DevSpaceMenu
+            devSpaces={devSpaces}
+            landscapeSession={landscapeSession}
           />,
         );
       })();
@@ -83,7 +78,7 @@ function AuthLandscape(
     <Box justifyContent="center" flexDirection="column">
       {receivedJWT
         ? (
-          <Box justifyContent="center" flexDirection="column" width={64}>
+          <Box justifyContent="center" flexDirection="column" width={72}>
             <Alert variant="success">
               {message}
             </Alert>
