@@ -1,4 +1,3 @@
-import { strict as assert } from "assert";
 import {
   existsSync,
   mkdirSync,
@@ -10,11 +9,8 @@ import { homedir } from "node:os";
 import { join, parse } from "node:path";
 import { URL } from "node:url";
 import { remotessh } from "@sap/bas-sdk";
-import { log, spinner } from "@clack/prompts";
 import sshConfig from "ssh-config";
-import { devspaceMessages } from "@/consts";
 import { getRandomArbitrary } from "@/utils/index.ts";
-import { ssh } from "./tunnel.ts";
 export const SSHD_SOCKET_PORT = 33765;
 export const SSH_SOCKET_PORT = 443;
 
@@ -43,7 +39,7 @@ function getSSHConfigFolderPath(): string {
   return parse(getSSHConfigFilePath()).dir;
 }
 
-async function getPK(
+export async function getPK(
   landscapeURL: string,
   jwt: string,
   wsId: string,
@@ -55,7 +51,7 @@ function composeKeyFileName(folder: string, url: string): string {
   return join(folder, `${new URL(url).host}.key`);
 }
 
-function savePK(pk: string, urlStr: string): string {
+export function savePK(pk: string, urlStr: string): string {
   //construct file named "<ws-url>.key"
   const sshFolderPath: string = getSSHConfigFolderPath();
   if (!existsSync(sshFolderPath)) {
@@ -99,7 +95,7 @@ function composeSSHConfigSectionName(landscape: string, wsId: string): string {
   return `${new URL(landscape).host}.${wsId}`;
 }
 
-function updateSSHConfig(
+export function updateSSHConfig(
   sshKeyFilePath: string,
   devSpace: DevSpaceNode,
 ): SSHConfigInfo {
@@ -139,42 +135,4 @@ function removeSSHConfig(devSpace: DevSpaceNode): void {
   });
   //save the ssh config object back to file
   writeFileSync(sshConfigFile, sshConfig.stringify(config));
-}
-
-export async function getSSHConfigurations(
-  devSpace: DevSpaceNode,
-  jwt: string,
-): Promise<SSHConfigInfo> {
-  assert(jwt != null);
-  const spinIndicator = spinner();
-  spinIndicator.start(devspaceMessages.info_obtaining_key);
-  const pk = await getPK(devSpace.landscapeURL, jwt, devSpace.id);
-
-  spinIndicator.message(devspaceMessages.info_save_pk_to_file);
-  const pkFilePath = savePK(pk, devSpace.wsURL);
-
-  spinIndicator.message(
-    devspaceMessages.info_update_config_file_with_ssh_connection,
-  );
-  const sshConfig = updateSSHConfig(pkFilePath, devSpace);
-  spinIndicator.stop(devspaceMessages.info_ssh_config_file_updated);
-  return { ...sshConfig, pkFilePath };
-}
-
-export async function runChannelClient(opt: {
-  displayName: string;
-  host: string;
-  landscape: string;
-  localPort: string;
-  jwt: string;
-  pkFilePath: string;
-}): Promise<void> {
-  await ssh({
-    displayName: opt.displayName,
-    host: { url: opt.host, port: `${SSH_SOCKET_PORT}` },
-    client: { port: opt.localPort },
-    username: "user",
-    jwt: opt.jwt,
-    pkFilePath: opt.pkFilePath,
-  });
 }

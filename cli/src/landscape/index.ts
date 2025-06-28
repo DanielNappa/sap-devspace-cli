@@ -185,7 +185,7 @@ async function deleteLandscape(
   assert(selectedLandscape != null);
 
   await removeLandscape(selectedLandscape.url);
-  log.info(`Deleted ${selectedLandscape.url}`);
+  console.log(`Deleted ${selectedLandscape.url}`);
 }
 
 async function selectLandscapeLogin(

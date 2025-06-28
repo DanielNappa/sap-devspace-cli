@@ -11,7 +11,6 @@ import type {
   DevSpacePack,
   DevSpaceSpec,
 } from "@sap/bas-sdk/dist/src/utils/devspace-utils";
-import { devspaceMessages } from "@/consts.ts";
 import {
   type DevSpaceNode,
   getSSHConfigurations,
@@ -20,6 +19,7 @@ import {
   SSHD_SOCKET_PORT,
 } from "@/ssh/index.ts";
 import chalk from "chalk";
+import { DevSpaceUpdate } from "./DevSpaceUpdate";
 
 enum DevSpaceMenuOption {
   CONNECT,
@@ -334,7 +334,7 @@ export async function selectDevSpace(
   };
 }
 
-async function canDevSpaceStart(
+export async function canDevSpaceStart(
   landscapeURL: string,
   jwt: string,
 ): Promise<boolean | string> {
@@ -354,68 +354,18 @@ async function canDevSpaceStart(
   ) {
     return true;
   } else {
-    log.info(`There are 2 Dev Spaces running for ${landscapeURL}`);
+    console.log(`There are 2 Dev Spaces running for ${landscapeURL}`);
     return false;
   }
 }
 
-async function updateDevSpace(
-  landscapeURL: string,
-  wsID: string,
-  wsName: string,
-  jwt: string,
-  suspend: boolean,
-): Promise<void> {
-  const spinIndicator = spinner();
-  spinIndicator.start(
-    devspaceMessages.info_devspace_state_inital_message(wsName, wsID, suspend),
-  );
-  return devspace
-    .updateDevSpace(landscapeURL, jwt, wsID, {
-      Suspended: suspend,
-      WorkspaceDisplayName: wsName,
-    })
-    .then(async () => {
-      // While the status of the Dev Space hasn't changed depending on the suspend variable
-      while (
-        (await devspace.getDevspaceInfo({
-          landscapeUrl: landscapeURL,
-          jwt: jwt,
-          wsId: wsID,
-        })).status !== (suspend
-          ? devspace.DevSpaceStatus.STOPPED
-          : devspace.DevSpaceStatus.RUNNING)
-      );
-      spinIndicator.stop(
-        devspaceMessages.info_devspace_state_updated(wsName, wsID, suspend),
-      );
-    }).catch((error) => {
-      const message = devspaceMessages.err_ws_update(wsID, error.toString());
-      log.error(message);
-      console.trace(error);
-    });
-}
-
-async function startDevSpace(
+export async function startDevSpace(
   devSpace: DevSpaceNode,
   jwt: string,
   suspend: boolean,
 ): Promise<void> {
   assert(devSpace != null);
   assert(jwt != null);
-
-  const canRun = await canDevSpaceStart(devSpace.landscapeURL, jwt);
-  if (typeof canRun === `boolean` && canRun === true) {
-    return updateDevSpace(
-      devSpace.landscapeURL,
-      devSpace.id,
-      devSpace.wsName,
-      jwt,
-      suspend,
-    );
-  } else if (typeof canRun === `string`) {
-    log.info(canRun);
-  }
 }
 
 export async function selectDevSpaceAction(
@@ -510,7 +460,7 @@ export async function selectDevSpaceAction(
         await startDevSpace(devSpaceNode, jwt, false);
         break;
       case DevSpaceMenuOption.STOP:
-        await updateDevSpace(
+        await DevSpaceUpdate(
           devSpaceNode.landscapeURL,
           devSpaceNode.id,
           devSpaceNode.wsName,

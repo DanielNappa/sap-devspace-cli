@@ -4,7 +4,7 @@ import { type Option, Select } from "@inkjs/ui";
 import type { devspace } from "@sap/bas-sdk";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
 import type { DevSpaceNode, LandscapeSession } from "@/utils/types.ts";
-import DevSpaceAction from "./DevSpaceAction";
+import DevSpaceAction from "./DevSpaceAction.tsx";
 
 function DevSpaceMenu({ devSpaces, landscapeSession }: {
   devSpaces: devspace.DevspaceInfo[];
@@ -58,7 +58,7 @@ function DevSpaceMenu({ devSpaces, landscapeSession }: {
   });
 
   return (
-    <Box flexDirection="row" gap={5} width={"95%"}>
+    <Box flexDirection="row" marginTop={1}>
       <Box justifyContent="center" flexDirection="column">
         <Box flexDirection="column" width={"70%"}>
           <Text>

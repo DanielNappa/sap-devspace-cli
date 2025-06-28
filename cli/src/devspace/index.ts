@@ -364,7 +364,7 @@ async function canDevSpaceStart(
   ) {
     return true;
   } else {
-    log.info(`There are 2 Dev Spaces running for ${landscapeURL}`);
+    console.log(`There are 2 Dev Spaces running for ${landscapeURL}`);
     return false;
   }
 }
@@ -424,7 +424,7 @@ async function startDevSpace(
       suspend,
     );
   } else if (typeof canRun === `string`) {
-    log.info(canRun);
+    console.log(canRun);
   }
 }
 

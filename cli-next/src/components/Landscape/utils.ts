@@ -84,7 +84,7 @@ export function deleteLandscape(
 ): void {
   assert(selectedLandscape != null);
   return removeLandscape(selectedLandscape.url);
-  // log.info(`Deleted ${selectedLandscape.url}`);
+  // console.log(`Deleted ${selectedLandscape.url}`);
 }
 
 export async function createLandscapeSession(

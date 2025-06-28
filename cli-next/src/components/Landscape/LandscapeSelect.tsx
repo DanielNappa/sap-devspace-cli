@@ -55,7 +55,7 @@ function LandscapeSelect(
   }, [selectedLandscapeIndex]);
 
   return (
-    <Box justifyContent="center" flexDirection="column">
+    <Box justifyContent="center" flexDirection="column" marginTop={1}>
       <Box flexDirection="column" width={"70%"}>
         <Text>
           {`Select a landscape${

@@ -55,7 +55,7 @@ function LandscapeMenu(): JSX.Element {
 
   return (
     <Box flexDirection="row" gap={5} width={"95%"}>
-      <Box flexDirection="column" width={"70%"}>
+      <Box flexDirection="column" width={"30%"}>
         <Text color="cyan">{BAS_LOGO}</Text>
       </Box>
       <Box justifyContent="center" flexDirection="column">
