@@ -3,12 +3,9 @@ import { Box, Text } from "ink";
 import { type Option, Select } from "@inkjs/ui";
 import { devspace } from "@sap/bas-sdk";
 import SSH from "@/components/SSH/SSH.tsx";
+import Nav from "@/components/UI/Nav.tsx";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
-import {
-  DevSpaceMenuOption,
-  type DevSpaceNode,
-  type SSHConfigInfo,
-} from "@/utils/types.ts";
+import { DevSpaceMenuOption, type DevSpaceNode } from "@/utils/types.ts";
 import { canDevSpaceStart } from "./utils.ts";
 import { DevSpaceUpdate } from "./DevSpaceUpdate.tsx";
 
@@ -138,21 +135,25 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
   return (
     <>
       {!!component ? component : (
-        <Box flexDirection="row" marginTop={1}>
-          <Box justifyContent="center" flexDirection="column">
-            <Box flexDirection="row">
-              <Text>
-                {message}
-              </Text>
+        <Nav
+          component={
+            <Box flexDirection="row" marginTop={1}>
+              <Box justifyContent="center" flexDirection="column">
+                <Box flexDirection="row">
+                  <Text>
+                    {message}
+                  </Text>
+                </Box>
+                <Select
+                  options={options}
+                  onChange={(value: string) => {
+                    setSelectedOption(value);
+                  }}
+                />
+              </Box>
             </Box>
-            <Select
-              options={options}
-              onChange={(value: string) => {
-                setSelectedOption(value);
-              }}
-            />
-          </Box>
-        </Box>
+          }
+        />
       )}
     </>
   );

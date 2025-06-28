@@ -3,6 +3,7 @@ import { strict as assert } from "assert";
 import { Box, Text } from "ink";
 import { Select } from "@inkjs/ui";
 import AuthLandscape from "@/components/Auth/AuthLandscape.tsx";
+import Nav from "@/components/UI/Nav.tsx";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
 import { type LandscapeConfig, LandscapeMenuOption } from "@/utils/types.ts";
 import { deleteLandscape, getLandscapesConfig } from "./utils.ts";
@@ -44,7 +45,13 @@ function LandscapeSelect(
       assert(selectedLandscape != null);
       switch (landscapeMenuOption) {
         case LandscapeMenuOption.LOGIN:
-          navigate(<AuthLandscape selectedLandscape={selectedLandscape} />);
+          navigate(
+            <Nav
+              component={
+                <AuthLandscape selectedLandscape={selectedLandscape} />
+              }
+            />,
+          );
           break;
         case LandscapeMenuOption.DELETE:
           deleteLandscape(selectedLandscape);

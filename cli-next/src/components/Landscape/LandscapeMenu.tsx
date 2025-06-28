@@ -1,6 +1,7 @@
 import { type JSX, useEffect, useMemo, useState } from "react";
 import { Select } from "@inkjs/ui";
 import { ensureFileSync } from "fs-extra";
+import Nav from "@/components/UI/Nav.tsx";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
 import { BAS_LOGO, LANDSCAPE_CONFIG_PATH } from "@/utils/consts.ts";
 import { type LandscapeConfig, LandscapeMenuOption } from "@/utils/types.ts";
@@ -31,8 +32,12 @@ function LandscapeMenu(): JSX.Element {
       switch (selectedOption) {
         case "LOGIN":
           navigate(
-            <LandscapeSelect
-              landscapeMenuOption={LandscapeMenuOption.LOGIN}
+            <Nav
+              component={
+                <LandscapeSelect
+                  landscapeMenuOption={LandscapeMenuOption.LOGIN}
+                />
+              }
             />,
           );
           break;
@@ -41,8 +46,12 @@ function LandscapeMenu(): JSX.Element {
           break;
         case "DELETE":
           navigate(
-            <LandscapeSelect
-              landscapeMenuOption={LandscapeMenuOption.DELETE}
+            <Nav
+              component={
+                <LandscapeSelect
+                  landscapeMenuOption={LandscapeMenuOption.DELETE}
+                />
+              }
             />,
           );
           break;
