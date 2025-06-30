@@ -1,4 +1,5 @@
 import { type JSX, useEffect, useMemo, useState } from "react";
+import { Box } from "ink";
 import { Select } from "@inkjs/ui";
 import { ensureFileSync } from "fs-extra";
 import Nav from "@/components/UI/Nav.tsx";
@@ -8,7 +9,6 @@ import { type LandscapeConfig, LandscapeMenuOption } from "@/utils/types.ts";
 import { getLandscapesConfig } from "./utils.ts";
 import LandscapeSelect from "./LandscapeSelect.tsx";
 import LandscapeURL from "./LandscapeURL.tsx";
-import { Box, Text } from "ink";
 
 function LandscapeMenu(): JSX.Element {
   const { navigate } = useNavigation();

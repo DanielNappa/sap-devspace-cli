@@ -5,14 +5,15 @@ import { devspace } from "@sap/bas-sdk";
 import SSH from "@/components/SSH/SSH.tsx";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
 import { DevSpaceMenuOption, type DevSpaceNode } from "@/utils/types.ts";
-import { canDevSpaceStart } from "./utils.ts";
+import { DevSpaceDelete } from "./DevSpaceDelete.tsx";
 import { DevSpaceUpdate } from "./DevSpaceUpdate.tsx";
+import { canDevSpaceStart } from "./utils.ts";
 
 function DevSpaceAction({ devSpaceNode, jwt }: {
   devSpaceNode: DevSpaceNode;
   jwt: string;
 }): JSX.Element {
-  const { navigate } = useNavigation();
+  const { navigate, goBack } = useNavigation();
   const [isLoadingStatus, setIsLoadingStatus] = useState<boolean>(true);
   const [component, setComponent] = useState<JSX.Element>();
   const [message, setMessage] = useState<string>("Select an option:");
@@ -125,7 +126,15 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
           );
           break;
         case `${DevSpaceMenuOption.DELETE}`:
-          // Handle exit
+          setComponent(
+            <DevSpaceDelete
+              devSpaceNode={devSpaceNode}
+              jwt={jwt}
+              onFinish={() => {
+                goBack();
+              }}
+            />,
+          );
           break;
       }
     }

@@ -46,6 +46,18 @@ export const uniqueBy = (array: any[], predicate: string) => {
   return [...pickedObjects];
 };
 
+export function pickByStringIndex<T>(
+  array: T[],
+  indices: string[],
+): (T | undefined)[] {
+  return indices
+    .map((indexAsString: string) => Number(indexAsString))
+    .filter((index: number) =>
+      Number.isInteger(index) && index >= 0 && index < array.length
+    )
+    .map((index: number) => array[index]);
+}
+
 export function getRandomArbitrary(min?: number, max?: number): number {
   max = max || 33654;
   min = min || 30432;

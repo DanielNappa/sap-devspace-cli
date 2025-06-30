@@ -1,6 +1,7 @@
 import { strict as assert } from "node:assert";
 import process from "node:process";
 import { devspace } from "@sap/bas-sdk";
+import chalk from "chalk";
 import {
   createDevSpace,
   getDevSpacesSpec,
@@ -11,15 +12,8 @@ import type {
   DevSpacePack,
   DevSpaceSpec,
 } from "@sap/bas-sdk/dist/src/utils/devspace-utils";
-import {
-  type DevSpaceNode,
-  getSSHConfigurations,
-  runChannelClient,
-  type SSHConfigInfo,
-  SSHD_SOCKET_PORT,
-} from "@/ssh/index.ts";
-import chalk from "chalk";
-import { DevSpaceUpdate } from "./DevSpaceUpdate";
+import { type DevSpaceNode } from "@/ssh/index.ts";
+import { devspaceMessages } from "@/utils/consts.ts";
 
 enum DevSpaceMenuOption {
   CONNECT,
@@ -54,148 +48,148 @@ export async function getDevSpaces(
   return await devspace.getDevSpaces(landscapeURL, jwt);
 }
 
-// async function createDevSpaceWrapper(
-//   landscapeURL: string,
-//   jwt: string,
-// ): Promise<devspace.DevspaceInfo[]> {
-//   const devSpaceName: string | symbol = await text({
-//     message: "Enter Dev Space name:",
-//     validate(input: string) {
-//       try {
-//         if (!(/^[a-zA-Z0-9][a-zA-Z0-9_]{0,39}$/.test(input))) {
-//           return devspaceMessages.err_invalid_devspace_name;
-//         }
-//       } catch (error) {
-//         return (error as Error).toString();
-//       }
-//     },
-//   });
+async function createDevSpaceWrapper(
+  landscapeURL: string,
+  jwt: string,
+): Promise<devspace.DevspaceInfo[]> {
+  // const devSpaceName: string | symbol = await text({
+  //   message: "Enter Dev Space name:",
+  //   validate(input: string) {
+  //     try {
+  //       if (!(/^[a-zA-Z0-9][a-zA-Z0-9_]{0,39}$/.test(input))) {
+  //         return devspaceMessages.err_invalid_devspace_name;
+  //       }
+  //     } catch (error) {
+  //       return (error as Error).toString();
+  //     }
+  //   },
+  // });
 
-//   if (isCancel(devSpaceName)) {
-//     cancel("Operation cancelled.");
-//     process.exit(0);
-//   }
+  // if (isCancel(devSpaceName)) {
+  //   cancel("Operation cancelled.");
+  //   process.exit(0);
+  // }
 
-//   assert(devSpaceName != null);
-//   const devSpacesSpec = await getDevSpacesSpec(
-//     landscapeURL,
-//     jwt,
-//   ) as DevSpaceSpec;
+  // assert(devSpaceName != null);
+  // const devSpacesSpec = await getDevSpacesSpec(
+  //   landscapeURL,
+  //   jwt,
+  // ) as DevSpaceSpec;
 
-//   const packOptions: Option<string | DevSpacePack>[] = devSpacesSpec.packs
-//     .filter((pack: DevSpacePack) => pack.name !== "PlatformTest")
-//     .map((pack: DevSpacePack) => ({
-//       value: pack,
-//       label: pack.tagline || pack.name,
-//       hint: pack.name,
-//     }));
-//   assert(packOptions != null);
+  // const packOptions: Option<string | DevSpacePack>[] = devSpacesSpec.packs
+  //   .filter((pack: DevSpacePack) => pack.name !== "PlatformTest")
+  //   .map((pack: DevSpacePack) => ({
+  //     value: pack,
+  //     label: pack.tagline || pack.name,
+  //     hint: pack.name,
+  //   }));
+  // assert(packOptions != null);
 
-//   const selectedPack = await select({
-//     message: "What kind of application do you want to create?",
-//     options: packOptions,
-//   }) as DevSpacePack;
-//   assert(selectedPack != null);
+  // const selectedPack = await select({
+  //   message: "What kind of application do you want to create?",
+  //   options: packOptions,
+  // }) as DevSpacePack;
+  // assert(selectedPack != null);
 
-//   // Organize extensions based on the selected pack
-//   const organizedData = organizePackExtensions(
-//     selectedPack.name,
-//     devSpacesSpec.packs,
-//     devSpacesSpec.extensions,
-//   ) as PackMetadata;
+  // // Organize extensions based on the selected pack
+  // const organizedData = organizePackExtensions(
+  //   selectedPack.name,
+  //   devSpacesSpec.packs,
+  //   devSpacesSpec.extensions,
+  // ) as PackMetadata;
 
-//   if (!organizedData) {
-//     log.error("Could not process extension data for the selected pack.");
-//     process.exit(0);
-//   }
+  // if (!organizedData) {
+  //   log.error("Could not process extension data for the selected pack.");
+  //   process.exit(0);
+  // }
 
-//   const additionalExtensionOptions = organizedData.additional.extensions.map((
-//     extension,
-//   ) => ({
-//     value: extension,
-//     label: `${extension.tagline || extension.name}`,
-//     // hint: extension.description,
-//   }));
-//   assert(additionalExtensionOptions != null);
-//   assert(additionalExtensionOptions.length > 0);
+  // const additionalExtensionOptions = organizedData.additional.extensions.map((
+  //   extension,
+  // ) => ({
+  //   value: extension,
+  //   label: `${extension.tagline || extension.name}`,
+  //   // hint: extension.description,
+  // }));
+  // assert(additionalExtensionOptions != null);
+  // assert(additionalExtensionOptions.length > 0);
 
-//   const selectedAdditionalExtensions = await multiselect({
-//     message: organizedData.additional.description,
-//     options: additionalExtensionOptions,
-//     required: false,
-//   }) as DevSpaceExtension[];
+  // const selectedAdditionalExtensions = await multiselect({
+  //   message: organizedData.additional.description,
+  //   options: additionalExtensionOptions,
+  //   required: false,
+  // }) as DevSpaceExtension[];
 
-//   if (isCancel(selectedAdditionalExtensions)) {
-//     cancel("Operation cancelled");
-//     process.exit(0);
-//   }
+  // if (isCancel(selectedAdditionalExtensions)) {
+  //   cancel("Operation cancelled");
+  //   process.exit(0);
+  // }
 
-//   const predefinedExtensions: string[] = organizedData.allPredefinedExtensions
-//     .map((
-//       extension: DevSpaceExtension,
-//     ) => `${extension.namespace}/${extension.name}`);
-//   const optionalExtensions: string[] = selectedAdditionalExtensions.map((
-//     extension: DevSpaceExtension,
-//   ) => `${extension.namespace}/${extension.name}`);
-//   // Find all technical extensions (required but not necessarily standalone/visible)
-//   const technicalExts: DevSpaceExtension[] = devSpacesSpec.extensions.filter(
-//     (
-//       extension: DevSpaceExtension,
-//     ) => (extension.mode === "required" && extension.standalone === true),
-//   );
-//   const technicalExtensions: string[] = technicalExts.map((
-//     extension: DevSpaceExtension,
-//   ) => `${extension.namespace}/${extension.name}`);
+  // const predefinedExtensions: string[] = organizedData.allPredefinedExtensions
+  //   .map((
+  //     extension: DevSpaceExtension,
+  //   ) => `${extension.namespace}/${extension.name}`);
+  // const optionalExtensions: string[] = selectedAdditionalExtensions.map((
+  //   extension: DevSpaceExtension,
+  // ) => `${extension.namespace}/${extension.name}`);
+  // // Find all technical extensions (required but not necessarily standalone/visible)
+  // const technicalExts: DevSpaceExtension[] = devSpacesSpec.extensions.filter(
+  //   (
+  //     extension: DevSpaceExtension,
+  //   ) => (extension.mode === "required" && extension.standalone === true),
+  // );
+  // const technicalExtensions: string[] = technicalExts.map((
+  //   extension: DevSpaceExtension,
+  // ) => `${extension.namespace}/${extension.name}`);
 
-//   const allExtensions: string[] = [
-//     ...new Set([
-//       ...predefinedExtensions,
-//       ...optionalExtensions,
-//       ...technicalExtensions,
-//     ]),
-//   ];
-//   assert(allExtensions != null);
-//   assert(allExtensions.length > 0);
+  // const allExtensions: string[] = [
+  //   ...new Set([
+  //     ...predefinedExtensions,
+  //     ...optionalExtensions,
+  //     ...technicalExtensions,
+  //   ]),
+  // ];
+  // assert(allExtensions != null);
+  // assert(allExtensions.length > 0);
 
-//   const devSpacePayload: DevSpaceCreation = {
-//     workspacedisplayname: devSpaceName,
-//     id: "",
-//     memoryLimitBytes: 2147483648,
-//     extensions: allExtensions,
-//     annotations: {
-//       pack: selectedPack.name,
-//       packTagline: selectedPack.tagline || "",
-//       optionalExtensions: JSON.stringify(optionalExtensions),
-//       technicalExtensions: JSON.stringify(technicalExtensions),
-//     },
-//   };
-//   const spinIndicator = spinner();
-//   spinIndicator.start(
-//     devspaceMessages.info_devspace_creating(devSpaceName),
-//   );
-//   try {
-//     await createDevSpace(landscapeURL, jwt, devSpacePayload);
-//     spinIndicator.stop(
-//       devspaceMessages.info_devspace_creating(devSpaceName),
-//     );
-//   } catch (error) {
-//     if (error instanceof Error) {
-//       const message = devspaceMessages.err_devspace_creation(
-//         devSpaceName,
-//         error.toString(),
-//       );
-//       log.error(message);
-//     }
-//   }
-//   const devSpaces: devspace.DevspaceInfo[] = await getDevSpaces(
-//     landscapeURL,
-//     jwt,
-//   );
-//   assert(devSpaces != null);
-//   return devSpaces;
-// }
+  // const devSpacePayload: DevSpaceCreation = {
+  //   workspacedisplayname: devSpaceName,
+  //   id: "",
+  //   memoryLimitBytes: 2147483648,
+  //   extensions: allExtensions,
+  //   annotations: {
+  //     pack: selectedPack.name,
+  //     packTagline: selectedPack.tagline || "",
+  //     optionalExtensions: JSON.stringify(optionalExtensions),
+  //     technicalExtensions: JSON.stringify(technicalExtensions),
+  //   },
+  // };
+  const spinIndicator = spinner();
+  spinIndicator.start(
+    devspaceMessages.info_devspace_creating(devSpaceName),
+  );
+  try {
+    await createDevSpace(landscapeURL, jwt, devSpacePayload);
+    spinIndicator.stop(
+      devspaceMessages.info_devspace_creating(devSpaceName),
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      const message = devspaceMessages.err_devspace_creation(
+        devSpaceName,
+        error.toString(),
+      );
+      log.error(message);
+    }
+  }
+  const devSpaces: devspace.DevspaceInfo[] = await getDevSpaces(
+    landscapeURL,
+    jwt,
+  );
+  assert(devSpaces != null);
+  return devSpaces;
+}
 
-function organizePackExtensions(
+export function organizePackExtensions(
   selectedPackName: string,
   allPacks: DevSpacePack[],
   allExtensions: DevSpaceExtension[],
@@ -366,131 +360,4 @@ export async function startDevSpace(
 ): Promise<void> {
   assert(devSpace != null);
   assert(jwt != null);
-}
-
-export async function selectDevSpaceAction(
-  devSpaceNode: DevSpaceNode,
-  jwt: string,
-): Promise<void> {
-  assert(devSpaceNode != null);
-  assert(devSpaceNode.label != null);
-  assert(devSpaceNode.id != null);
-  assert(devSpaceNode.landscapeURL != null);
-  assert(devSpaceNode.wsName != null);
-  assert(devSpaceNode.wsURL != null);
-  assert(devSpaceNode.status != null);
-  assert(jwt != null);
-
-  while (true) {
-    // Need to get the Dev Space's status on each iteration
-    const devSpaceStatus: string = (await devspace.getDevspaceInfo({
-      landscapeUrl: devSpaceNode.landscapeURL,
-      jwt: jwt,
-      wsId: devSpaceNode.id,
-    })).status;
-
-    const isReady = devSpaceStatus === devspace.DevSpaceStatus.RUNNING;
-
-    const options: Option<number | string>[] = [
-      isReady
-        ? {
-          value: DevSpaceMenuOption.CONNECT,
-          label: "Connect to Dev Space (SSH)",
-        }
-        : {
-          value: DevSpaceMenuOption.START,
-          label: "Start Dev Space",
-        },
-      ...(isReady
-        ? [{
-          value: DevSpaceMenuOption.STOP,
-          label: "Stop Dev Space",
-        }]
-        : []),
-      {
-        value: DevSpaceMenuOption.DELETE,
-        label: "Delete Dev Space",
-      },
-    ];
-
-    const selectedOption: symbol | number | string = await select({
-      message: "Select an option:",
-      options: options,
-    });
-
-    if (isCancel(selectedOption)) {
-      cancel("Exiting...");
-      return process.exit(0);
-    }
-
-    assert(selectedOption != null);
-    assert(typeof selectedOption === "number");
-
-    switch (selectedOption) {
-      case DevSpaceMenuOption.CONNECT: {
-        // Poll the API until it gives us a non-empty wsURL
-        while (devSpaceNode.wsURL.length === 0) {
-          const info: devspace.DevspaceInfo = await devspace.getDevspaceInfo({
-            landscapeUrl: devSpaceNode.landscapeURL,
-            jwt,
-            wsId: devSpaceNode.id,
-          });
-          assert(info != null);
-          devSpaceNode.wsURL = info.url;
-        }
-
-        const sshConfig: SSHConfigInfo = await getSSHConfigurations(
-          devSpaceNode,
-          jwt,
-        );
-        assert(sshConfig != null);
-
-        return await runChannelClient({
-          displayName: devSpaceNode.label,
-          host: `port${SSHD_SOCKET_PORT}-${
-            new URL(devSpaceNode.wsURL).hostname
-          }`,
-          landscape: devSpaceNode.landscapeURL,
-          localPort: sshConfig.port,
-          jwt: jwt,
-          pkFilePath: sshConfig.pkFilePath,
-        });
-      }
-      case DevSpaceMenuOption.START:
-        await startDevSpace(devSpaceNode, jwt, false);
-        break;
-      case DevSpaceMenuOption.STOP:
-        await DevSpaceUpdate(
-          devSpaceNode.landscapeURL,
-          devSpaceNode.id,
-          devSpaceNode.wsName,
-          jwt,
-          true,
-        );
-        break;
-      case DevSpaceMenuOption.DELETE: {
-        const allowOpen: boolean | symbol = await confirm({
-          message: `Are you sure you want to delete ${devSpaceNode.label}?`,
-        });
-
-        if (isCancel(allowOpen) || !allowOpen) {
-          cancel("Operation cancelled");
-        } else {
-          const spinIndicator = spinner();
-          spinIndicator.start(`Deleting ${devSpaceNode.label}`);
-          devspace.deleteDevSpace(
-            devSpaceNode.landscapeURL,
-            jwt,
-            devSpaceNode.id,
-          );
-          spinIndicator.stop(`Deleted ${devSpaceNode.label}`);
-        }
-        return;
-      }
-      default:
-        // Shouldn't even reach here
-        cancel("Exiting...");
-        return process.exit(0);
-    }
-  }
 }

@@ -1,5 +1,5 @@
 import { type JSX, useMemo, useState } from "react";
-import { Box, Text, useApp } from "ink";
+import { Box, Text, useApp, useInput } from "ink";
 import LandscapeMenu from "@/components/Landscape/LandscapeMenu";
 import { NavigationContext } from "@/hooks/NavigationContext.ts";
 import { onExit } from "@/utils/terminal.ts";
@@ -14,13 +14,30 @@ export default function App({ prompt }: Props): JSX.Element {
   const [accepted, setAccepted] = useState<boolean>(() => false);
   const cwd = useMemo<string>(() => process.cwd(), []) as string;
   const [component, setComponent] = useState<JSX.Element>(<LandscapeMenu />);
+  const [previousComponent, setPreviousComponent] = useState<
+    JSX.Element | null
+  >(null);
 
-  const navigate = useMemo(() => (component: JSX.Element) => {
-    setComponent(component);
+  const navigate = useMemo(() => (newComponent: JSX.Element) => {
+    setPreviousComponent(component);
+    setComponent(newComponent);
   }, []);
 
+  const goBack = useMemo(() => () => {
+    if (previousComponent) {
+      setComponent(previousComponent);
+      setPreviousComponent(null);
+    }
+  }, [previousComponent]);
+
+  useInput((input, key) => {
+    if (key.escape && previousComponent) {
+      goBack();
+    }
+  });
+
   return (
-    <NavigationContext.Provider value={{ navigate, component }}>
+    <NavigationContext.Provider value={{ navigate, component, goBack }}>
       <Box flexDirection="column">
         <Box borderStyle="round" paddingX={1} width={72}>
           <Text>
