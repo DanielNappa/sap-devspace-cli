@@ -1,6 +1,7 @@
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Text } from "ink";
 import { ConfirmInput, type Option, Select } from "@inkjs/ui";
+import Spinner from "ink-spinner";
 import type { devspace } from "@sap/bas-sdk";
 import { getDevSpaces } from "@/components/DevSpace/utils.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
@@ -18,9 +19,11 @@ function DevSpaceMenu({ landscapeSession }: {
   const [selectedOption, setSelectedOption] = useState<string | undefined>(
     undefined,
   );
+  const [loading, setLoading] = useState<boolean>(false);
   const [noDevSpaces, setNoDevSpaces] = useState<boolean>(false);
 
   const fetchDevSpaceInfo = useCallback(async () => {
+    setLoading(true);
     const devSpacesLocal: devspace.DevspaceInfo[] = await getDevSpaces(
       landscapeSession.url,
       landscapeSession.jwt,
@@ -39,21 +42,12 @@ function DevSpaceMenu({ landscapeSession }: {
       );
       setDevSpaces(devSpacesLocal);
     }
-  }, [devSpaces, message, noDevSpaces]);
+    setLoading(false);
+  }, [devSpaces, loading, message, noDevSpaces]);
 
   useEffect(() => {
     fetchDevSpaceInfo();
   }, []);
-
-  const devSpaceOptions: Option[] = useMemo(
-    () =>
-      devSpaces?.map((devSpace, i) => ({
-        value: `${i}`,
-        label:
-          `${devSpace.devspaceDisplayName} (${devSpace.packDisplayName}) - ${devSpace.status}`,
-      })),
-    [devSpaces],
-  );
 
   useEffect(() => {
     if (selectedOption != null) {
@@ -78,47 +72,70 @@ function DevSpaceMenu({ landscapeSession }: {
     }
   });
 
+  const devSpaceOptions: Option[] = useMemo(
+    () =>
+      devSpaces?.map((devSpace, i) => ({
+        value: `${i}`,
+        label:
+          `${devSpace.devspaceDisplayName} (${devSpace.packDisplayName}) - ${devSpace.status}`,
+      })),
+    [devSpaces],
+  );
+
   return (
-    component || (
-      <Box justifyContent="center" flexDirection="column" marginTop={1}>
-        <Box flexDirection="column" width={"70%"}>
-          <Text>
-            {message}
-          </Text>
+    <>
+      {loading && (
+        <Box flexDirection="row" marginTop={1}>
+          <Box justifyContent="center" flexDirection="column">
+            <Text>
+              <Text>
+                <Spinner type="bouncingBar" />
+              </Text>
+            </Text>
+          </Box>
         </Box>
-        {noDevSpaces
-          ? (
-            <ConfirmInput
-              onConfirm={() => {
-                setComponent(
-                  <DevSpaceCreate
-                    landscapeURL={landscapeSession.url}
-                    jwt={landscapeSession.jwt}
-                    onFinish={() => {
-                      setMessage("Select a Dev Space:");
-                      fetchDevSpaceInfo();
-                      setComponent(undefined);
-                    }}
-                  />,
-                );
-              }}
-              onCancel={() => {
-                goBack();
-              }}
-            />
-          )
-          : (
-            <Box justifyContent="center" flexDirection="column">
-              <Select
-                options={devSpaceOptions}
-                onChange={(value: string) => {
-                  setSelectedOption(value);
+      )}
+      {component || (
+        <Box justifyContent="center" flexDirection="column" marginTop={1}>
+          <Box flexDirection="column" width={"70%"}>
+            <Text>
+              {message}
+            </Text>
+          </Box>
+          {noDevSpaces
+            ? (
+              <ConfirmInput
+                onConfirm={() => {
+                  setComponent(
+                    <DevSpaceCreate
+                      landscapeURL={landscapeSession.url}
+                      jwt={landscapeSession.jwt}
+                      onFinish={() => {
+                        setMessage("Select a Dev Space:");
+                        fetchDevSpaceInfo();
+                        setComponent(undefined);
+                      }}
+                    />,
+                  );
+                }}
+                onCancel={() => {
+                  goBack();
                 }}
               />
-            </Box>
-          )}
-      </Box>
-    )
+            )
+            : (
+              <Box justifyContent="center" flexDirection="column">
+                <Select
+                  options={devSpaceOptions}
+                  onChange={(value: string) => {
+                    setSelectedOption(value);
+                  }}
+                />
+              </Box>
+            )}
+        </Box>
+      )}
+    </>
   );
 }
 

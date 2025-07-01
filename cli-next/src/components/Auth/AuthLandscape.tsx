@@ -1,4 +1,4 @@
-import { type JSX, useEffect, useState } from "react";
+import { type JSX, useCallback, useEffect, useState } from "react";
 import { Box, Text } from "ink";
 import open from "open";
 import { Alert, ConfirmInput } from "@inkjs/ui";
@@ -22,38 +22,51 @@ function AuthLandscape(
   );
   const [receivedJWT, setReceivedJWT] = useState<boolean>(false);
 
+  const handleSuccessfulAuth: (jwt: string) => Promise<void> = useCallback(
+    async (jwt: string) => {
+      // Update existing config if JWT didn't previously exist for landscape URL, and overwrite the config with the new JWT
+      await removeLandscape(selectedLandscape.url);
+      await addLandscape(selectedLandscape.url, jwt);
+
+      setReceivedJWT(true);
+
+      const landscapeSession: LandscapeSession = {
+        name: new URL(selectedLandscape.url).hostname,
+        url: selectedLandscape.url,
+        jwt: jwt,
+      };
+
+      navigate(
+        <DevSpaceMenu
+          landscapeSession={landscapeSession}
+        />,
+      );
+    },
+    [selectedLandscape.url, navigate],
+  );
+
+  useEffect(() => {
+    (async (): Promise<void> => {
+      if (
+        !(selectedLandscape?.jwt && selectedLandscape.jwt.length > 1 &&
+          !core.isJwtExpired(selectedLandscape.jwt))
+      ) {
+        return;
+      } else {
+        const jwt: string = selectedLandscape.jwt;
+        await handleSuccessfulAuth(jwt);
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     if (loginToLandscape) {
       (async (): Promise<void> => {
         open(core.getExtLoginPath(selectedLandscape.url));
         // If jwt exists and is not expired then use it otherwise update existing
         // LandscapeConfig with new JWT
-        const jwt: string =
-          !!(selectedLandscape?.jwt && selectedLandscape.jwt.length > 1 &&
-              !core.isJwtExpired(selectedLandscape.jwt))
-            ? selectedLandscape.jwt
-            : await getJWT(selectedLandscape.url);
-
-        // Update existing config if JWT didn't previously exist for landscape URL
-        if (
-          !selectedLandscape.hasOwnProperty("jwt") || !selectedLandscape?.jwt
-        ) {
-          await removeLandscape(selectedLandscape.url);
-          await addLandscape(selectedLandscape.url, jwt);
-        }
-
-        setReceivedJWT(true);
-
-        const landscapeSession: LandscapeSession = {
-          name: new URL(selectedLandscape.url).hostname,
-          url: selectedLandscape.url,
-          jwt: jwt,
-        };
-        navigate(
-          <DevSpaceMenu
-            landscapeSession={landscapeSession}
-          />,
-        );
+        const jwt: string = await getJWT(selectedLandscape.url);
+        await handleSuccessfulAuth(jwt);
       })();
     } else {
       (async (): Promise<void> => {
