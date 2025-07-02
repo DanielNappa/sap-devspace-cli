@@ -2,8 +2,8 @@ import { type JSX, useEffect, useState } from "react";
 import { Box, Text } from "ink";
 import { ConfirmInput } from "@inkjs/ui";
 import Spinner from "ink-spinner";
-import type { DevSpaceNode } from "@/utils/types.ts";
 import { devspace } from "@sap/bas-sdk";
+import type { DevSpaceNode } from "@/utils/types.ts";
 
 export function DevSpaceDelete({ devSpaceNode, jwt, onFinish }: {
   devSpaceNode: DevSpaceNode;

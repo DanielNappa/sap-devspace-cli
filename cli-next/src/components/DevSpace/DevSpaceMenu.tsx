@@ -5,6 +5,7 @@ import Spinner from "ink-spinner";
 import type { devspace } from "@sap/bas-sdk";
 import { getDevSpaces } from "@/components/DevSpace/utils.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
+import { useHelp } from "@/hooks/HelpContext.ts";
 import type { DevSpaceNode, LandscapeSession } from "@/utils/types.ts";
 import DevSpaceAction from "./DevSpaceAction.tsx";
 import DevSpaceCreate from "./DevSpaceCreate.tsx";
@@ -13,6 +14,7 @@ function DevSpaceMenu({ landscapeSession }: {
   landscapeSession: LandscapeSession;
 }): JSX.Element {
   const { navigate, goBack } = useNavigation();
+  const { setOverlay, useDefaultOverlay } = useHelp();
   const [message, setMessage] = useState<string>("");
   const [component, setComponent] = useState<JSX.Element>();
   const [devSpaces, setDevSpaces] = useState<devspace.DevspaceInfo[]>([]);
@@ -23,6 +25,7 @@ function DevSpaceMenu({ landscapeSession }: {
   const [noDevSpaces, setNoDevSpaces] = useState<boolean>(false);
 
   const fetchDevSpaceInfo = useCallback(async () => {
+    setOverlay("esc to cancel and return to main menu");
     setLoading(true);
     const devSpacesLocal: devspace.DevspaceInfo[] = await getDevSpaces(
       landscapeSession.url,
@@ -43,6 +46,7 @@ function DevSpaceMenu({ landscapeSession }: {
       setDevSpaces(devSpacesLocal);
     }
     setLoading(false);
+    useDefaultOverlay();
   }, [devSpaces, loading, message, noDevSpaces]);
 
   useEffect(() => {

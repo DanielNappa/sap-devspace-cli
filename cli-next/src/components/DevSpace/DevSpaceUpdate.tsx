@@ -2,6 +2,7 @@ import { type JSX, useEffect, useState } from "react";
 import { devspace } from "@sap/bas-sdk";
 import { Box, Text } from "ink";
 import Spinner from "ink-spinner";
+import { useHelp } from "@/hooks/HelpContext.ts";
 import { devspaceMessages } from "@/utils/consts.ts";
 
 export function DevSpaceUpdate(
@@ -14,12 +15,14 @@ export function DevSpaceUpdate(
     onFinish?: () => void;
   },
 ): JSX.Element {
+  const { setOverlay, useDefaultOverlay } = useHelp();
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>(
     devspaceMessages.info_devspace_state_inital_message(wsName, wsID, suspend),
   );
 
   useEffect(() => {
+    setOverlay("esc to return to main menu");
     setLoading(true);
     devspace
       .updateDevSpace(landscapeURL, jwt, wsID, {
@@ -41,6 +44,7 @@ export function DevSpaceUpdate(
           devspaceMessages.info_devspace_state_updated(wsName, wsID, suspend),
         );
         setLoading(false);
+        useDefaultOverlay();
         onFinish?.();
       }).catch((error) => {
         const message = devspaceMessages.err_ws_update(wsID, error.toString());

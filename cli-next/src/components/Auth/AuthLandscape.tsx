@@ -25,8 +25,8 @@ function AuthLandscape(
   const handleSuccessfulAuth: (jwt: string) => Promise<void> = useCallback(
     async (jwt: string) => {
       // Update existing config if JWT didn't previously exist for landscape URL, and overwrite the config with the new JWT
-      await removeLandscape(selectedLandscape.url);
-      await addLandscape(selectedLandscape.url, jwt);
+      removeLandscape(selectedLandscape.url);
+      addLandscape(selectedLandscape.url, jwt);
 
       setReceivedJWT(true);
 

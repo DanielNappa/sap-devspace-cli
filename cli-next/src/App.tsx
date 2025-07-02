@@ -1,6 +1,16 @@
-import { type JSX, useMemo, useState } from "react";
+import {
+  type Dispatch,
+  type JSX,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { Box, Text, useApp, useInput } from "ink";
 import LandscapeMenu from "@/components/Landscape/LandscapeMenu";
+import HelpOverlay from "@/components/UI/HelpOverlay.tsx";
+import { HelpContext } from "@/hooks/HelpContext.ts";
 import { NavigationContext } from "@/hooks/NavigationContext.ts";
 import { onExit } from "@/utils/terminal.ts";
 import { CLI_VERSION } from "@/utils/version.ts";
@@ -11,12 +21,12 @@ type Props = {
 
 export default function App({ prompt }: Props): JSX.Element {
   const app = useApp();
-  const [accepted, setAccepted] = useState<boolean>(() => false);
   const cwd = useMemo<string>(() => process.cwd(), []) as string;
   const [component, setComponent] = useState<JSX.Element>(<LandscapeMenu />);
   const [previousComponent, setPreviousComponent] = useState<
     JSX.Element | null
   >(null);
+  const [overlay, setOverlay] = useState<string | null>(null);
 
   const navigate = useMemo(() => (newComponent: JSX.Element) => {
     setPreviousComponent(component);
@@ -36,19 +46,35 @@ export default function App({ prompt }: Props): JSX.Element {
     }
   });
 
+  const useDefaultOverlay = useCallback(() => {
+    setOverlay("enter to confirm · esc to return to main menu");
+  }, []);
+
+  useEffect(() => {
+    useDefaultOverlay();
+  }, []);
+
   return (
     <NavigationContext.Provider value={{ navigate, component, goBack }}>
-      <Box flexDirection="column">
-        <Box borderStyle="round" paddingX={1} width={72}>
-          <Text>
-            <Text bold>SAP</Text> <Text bold>Dev Space CLI</Text>{" "}
-            <Text dimColor>
-              (experimental) <Text>v{CLI_VERSION}</Text>
+      <HelpContext.Provider value={{ overlay, setOverlay, useDefaultOverlay }}>
+        <Box flexDirection="column">
+          <Box borderStyle="round" paddingX={1} width={72}>
+            <Text>
+              <Text bold>SAP</Text> <Text bold>Dev Space CLI</Text>{" "}
+              <Text dimColor>
+                (experimental) <Text>v{CLI_VERSION}</Text>
+              </Text>
             </Text>
-          </Text>
+          </Box>
         </Box>
-      </Box>
-      {component}
+        {component}
+        {overlay && (
+          <HelpOverlay
+            overlay={overlay}
+            // onExit={() => setOverlay(null)}
+          />
+        )}
+      </HelpContext.Provider>
     </NavigationContext.Provider>
   );
 }
