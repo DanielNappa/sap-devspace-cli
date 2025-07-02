@@ -1,8 +1,10 @@
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Text } from "ink";
 import { type Option, Select } from "@inkjs/ui";
+import Spinner from "ink-spinner";
 import { devspace } from "@sap/bas-sdk";
 import SSH from "@/components/SSH/SSH.tsx";
+import { useHelp } from "@/hooks/HelpContext.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
 import { DevSpaceMenuOption, type DevSpaceNode } from "@/utils/types.ts";
 import { DevSpaceDelete } from "./DevSpaceDelete.tsx";
@@ -14,7 +16,8 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
   jwt: string;
 }): JSX.Element {
   const { navigate, goBack } = useNavigation();
-  const [isLoadingStatus, setIsLoadingStatus] = useState<boolean>(true);
+  const { setOverlay, useDefaultOverlay } = useHelp();
+  const [loading, setLoading] = useState<boolean>(true);
   const [component, setComponent] = useState<JSX.Element>();
   const [message, setMessage] = useState<string>("Select an option:");
   const [selectedOption, setSelectedOption] = useState<string | undefined>(
@@ -23,14 +26,16 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
   const [devSpaceStatus, setDevSpaceStatus] = useState<string>("");
 
   const fetchStatus = useCallback(async () => {
-    setIsLoadingStatus(true);
+    setOverlay("esc to cancel and return to main menu");
+    setLoading(true);
     const info = await devspace.getDevspaceInfo({
       landscapeUrl: devSpaceNode.landscapeURL,
       jwt: jwt,
       wsId: devSpaceNode.id,
     });
     setDevSpaceStatus(info.status);
-    setIsLoadingStatus(false);
+    setLoading(false);
+    useDefaultOverlay();
   }, [
     devSpaceNode.landscapeURL,
     devSpaceNode.id,
@@ -42,7 +47,7 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
   }, []);
 
   const options: Option[] = useMemo(() => {
-    if (isLoadingStatus) return [];
+    if (loading) return [];
     const isReady = devSpaceStatus === devspace.DevSpaceStatus.RUNNING;
     return [
       isReady
@@ -65,7 +70,7 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
         label: "Delete Dev Space",
       },
     ];
-  }, [devSpaceStatus, isLoadingStatus]);
+  }, [devSpaceStatus, loading]);
 
   // Add this useEffect for handling selected options
   useEffect(() => {
@@ -142,23 +147,35 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
 
   return (
     <>
-      {!!component ? component : (
-        <Box flexDirection="row" marginTop={1}>
-          <Box justifyContent="center" flexDirection="column">
-            <Box flexDirection="row">
+      {loading
+        ? (
+          <Box flexDirection="row" marginTop={1}>
+            <Box justifyContent="center" flexDirection="column">
               <Text>
-                {message}
+                <Text>
+                  <Spinner type="bouncingBar" />
+                </Text>
               </Text>
             </Box>
-            <Select
-              options={options}
-              onChange={(value: string) => {
-                setSelectedOption(value);
-              }}
-            />
           </Box>
-        </Box>
-      )}
+        )
+        : component || (
+          <Box flexDirection="row" marginTop={1}>
+            <Box justifyContent="center" flexDirection="column">
+              <Box flexDirection="row">
+                <Text>
+                  {message}
+                </Text>
+              </Box>
+              <Select
+                options={options}
+                onChange={(value: string) => {
+                  setSelectedOption(value);
+                }}
+              />
+            </Box>
+          </Box>
+        )}
     </>
   );
 }

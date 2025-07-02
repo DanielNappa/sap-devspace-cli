@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import WebSocket from "websocket";
-
 import type { Dispatch, SetStateAction } from "react";
+import type { Instance } from "ink";
 import {
   BaseStream,
   ObjectDisposedError,
@@ -13,7 +13,10 @@ import {
   type Stream,
 } from "@microsoft/dev-tunnels-ssh";
 import { PortForwardingService } from "@microsoft/dev-tunnels-ssh-tcp";
-import { BAS_INTERNAL_PROXY_PORT, PROXY_LOCAL_PORT } from "@/consts.ts";
+import { BAS_INTERNAL_PROXY_PORT, PROXY_LOCAL_PORT } from "@/utils/consts.ts";
+import { clearTerminal, onExit } from "@/utils/terminal.ts";
+import { RenderSessionHeader } from "./SessionHeader.tsx";
+import { getSSHConfigFilePath } from "./utils.ts";
 
 const sessionMap: Map<string, SshClientSession> = new Map();
 
@@ -104,6 +107,7 @@ export async function ssh(
   },
   setLoading: Dispatch<SetStateAction<boolean>>,
   setMessage: Dispatch<SetStateAction<string>>,
+  exit: (error?: Error) => void,
 ): Promise<void> {
   setMessage(`Connecting to ${opts.displayName}`);
   const serverUri = `wss://${opts.host.url}:${opts.host.port}`;
@@ -181,7 +185,35 @@ export async function ssh(
       "127.0.0.1",
       BAS_INTERNAL_PROXY_PORT, // BAS internal proxy port
     );
+
     setLoading(false);
+    clearTerminal();
+    onExit();
+    exit();
+
+    const sshCommand: string = [
+      "ssh",
+      "-i",
+      opts.pkFilePath,
+      "-p",
+      `${localPort}`,
+      "-o",
+      "StrictHostKeyChecking=no", // For first connection to localhost
+      "-o",
+      "UserKnownHostsFile=/dev/null", // Avoids polluting known_hosts for localhost ports
+      `${opts.username}@127.0.0.1`,
+    ].join(" ");
+
+    const sessionHeaderRenderer = RenderSessionHeader({
+      localPort: localPort,
+      sshConfigFile: getSSHConfigFilePath(),
+      pkFilePath: opts.pkFilePath,
+      sshCommand: sshCommand,
+    });
+
+    process.stdout.write("\x1b[?25h");
+    process.stdout.write("\x1b[0m");
+
     const sshProcess = spawn("ssh", [
       "-i",
       opts.pkFilePath,

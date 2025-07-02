@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-import { render } from "ink";
+import { type Instance, render } from "ink";
 import meow from "meow";
 import { rootCertificateInjection } from "@/utils/utils.ts";
 import App from "./App.tsx";
+import { setInkRenderer } from "./utils/terminal.ts";
 
 const cli = meow(
   `
@@ -30,4 +31,5 @@ const cli = meow(
 );
 // Runs only on Win32 systems to inject system certificates to address issues with corporate networks
 await rootCertificateInjection();
-render(<App prompt={cli.flags.prompt} />);
+const instance: Instance = render(<App prompt={cli.flags.prompt} />);
+setInkRenderer(instance);

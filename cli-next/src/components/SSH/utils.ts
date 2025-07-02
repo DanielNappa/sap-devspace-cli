@@ -29,7 +29,7 @@ export interface SSHConfigInfo {
   pkFilePath: string;
 }
 
-function getSSHConfigFilePath(): string {
+export function getSSHConfigFilePath(): string {
   return (
     join(homedir(), ".ssh", "config")
   );
@@ -47,23 +47,22 @@ export async function getPK(
   return remotessh.getKey(landscapeURL, jwt, wsId);
 }
 
-function composeKeyFileName(folder: string, url: string): string {
-  return join(folder, `${new URL(url).host}.key`);
+function composeKeyFileName(folder: string, fileName: string): string {
+  return join(folder, `${fileName}.key`);
 }
 
-export function savePK(pk: string, urlStr: string): string {
-  //construct file named "<ws-url>.key"
+export function savePK(pk: string, wsID: string): string {
+  //construct file named "<wsID>.key"
   const sshFolderPath: string = getSSHConfigFolderPath();
   if (!existsSync(sshFolderPath)) {
     mkdirSync(sshFolderPath);
   }
 
-  const fileName: string = composeKeyFileName(sshFolderPath, urlStr);
+  const fileName: string = composeKeyFileName(sshFolderPath, wsID);
   if (existsSync(fileName)) {
     unlinkSync(fileName);
   }
   writeFileSync(fileName, `${pk}\n`, { mode: "0400", flag: "w" });
-  console.log(`Private key file ${fileName} created`);
   return fileName;
 }
 

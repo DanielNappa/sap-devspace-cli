@@ -17,7 +17,7 @@ function SSH({ devSpaceNode, jwt }: {
   devSpaceNode: DevSpaceNode;
   jwt: string;
 }): JSX.Element {
-  const { navigate } = useNavigation();
+  const { app, navigate, goBack } = useNavigation();
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>(
     devspaceMessages.info_obtaining_key,
@@ -42,6 +42,7 @@ function SSH({ devSpaceNode, jwt }: {
       },
       setLoading,
       setMessage,
+      app.exit,
     );
   }, []);
 
@@ -49,13 +50,7 @@ function SSH({ devSpaceNode, jwt }: {
     setLoading(true);
     getPK(devSpaceNode.landscapeURL, jwt, devSpaceNode.id).then(
       (pk: string) => {
-        setMessage(devspaceMessages.info_save_pk_to_file);
-        const pkFilePath = savePK(pk, devSpaceNode.wsURL);
-
-        setMessage(
-          devspaceMessages.info_update_config_file_with_ssh_connection,
-        );
-        console.log(devspaceMessages.info_ssh_config_file_updated);
+        const pkFilePath = savePK(pk, devSpaceNode.id);
         const sshConfig: SSHConfigInfo = {
           ...updateSSHConfig(pkFilePath, devSpaceNode),
           pkFilePath,
@@ -63,20 +58,19 @@ function SSH({ devSpaceNode, jwt }: {
         const host: string = `port${SSHD_SOCKET_PORT}-${
           new URL(devSpaceNode.wsURL).hostname
         }`;
-        (async () => {
-          ssh(
-            {
-              displayName: devSpaceNode.label,
-              host: { url: host, port: `${SSH_SOCKET_PORT}` },
-              client: { port: sshConfig.port },
-              username: "user",
-              jwt: jwt,
-              pkFilePath: sshConfig.pkFilePath,
-            },
-            setLoading,
-            setMessage,
-          );
-        })();
+        ssh(
+          {
+            displayName: devSpaceNode.label,
+            host: { url: host, port: `${SSH_SOCKET_PORT}` },
+            client: { port: sshConfig.port },
+            username: "user",
+            jwt: jwt,
+            pkFilePath: sshConfig.pkFilePath,
+          },
+          setLoading,
+          setMessage,
+          app.exit,
+        );
       },
     );
   }, []);

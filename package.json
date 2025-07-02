@@ -43,9 +43,10 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "dev": "npx tsx --watch cli-next/src/index.tsx",
+    "dev": "npx tsx cli-next/src/index.tsx",
+    "dev:watch": "npx tsx --watch cli-next/src/index.tsx",
     "dev:old": "npx tsx cli/src/index.ts",
-    "test": "npm run build && node dist/index.js",
+    "test:old": "npm run build && node dist/index.js",
     "test:dev": "NODE_ENV=development node build.mjs --dev && NODE_OPTIONS=--enable-source-maps node dist/index-dev.js"
   },
   "files": [

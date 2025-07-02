@@ -12,7 +12,6 @@ import LandscapeMenu from "@/components/Landscape/LandscapeMenu";
 import HelpOverlay from "@/components/UI/HelpOverlay.tsx";
 import { HelpContext } from "@/hooks/HelpContext.ts";
 import { NavigationContext } from "@/hooks/NavigationContext.ts";
-import { onExit } from "@/utils/terminal.ts";
 import { CLI_VERSION } from "@/utils/version.ts";
 
 type Props = {
@@ -55,7 +54,7 @@ export default function App({ prompt }: Props): JSX.Element {
   }, []);
 
   return (
-    <NavigationContext.Provider value={{ navigate, component, goBack }}>
+    <NavigationContext.Provider value={{ app, navigate, component, goBack }}>
       <HelpContext.Provider value={{ overlay, setOverlay, useDefaultOverlay }}>
         <Box flexDirection="column">
           <Box borderStyle="round" paddingX={1} width={72}>

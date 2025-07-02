@@ -11,6 +11,22 @@ let inkRenderer: Instance | null = null;
 // Ctrl‑C handler and the process "exit" event) both attempt to tidy up.
 let didRunOnExit = false;
 
+export function setInkRenderer(renderer: Instance): void {
+  inkRenderer = renderer;
+}
+
+export function clearTerminal(): void {
+  // When using the alternate screen the content never scrolls, so we rarely
+  // need a full clear. Still expose the behaviour when explicitly requested
+  // (e.g. via Ctrl‑L) but avoid unnecessary clears on every render to minimise
+  // flicker.
+  if (inkRenderer) {
+    inkRenderer.clear();
+  }
+  // Also clear scrollback and primary buffer to ensure a truly blank slate
+  process.stdout.write("\x1b[3J\x1b[H\x1b[2J");
+}
+
 export function onExit(): void {
   // Ensure the clean‑up logic only runs once even if multiple exit signals
   // (e.g. Ctrl‑C data handler *and* the process "exit" event) invoke this
