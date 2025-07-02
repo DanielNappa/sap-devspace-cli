@@ -1,7 +1,6 @@
 import { spawn } from "node:child_process";
 import WebSocket from "websocket";
 import type { Dispatch, SetStateAction } from "react";
-import type { Instance } from "ink";
 import {
   BaseStream,
   ObjectDisposedError,
