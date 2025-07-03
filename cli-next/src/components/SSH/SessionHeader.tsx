@@ -61,17 +61,15 @@ export function RenderSessionHeader({
   sshConfigFile,
   pkFilePath,
   sshCommand,
-}: SessionHeaderProps): Promise<Instance> {
-  return new Promise<Instance>((resolve) => {
-    const instance = render(
-      <SessionHeader
-        localPort={localPort}
-        sshConfigFile={sshConfigFile}
-        pkFilePath={pkFilePath}
-        sshCommand={sshCommand}
-      />,
-    );
-  });
+}: SessionHeaderProps): Instance {
+  return render(
+    <SessionHeader
+      localPort={localPort}
+      sshConfigFile={sshConfigFile}
+      pkFilePath={pkFilePath}
+      sshCommand={sshCommand}
+    />,
+  );
 }
 
 export default SessionHeader;

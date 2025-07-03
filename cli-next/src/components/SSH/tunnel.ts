@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import WebSocket from "websocket";
 import type { Dispatch, SetStateAction } from "react";
+import type { Instance } from "ink";
 import {
   BaseStream,
   ObjectDisposedError,
@@ -203,15 +204,14 @@ export async function ssh(
       `${opts.username}@127.0.0.1`,
     ].join(" ");
 
-    const sessionHeaderRenderer = RenderSessionHeader({
+    const instance: Instance = RenderSessionHeader({
       localPort: localPort,
       sshConfigFile: getSSHConfigFilePath(),
       pkFilePath: opts.pkFilePath,
       sshCommand: sshCommand,
     });
 
-    process.stdout.write("\x1b[?25h");
-    process.stdout.write("\x1b[0m");
+    instance.unmount();
 
     const sshProcess = spawn("ssh", [
       "-i",
