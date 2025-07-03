@@ -14,6 +14,7 @@ import type {
   DevSpaceSpec,
 } from "@sap/bas-sdk/dist/src/utils/devspace-utils";
 import { TextInput } from "@/components/UI/TextInput.tsx";
+import { useHelp } from "@/hooks/HelpContext.ts";
 import { devspaceMessages } from "@/utils/consts.ts";
 import type { PackMetadata } from "@/utils/types.ts";
 import { pickByStringIndex } from "@/utils/utils.ts";
@@ -33,6 +34,7 @@ function DevSpaceCreate(
     onFinish: () => void;
   },
 ): JSX.Element {
+  const { useDefaultOverlay } = useHelp();
   const [currentStep, setCurrentStep] = useState<DevSpaceCreateStep>(
     DevSpaceCreateStep.NAME,
   );
@@ -54,6 +56,10 @@ function DevSpaceCreate(
   >([]);
   const [selectedAdditionalExtensions, setSelectedAdditionalExtensions] =
     useState<DevSpaceExtension[]>([]);
+
+  useEffect(() => {
+    useDefaultOverlay();
+  }, []);
 
   useEffect(() => {
     switch (currentStep) {

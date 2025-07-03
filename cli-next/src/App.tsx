@@ -28,13 +28,13 @@ export default function App({ prompt }: Props): JSX.Element {
     if (previousComponent) {
       setComponent(previousComponent);
       setPreviousComponent(null);
+      useDefaultOverlay();
     }
   }, [previousComponent]);
 
-  useInput((input, key) => {
+  useInput((_, key) => {
     if (key.escape && previousComponent) {
       goBack();
-      useDefaultOverlay();
     }
   });
 
