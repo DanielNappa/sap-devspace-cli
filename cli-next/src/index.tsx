@@ -2,8 +2,9 @@
 import { type Instance, render } from "ink";
 import meow from "meow";
 import { rootCertificateInjection } from "@/utils/utils.ts";
+import { setInkRenderer } from "@/utils/terminal.ts";
 import App from "./App.tsx";
-import { setInkRenderer } from "./utils/terminal.ts";
+import "@/utils/process.ts";
 
 const cli = meow(
   `
