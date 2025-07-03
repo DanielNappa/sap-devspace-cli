@@ -4,6 +4,7 @@ import { ConfirmInput } from "@inkjs/ui";
 import Spinner from "ink-spinner";
 import { devspace } from "@sap/bas-sdk";
 import type { DevSpaceNode } from "@/utils/types.ts";
+import { deletePK, removeSSHConfig } from "@/components/SSH/utils.ts";
 
 export function DevSpaceDelete({ devSpaceNode, jwt, onFinish }: {
   devSpaceNode: DevSpaceNode;
@@ -18,6 +19,8 @@ export function DevSpaceDelete({ devSpaceNode, jwt, onFinish }: {
   useEffect(() => {
     if (acceptedDeletion) {
       setMessage(`Deleting ${devSpaceNode.label}`);
+      deletePK(devSpaceNode.id);
+      removeSSHConfig(devSpaceNode);
       devspace.deleteDevSpace(
         devSpaceNode.landscapeURL,
         jwt,

@@ -1,4 +1,3 @@
-import { join } from "node:path";
 import open from "open";
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";

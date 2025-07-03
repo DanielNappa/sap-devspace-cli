@@ -31,7 +31,7 @@ const USER_DATA_FOLDER: string = process.env.APPDATA ||
 
 export const LANDSCAPE_CONFIG_PATH: string = join(
   USER_DATA_FOLDER,
-  "landscape-config.cfg",
+  "landscape-config.json",
 );
 
 export const devspaceMessages = {

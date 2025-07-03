@@ -66,8 +66,8 @@ export function savePK(pk: string, wsID: string): string {
   return fileName;
 }
 
-function deletePK(wsURL: string): void {
-  const fileName: string = composeKeyFileName(getSSHConfigFolderPath(), wsURL);
+export function deletePK(wsID: string): void {
+  const fileName: string = composeKeyFileName(getSSHConfigFolderPath(), wsID);
   let message = `Private key file ${fileName} deleted`;
   if (existsSync(fileName)) {
     unlinkSync(fileName);
@@ -124,7 +124,7 @@ export function updateSSHConfig(
   return { name: sectionName, port: `${port}` } as SSHConfigInfo;
 }
 
-function removeSSHConfig(devSpace: DevSpaceNode): void {
+export function removeSSHConfig(devSpace: DevSpaceNode): void {
   const sshConfigFile: string = getSSHConfigFilePath();
   // get ssh config object form ssh config file
   const config = getSSHConfig(sshConfigFile) as sshConfig;

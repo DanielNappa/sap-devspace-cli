@@ -34,6 +34,7 @@ export default function App({ prompt }: Props): JSX.Element {
   useInput((input, key) => {
     if (key.escape && previousComponent) {
       goBack();
+      useDefaultOverlay();
     }
   });
 
