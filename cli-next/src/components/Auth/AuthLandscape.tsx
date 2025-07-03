@@ -2,7 +2,7 @@ import { type JSX, useCallback, useEffect, useState } from "react";
 import { Box, Text } from "ink";
 import open from "open";
 import { Alert, ConfirmInput } from "@inkjs/ui";
-import { core, devspace } from "@sap/bas-sdk";
+import { core } from "@sap/bas-sdk";
 import DevSpaceMenu from "@/components/DevSpace/DevSpaceMenu.tsx";
 import { addLandscape, removeLandscape } from "@/components/Landscape/utils.ts";
 import { closeListener, getJWT } from "@/hooks/Auth.ts";

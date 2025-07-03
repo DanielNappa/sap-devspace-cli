@@ -1,5 +1,7 @@
+import { join } from "node:path";
+import open from "open";
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
-import { Box, Text } from "ink";
+import { Box, Text, useInput } from "ink";
 import { type Option, Select } from "@inkjs/ui";
 import Spinner from "ink-spinner";
 import { devspace } from "@sap/bas-sdk";
@@ -35,7 +37,11 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
     });
     setDevSpaceStatus(info.status);
     setLoading(false);
-    useDefaultOverlay();
+    (info.status === devspace.DevSpaceStatus.RUNNING)
+      ? setOverlay(
+        "enter to confirm · o to open BAS in a browser · esc to return to main menu",
+      )
+      : useDefaultOverlay();
   }, [
     devSpaceNode.landscapeURL,
     devSpaceNode.id,
@@ -45,6 +51,28 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
   useEffect(() => {
     fetchStatus();
   }, []);
+
+  useInput((input, _) => {
+    if (input === "o" && (devSpaceStatus === devspace.DevSpaceStatus.RUNNING)) {
+      (async (): Promise<void> => {
+        const url: URL = new URL(devSpaceNode.landscapeURL);
+        // It correctly handles whether a '#' already exists or not.
+        url.hash = devSpaceNode.id;
+        // The hash alone is usually sufficient for these single-page applications.
+        if (
+          !url.pathname.endsWith("/") && !url.pathname.endsWith("index.html")
+        ) {
+          url.pathname += "/index.html";
+        } else if (
+          url.pathname.endsWith("/") && !url.pathname.endsWith("index.html")
+        ) {
+          url.pathname += "index.html";
+        }
+        const externalBASURL: string = url.toString();
+        open(externalBASURL);
+      })();
+    }
+  });
 
   const options: Option[] = useMemo(() => {
     if (loading) return [];
