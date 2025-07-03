@@ -1,18 +1,24 @@
-import { type JSX, useState } from "react";
+import { type JSX, useEffect, useState } from "react";
 import { Box, Text } from "ink";
 import { URL } from "url";
 import { TextInput } from "@/components/UI/TextInput.tsx";
+import { useHelp } from "@/hooks/HelpContext.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
 import LandscapeMenu from "./LandscapeMenu.tsx";
 import { addLandscape } from "./utils.ts";
 
 function LandscapeURL(): JSX.Element {
   const { navigate } = useNavigation();
+  const { setOverlay } = useHelp();
   const [message, setMessage] = useState<string>(
     "Enter your Landscape URL and press Enter:",
   );
   const [landscapeURL, setLandscapeURL] = useState<string>("");
   const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
+
+  useEffect(() => {
+    setOverlay("enter to confirm");
+  }, []);
 
   return (
     <Box flexDirection="column">

@@ -14,7 +14,7 @@ function DevSpaceMenu({ landscapeSession }: {
   landscapeSession: LandscapeSession;
 }): JSX.Element {
   const { navigate, goBack } = useNavigation();
-  const { setOverlay } = useHelp();
+  const { setOverlay, useDefaultOverlay } = useHelp();
   const [message, setMessage] = useState<string>("");
   const [component, setComponent] = useState<JSX.Element>();
   const [devSpaces, setDevSpaces] = useState<devspace.DevspaceInfo[]>([]);
@@ -32,6 +32,7 @@ function DevSpaceMenu({ landscapeSession }: {
       landscapeSession.jwt,
     );
     if (devSpacesLocal && devSpacesLocal?.length === 0) {
+      useDefaultOverlay();
       setMessage(
         "There are no Dev Spaces in this landscape. Create a new Dev Space?",
       );
@@ -39,6 +40,9 @@ function DevSpaceMenu({ landscapeSession }: {
         setNoDevSpaces(true);
       }
     } else {
+      setOverlay(
+        "enter to confirm · n to create a new dev space · esc to return to main menu",
+      );
       setNoDevSpaces(false);
       setMessage(
         "Select a Dev Space:",
@@ -46,9 +50,6 @@ function DevSpaceMenu({ landscapeSession }: {
       setDevSpaces(devSpacesLocal);
     }
     setLoading(false);
-    setOverlay(
-      "enter to confirm · n to create a new dev space · esc to return to main menu",
-    );
   }, [devSpaces, loading, message, noDevSpaces]);
 
   useEffect(() => {

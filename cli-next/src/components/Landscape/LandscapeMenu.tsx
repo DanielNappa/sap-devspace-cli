@@ -6,9 +6,9 @@ import Nav from "@/components/UI/Nav.tsx";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
 import { LANDSCAPE_CONFIG_PATH } from "@/utils/consts.ts";
 import { type LandscapeConfig, LandscapeMenuOption } from "@/utils/types.ts";
-import { getLandscapesConfig } from "./utils.ts";
 import LandscapeSelect from "./LandscapeSelect.tsx";
 import LandscapeURL from "./LandscapeURL.tsx";
+import { getLandscapesConfig } from "./utils.ts";
 
 function LandscapeMenu(): JSX.Element {
   const { navigate } = useNavigation();

@@ -34,7 +34,7 @@ function DevSpaceCreate(
     onFinish: () => void;
   },
 ): JSX.Element {
-  const { useDefaultOverlay } = useHelp();
+  const { setOverlay, useDefaultOverlay } = useHelp();
   const [currentStep, setCurrentStep] = useState<DevSpaceCreateStep>(
     DevSpaceCreateStep.NAME,
   );
@@ -116,6 +116,9 @@ function DevSpaceCreate(
             additionalExtensionOptionsLocal?.length > 0
           ) {
             setMessage(organizedDataLocal.additional.description);
+            setOverlay(
+              "space to select extension · enter to create dev space · esc to return to main menu",
+            );
           }
         }
         break;
@@ -124,6 +127,7 @@ function DevSpaceCreate(
           devSpacesSpec != null && organizedData != null &&
           selectedPack != null && !loading
         ) {
+          setOverlay("esc to cancel and return to main menu");
           setLoading(true);
           setMessage(devspaceMessages.info_devspace_creating(devSpaceName));
           const predefinedExtensions: string[] = organizedData
