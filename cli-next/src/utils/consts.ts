@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { getRandomArbitrary } from "@/utils/index.ts";
+import { getRandomArbitrary } from "@/utils/utils.ts";
 
 export const AI: string = `⠀⠀⠀⠀⠀⠀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀
 ⠀⠀⠀⠀⢀⣾⣿⣿⡿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⢿⣿⣿⣷⡀⠀⠀⠀⠀

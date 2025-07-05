@@ -1,5 +1,5 @@
+import { strict as assert } from "node:assert";
 import { useEffect, useMemo, useState } from "react";
-import { strict as assert } from "assert";
 import { Box, Text } from "ink";
 import { Select } from "@inkjs/ui";
 import AuthLandscape from "@/components/Auth/AuthLandscape.tsx";

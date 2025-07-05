@@ -1,11 +1,11 @@
-import { strict as assert } from "assert";
+import { strict as assert } from "node:assert";
 import { URL } from "node:url";
 import { readFileSync, writeFileSync } from "node:fs";
 import { ensureFileSync } from "fs-extra";
 import { core } from "@sap/bas-sdk";
-import { LANDSCAPE_CONFIG_PATH } from "@/consts.ts";
+import { LANDSCAPE_CONFIG_PATH } from "@/utils/consts.ts";
 import { getJWT } from "@/hooks/Auth.ts";
-import { uniqueBy } from "@/utils/index.ts";
+import { uniqueBy } from "@/utils/utils.ts";
 import { type LandscapeConfig, type LandscapeSession } from "@/utils/types.ts";
 
 export function getLandscapesConfig(): LandscapeConfig[] {

@@ -1,6 +1,6 @@
 import { type JSX, useEffect, useState } from "react";
 import { Box, Text } from "ink";
-import { URL } from "url";
+import { URL } from "node:url";
 import { TextInput } from "@/components/UI/TextInput.tsx";
 import { useHelp } from "@/hooks/HelpContext.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";

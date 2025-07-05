@@ -7,7 +7,7 @@
   "module": "./cli/src/index.ts",
   "type": "module",
   "bin": {
-    "sap-devspace-cli": "dist/index.js"
+    "sap-devspace-cli": "bin/index.js"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -45,11 +45,14 @@
     "build": "node build.mjs",
     "dev": "npx tsx cli-next/src/index.tsx",
     "dev:watch": "npx tsx --watch cli-next/src/index.tsx",
+    "dev:bun:watch": "bun --watch cli-next/src/index.tsx",
+    "dev:deno:watch": "deno run -A --watch cli-next/src/index.tsx",
     "dev:old": "npx tsx cli/src/index.ts",
     "test:old": "npm run build && node dist/index.js",
     "test:dev": "NODE_ENV=development node build.mjs --dev && NODE_OPTIONS=--enable-source-maps node dist/index-dev.js"
   },
   "files": [
+    "bin",
     "dist",
     "README.md",
     "LICENSE"

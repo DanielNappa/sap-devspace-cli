@@ -46,15 +46,9 @@ if (fs.existsSync(outPath)) {
   fs.rmSync(outPath, { recursive: true, force: true });
 }
 
-const shebangLine =
-  "#!/usr/bin/env -S node --no-warnings --enable-source-maps \n";
-
 esbuild
   .build({
-    entryPoints: ["cli/src/index.ts"],
-    banner: {
-      js: shebangLine,
-    },
+    entryPoints: ["cli-next/src/index.tsx"],
     loader: { ".node": "file" },
     // Do not bundle the contents of package.json at build time: always read it
     // at runtime.

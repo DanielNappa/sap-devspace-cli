@@ -10,7 +10,7 @@ import { join, parse } from "node:path";
 import { URL } from "node:url";
 import { remotessh } from "@sap/bas-sdk";
 import sshConfig from "ssh-config";
-import { getRandomArbitrary } from "@/utils/index.ts";
+import { getRandomArbitrary } from "@/utils/utils.ts";
 export const SSHD_SOCKET_PORT = 33765;
 export const SSH_SOCKET_PORT = 443;
 

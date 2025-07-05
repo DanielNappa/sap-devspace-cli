@@ -1,6 +1,6 @@
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import LandscapeMenu from "@/components/Landscape/LandscapeMenu";
+import LandscapeMenu from "@/components/Landscape/LandscapeMenu.tsx";
 import HelpOverlay from "@/components/UI/HelpOverlay.tsx";
 import { HelpContext } from "@/hooks/HelpContext.ts";
 import { NavigationContext } from "@/hooks/NavigationContext.ts";

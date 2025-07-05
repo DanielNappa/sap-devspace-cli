@@ -6,7 +6,7 @@ import { type Context, Hono } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 import { serve, type ServerType } from "@hono/node-server";
-import { devspaceMessages, JWT_TIMEOUT } from "@/consts.ts";
+import { devspaceMessages, JWT_TIMEOUT } from "@/utils/consts.ts";
 
 const EXT_LOGIN_PORTNUM = 55532;
 const serverCache = new Map<string, ServerType>();
