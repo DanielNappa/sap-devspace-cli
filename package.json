@@ -42,14 +42,13 @@
     "win-ca": "^3.5.1"
   },
   "scripts": {
-    "build": "node build.mjs",
+    "build": "npx tsx build.mts",
     "dev": "npx tsx cli-next/src/index.tsx",
     "dev:watch": "npx tsx --watch cli-next/src/index.tsx",
     "dev:bun:watch": "bun --watch cli-next/src/index.tsx",
     "dev:deno:watch": "deno run -A --watch cli-next/src/index.tsx",
     "dev:old": "npx tsx cli/src/index.ts",
-    "test:old": "npm run build && node dist/index.js",
-    "test:dev": "NODE_ENV=development node build.mjs --dev && NODE_OPTIONS=--enable-source-maps node dist/index-dev.js"
+    "test": "npm run build && bin/index.js"
   },
   "files": [
     "bin",

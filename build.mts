@@ -2,11 +2,12 @@
  * Build script adapted from
  * https://github.com/openai/codex/blob/main/codex-cli/build.mjs
  */
+import type { Plugin, PluginBuild } from "esbuild";
 import * as esbuild from "esbuild";
 import * as fs from "fs";
 import * as path from "path";
 
-const OUT_DIR = "dist";
+const OUT_DIR: string = "dist";
 /**
  * ink attempts to import react-devtools-core in an ESM-unfriendly way:
  *
@@ -14,14 +15,17 @@ const OUT_DIR = "dist";
  *
  * to make this work, we have to strip the import out of the build.
  */
-const ignoreReactDevToolsPlugin = {
+const ignoreReactDevToolsPlugin: Plugin = {
   name: "ignore-react-devtools",
-  setup(build) {
+  setup(build: PluginBuild) {
     // When an import for 'react-devtools-core' is encountered,
     // return an empty module.
-    build.onResolve({ filter: /^react-devtools-core$/ }, (args) => {
-      return { path: args.path, namespace: "ignore-devtools" };
-    });
+    build.onResolve(
+      { filter: /^react-devtools-core$/ },
+      (args: { path: any }) => {
+        return { path: args.path, namespace: "ignore-devtools" };
+      },
+    );
     build.onLoad({ filter: /.*/, namespace: "ignore-devtools" }, () => {
       return { contents: "", loader: "js" };
     });
@@ -37,11 +41,11 @@ const ignoreReactDevToolsPlugin = {
 //      – shebang tweaked to enable Node's source‑map support at runtime
 // ----------------------------------------------------------------------------
 
-const isDevBuild = process.argv.includes("--dev") ||
+const isDevBuild: boolean = process.argv.includes("--dev") ||
   process.env.NODE_ENV === "development";
 
 // Build Hygiene, ensure we drop previous dist dir and any leftover files
-const outPath = path.resolve(OUT_DIR);
+const outPath: string = path.resolve(OUT_DIR);
 if (fs.existsSync(outPath)) {
   fs.rmSync(outPath, { recursive: true, force: true });
 }
