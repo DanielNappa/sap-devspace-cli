@@ -2,11 +2,9 @@ import { strict as assert } from "node:assert";
 import { URL } from "node:url";
 import { readFileSync, writeFileSync } from "node:fs";
 import { ensureFileSync } from "fs-extra";
-import { core } from "@sap/bas-sdk";
-import { getJWT } from "@/hooks/Auth.ts";
 import { LANDSCAPE_CONFIG_PATH } from "@/utils/consts.ts";
 import { uniqueBy } from "@/utils/utils.ts";
-import { type LandscapeConfig, type LandscapeSession } from "@/utils/types.ts";
+import { type LandscapeConfig } from "@/utils/types.ts";
 
 export function getLandscapesConfig(): LandscapeConfig[] {
   //  - new format:  {"url":"https://example.com","default":true}|{"url":"https://example2.com"}
@@ -85,30 +83,4 @@ export function deleteLandscape(
   assert(selectedLandscape != null);
   return removeLandscape(selectedLandscape.url);
   // console.log(`Deleted ${selectedLandscape.url}`);
-}
-
-export async function createLandscapeSession(
-  selectedLandscape: LandscapeConfig,
-): Promise<LandscapeSession> {
-  assert(selectedLandscape != null);
-
-  // If jwt exists and is not expired then use it otherwise update existing
-  // LandscapeConfig with new JWT
-  const jwt: string =
-    !!(selectedLandscape?.jwt && selectedLandscape.jwt.length > 1 &&
-        !core.isJwtExpired(selectedLandscape.jwt))
-      ? selectedLandscape.jwt
-      : await getJWT(selectedLandscape.url);
-
-  // Update existing config if JWT didn't previously exist for landscape URL
-  if (!selectedLandscape.hasOwnProperty("jwt") || !selectedLandscape?.jwt) {
-    removeLandscape(selectedLandscape.url);
-    addLandscape(selectedLandscape.url, jwt);
-  }
-
-  return {
-    name: new URL(selectedLandscape.url).hostname,
-    url: selectedLandscape.url,
-    jwt: jwt,
-  };
 }

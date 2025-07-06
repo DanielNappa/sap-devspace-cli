@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import { type Instance, render } from "ink";
 import meow from "meow";
+import { handleSubcommandSSH } from "@/ssh/core.ts";
 import { rootCertificateInjection } from "@/utils/utils.ts";
 import { setInkRenderer } from "@/utils/terminal.ts";
 import App from "./App.tsx";
 import "@/utils/process.ts";
-import { handleSSHCore } from "./ssh/core.ts";
 
 const cli = meow(
   `
@@ -79,8 +79,9 @@ if (cli.input[0] === "ssh") {
   if (ssh.flags.help || (!ssh.flags.devspace && !ssh.flags.landscape)) {
     ssh.showHelp();
     process.exit(0);
+  } else {
+    handleSubcommandSSH(ssh.flags);
   }
-  handleSSHCore(ssh.flags);
 } else {
   const instance: Instance = render(<App prompt={cli.flags.prompt} />);
   setInkRenderer(instance);
