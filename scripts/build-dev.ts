@@ -44,7 +44,7 @@ const watcher = Deno.watchFs(watchPath);
 for await (const event of watcher) {
   // Only rebuild on modify/create events for TypeScript files
   if (event.kind === "modify" || event.kind === "create") {
-    const hasTypeScriptFiles = event.paths.some((path) =>
+    const hasTypeScriptFiles = event.paths.some((path: string) =>
       path.endsWith(".ts") || path.endsWith(".tsx")
     );
 

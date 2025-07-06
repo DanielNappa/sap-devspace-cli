@@ -5,6 +5,7 @@ import { rootCertificateInjection } from "@/utils/utils.ts";
 import { setInkRenderer } from "@/utils/terminal.ts";
 import App from "./App.tsx";
 import "@/utils/process.ts";
+import { handleSSHCore } from "./ssh/core.ts";
 
 const cli = meow(
   `
@@ -75,11 +76,11 @@ await rootCertificateInjection();
 
 // Hand off to the SSH command
 if (cli.input[0] === "ssh") {
-  console.log(process.argv);
-  console.log(cli.flags);
-  console.log(ssh.flags);
-  console.log(`  Landscape: ${ssh.flags.landscape}`);
-  console.log(`  Dev Space: ${ssh.flags.devspace}`);
+  if (ssh.flags.help || (!ssh.flags.devspace && !ssh.flags.landscape)) {
+    ssh.showHelp();
+    process.exit(0);
+  }
+  handleSSHCore(ssh.flags);
 } else {
   const instance: Instance = render(<App prompt={cli.flags.prompt} />);
   setInkRenderer(instance);

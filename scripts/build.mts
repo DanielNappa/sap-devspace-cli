@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-process-global
 /**
  * Build script adapted from
  * https://github.com/openai/codex/blob/main/codex-cli/build.mjs
@@ -5,9 +6,22 @@
 import type { Plugin, PluginBuild } from "esbuild";
 import * as esbuild from "esbuild";
 import * as fs from "fs";
-import * as path from "path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const OUT_DIR: string = "dist";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const __rootDirectory = dirname(dirname(fileURLToPath(import.meta.url)));
+const OUT_DIR: string = join(__rootDirectory, "dist");
+const entryPoint: string = join(
+  __rootDirectory,
+  "cli-next",
+  "src",
+  "index.tsx",
+);
+const tsConfig: string = join(__rootDirectory, "tsconfig.json");
+const packagePath: string = join(__rootDirectory, "package.json");
+const inject: string = join(__dirname, "require-shim.ts");
+
 /**
  * ink attempts to import react-devtools-core in an ESM-unfriendly way:
  *
@@ -45,26 +59,26 @@ const isDevBuild: boolean = process.argv.includes("--dev") ||
   process.env.NODE_ENV === "development";
 
 // Build Hygiene, ensure we drop previous dist dir and any leftover files
-const outPath: string = path.resolve(OUT_DIR);
+const outPath: string = resolve(OUT_DIR);
 if (fs.existsSync(outPath)) {
   fs.rmSync(outPath, { recursive: true, force: true });
 }
 
 esbuild
   .build({
-    entryPoints: ["cli-next/src/index.tsx"],
+    entryPoints: [entryPoint],
     loader: { ".node": "file" },
     // Do not bundle the contents of package.json at build time: always read it
     // at runtime.
-    external: ["/package.json", "vscode", "node:child_process", "win-ca"],
+    external: [packagePath, "vscode", "node:child_process", "win-ca"],
     bundle: true,
     format: "esm",
     platform: "node",
-    tsconfig: "tsconfig.json",
+    tsconfig: tsConfig,
     outfile: isDevBuild ? `${OUT_DIR}/index-dev.js` : `${OUT_DIR}/index.js`,
     minify: !isDevBuild,
     sourcemap: isDevBuild ? "inline" : true,
     plugins: [ignoreReactDevToolsPlugin],
-    inject: ["./require-shim.ts"],
+    inject: [inject],
   })
   .catch(() => process.exit(1));

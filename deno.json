@@ -6,7 +6,8 @@
       "@types/react"
     ],
     "lib": [
-      "deno.ns"
+      "deno.ns",
+      "dom"
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "react"

@@ -42,7 +42,7 @@
     "win-ca": "^3.5.1"
   },
   "scripts": {
-    "build": "npx tsx build.mts",
+    "build": "npx tsx scripts/build.mts",
     "dev": "npx tsx cli-next/src/index.tsx",
     "dev:watch": "npx tsx --watch cli-next/src/index.tsx",
     "dev:bun:watch": "bun --watch cli-next/src/index.tsx",
