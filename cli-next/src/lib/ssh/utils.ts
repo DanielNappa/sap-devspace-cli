@@ -104,23 +104,23 @@ export function updateSSHConfig(
   );
   const sshConfigFile: string = getSSHConfigFilePath();
   const port = getRandomArbitrary();
-  // // get ssh config object from the ssh config file
-  // const config = getSSHConfig(sshConfigFile) as sshConfig;
-  // // push to the ssh config object with the new configuration
-  // config.remove({ Host: sectionName });
-  // // keep the existing indentation of the next block
-  // config.push(
-  //   sshConfig.parse(
-  //     `Host ${sectionName}
-  // HostName 127.0.0.1
-  // Port ${port}
-  // IdentityFile ${sshKeyFilePath}
-  // User user
-  // NoHostAuthenticationForLocalhost yes\n`,
-  //   )[0]!,
-  // );
-  // // save the SSH config object back to file
-  // writeFileSync(sshConfigFile, sshConfig.stringify(config));
+  // get ssh config object form ssh config file
+  const config = getSSHConfig(sshConfigFile) as sshConfig;
+  // push to the ssh config object with the new configuration
+  config.remove({ Host: sectionName });
+  // keep the existing indentation of the next block
+  config.push(
+    sshConfig.parse(
+      `Host ${sectionName}
+  HostName 127.0.0.1
+  Port ${port}
+  IdentityFile ${sshKeyFilePath}
+  User user
+  NoHostAuthenticationForLocalhost yes\n`,
+    )[0]!,
+  );
+  // save the SSH config object back to file
+  writeFileSync(sshConfigFile, sshConfig.stringify(config));
   return { name: sectionName, port: `${port}` } as SSHConfigInfo;
 }
 

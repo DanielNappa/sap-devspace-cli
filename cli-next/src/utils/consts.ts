@@ -57,6 +57,11 @@ export const LANDSCAPE_CONFIG_PATH: string = join(
   "landscape-config.json",
 );
 
+export const DEVSPACE_SETTINGS_PATH: string = join(
+  USER_DATA_FOLDER,
+  "devspaces.json",
+);
+
 export const devspaceMessages = {
   info_devspace_creating: (name: string) => `Creating Dev Space ${name}`,
   info_devspace_created: (name: string) =>

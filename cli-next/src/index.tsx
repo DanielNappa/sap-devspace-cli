@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { type Instance, render } from "ink";
 import meow from "meow";
-import { handleSubcommandSSH } from "@/ssh/core.ts";
+import { handleSubcommandSSH } from "@/lib/ssh/core.ts";
 import { rootCertificateInjection } from "@/utils/utils.ts";
 import { setInkRenderer } from "@/utils/terminal.ts";
 import App from "./App.tsx";

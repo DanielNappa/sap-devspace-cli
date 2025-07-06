@@ -9,11 +9,11 @@ import {
 import {
   getPK,
   savePK,
-  SSH_SOCKET_PORT,
   type SSHConfigInfo,
   SSHD_SOCKET_PORT,
   updateSSHConfig,
 } from "@/components/SSH/utils.ts";
+import { devspaceMessages } from "@/utils/consts.ts";
 import type {
   DevSpaceNode,
   LandscapeConfig,
@@ -54,6 +54,26 @@ async function getDevSpace(
     );
     process.exit(1);
   }
+
+  devspace.updateDevSpace(landscapeSession.url, jwt, result.id, {
+    Suspended: false,
+    WorkspaceDisplayName: result.devspaceDisplayName,
+  }).then(async () => {
+    // While the status of the Dev Space hasn't changed depending on the suspend variable
+    while (
+      (await devspace.getDevspaceInfo({
+        landscapeUrl: landscapeSession.url,
+        jwt: jwt,
+        wsId: result.id,
+      })).status !== devspace.DevSpaceStatus.RUNNING
+    );
+  }).catch((error) => {
+    console.error(devspaceMessages.err_ws_update(
+      result.id,
+      error.toString(),
+    ));
+    process.exit(1);
+  });
 
   return {
     label: `${result.devspaceDisplayName} (${result.packDisplayName})`,
@@ -133,6 +153,7 @@ export async function handleSubcommandSSH(
         result,
         jwt,
       );
+
       // Poll the API until it gives us a non-empty wsURL
       while (devSpaceNode.wsURL.length === 0) {
         const info: devspace.DevspaceInfo = await devspace.getDevspaceInfo({
@@ -149,17 +170,6 @@ export async function handleSubcommandSSH(
       //   jwt,
       // );
       // assert(sshConfig != null);
-
-      // return await runChannelClient({
-      //   displayName: devSpaceNode.label,
-      //   host: `port${SSHD_SOCKET_PORT}-${
-      //     new URL(devSpaceNode.wsURL).hostname
-      //   }`,
-      //   landscape: devSpaceNode.landscapeURL,
-      //   localPort: sshConfig.port,
-      //   jwt: jwt,
-      //   pkFilePath: sshConfig.pkFilePath,
-      // });
     }
   }
 }

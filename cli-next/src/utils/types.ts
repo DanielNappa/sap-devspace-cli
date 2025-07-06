@@ -27,6 +27,12 @@ export enum LandscapeMenuOption {
   EXIT,
 }
 
+export interface DevSpaceSettings {
+  [landscapeURL: string]: {
+    [devSpaceKey: string]: boolean;
+  };
+}
+
 export interface DevSpaceNode {
   label: string;
   id: string;

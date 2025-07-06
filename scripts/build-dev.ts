@@ -29,7 +29,6 @@ const run = async (cmd: string[]): Promise<void> => {
 
 const buildAndRun = async (): Promise<void> => {
   await run(["npm", "run", "build"]);
-
   await run(["bin/index.js", ...Deno.args]);
 };
 
