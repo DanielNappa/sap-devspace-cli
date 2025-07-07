@@ -113,6 +113,7 @@ export const devspaceMessages = {
   err_get_jwt_timeout: (ms: number) => `Login time out in ${ms} ms.`,
   err_get_jwt_not_exists: `Personal Access Token does not exist.`,
   err_get_jwt_required: `Personal Access Token is required`,
+  err_invalid_alias_name: "Invalid alias",
   err_invalid_devspace_name:
     "The name must start with a letter or number and may contain any alphanumeric characters or underscores. Special characters can't be used.",
   err_open_devspace_in_bas: (landscapeUrl: string, err: string) =>

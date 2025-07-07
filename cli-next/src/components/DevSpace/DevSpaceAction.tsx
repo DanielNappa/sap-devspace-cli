@@ -1,16 +1,30 @@
-import open from "open";
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
+import { readFileSync, writeFileSync } from "node:fs";
+import { ensureFile } from "fs-extra";
+import open from "open";
 import { Box, Text, useInput } from "ink";
-import { type Option, Select } from "@inkjs/ui";
+import { ConfirmInput, type Option, Select } from "@inkjs/ui";
 import Spinner from "ink-spinner";
 import { devspace } from "@sap/bas-sdk";
 import SSH from "@/components/SSH/SSH.tsx";
+import { TextInput } from "@/components/UI/TextInput.tsx";
 import { useHelp } from "@/hooks/HelpContext.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
-import { DevSpaceMenuOption, type DevSpaceNode } from "@/utils/types.ts";
+import { DEVSPACE_SETTINGS_PATH, devspaceMessages } from "@/utils/consts.ts";
+import {
+  DevSpaceMenuOption,
+  type DevSpaceNode,
+  type DevSpaceSettings,
+} from "@/utils/types.ts";
 import { DevSpaceDelete } from "./DevSpaceDelete.tsx";
 import { DevSpaceUpdate } from "./DevSpaceUpdate.tsx";
 import { canDevSpaceStart } from "./utils.ts";
+
+enum SSHAliasStep {
+  NONE,
+  CONFIRM,
+  INPUT,
+}
 
 function DevSpaceAction({ devSpaceNode, jwt }: {
   devSpaceNode: DevSpaceNode;
@@ -19,12 +33,25 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
   const { navigate, goBack } = useNavigation();
   const { setOverlay, useDefaultOverlay } = useHelp();
   const [loading, setLoading] = useState<boolean>(true);
+  const [hasBeenPrompted, setHasBeenPrompted] = useState<boolean>(false);
   const [component, setComponent] = useState<JSX.Element>();
   const [message, setMessage] = useState<string>("Select an option:");
+  const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
+  const [sshAlias, setSSHAlias] = useState<string>(
+    `${devSpaceNode.wsName}.devspace`,
+  );
   const [selectedOption, setSelectedOption] = useState<string | undefined>(
     undefined,
   );
   const [devSpaceStatus, setDevSpaceStatus] = useState<string>("");
+  const [sshAliasStep, setSSHAliasStep] = useState<SSHAliasStep>(
+    SSHAliasStep.NONE,
+  );
+
+  const devSpaceKey: string = useMemo(
+    () => `${devSpaceNode.wsName}-${devSpaceNode.id}`,
+    [],
+  );
 
   const fetchStatus = useCallback(async () => {
     setOverlay("esc to cancel and return to main menu");
@@ -35,6 +62,10 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
       wsId: devSpaceNode.id,
     });
     setDevSpaceStatus(info.status);
+    const devSpaceSettings: DevSpaceSettings = await getDevSpaceSettings();
+    setHasBeenPrompted(
+      !!devSpaceSettings[devSpaceNode.landscapeURL]?.[devSpaceKey],
+    );
     setLoading(false);
     (info.status === devspace.DevSpaceStatus.RUNNING)
       ? setOverlay(
@@ -46,6 +77,46 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
     devSpaceNode.id,
     jwt,
   ]);
+
+  const getDevSpaceSettings: () => Promise<DevSpaceSettings> = useCallback(
+    async (): Promise<DevSpaceSettings> => {
+      await ensureFile(DEVSPACE_SETTINGS_PATH);
+      const settingsBuffer: string = readFileSync(DEVSPACE_SETTINGS_PATH, {
+        encoding: "utf-8",
+      }).trim();
+      const devSpaceSettings = settingsBuffer
+        ? (JSON.parse(settingsBuffer) as DevSpaceSettings)
+        : ({} as DevSpaceSettings);
+      return devSpaceSettings;
+    },
+    [],
+  );
+
+  const updateDevSpaceSettings = useCallback(
+    async (
+      devSpaceNode: DevSpaceNode,
+      hasBeenPromptedLocal: boolean,
+    ): Promise<void> => {
+      await ensureFile(DEVSPACE_SETTINGS_PATH);
+      const settingsBuffer: string = readFileSync(DEVSPACE_SETTINGS_PATH, {
+        encoding: "utf-8",
+      }).trim();
+      const devSpaceSettings = settingsBuffer
+        ? (JSON.parse(settingsBuffer) as DevSpaceSettings)
+        : ({} as DevSpaceSettings);
+      // Ensure nested structure exists
+      const host: string = devSpaceNode.landscapeURL;
+      if (!devSpaceSettings[host]) {
+        devSpaceSettings[host] = {};
+      }
+      devSpaceSettings[host]![devSpaceKey] = hasBeenPromptedLocal;
+      writeFileSync(
+        DEVSPACE_SETTINGS_PATH,
+        JSON.stringify(devSpaceSettings, null, 2),
+      );
+    },
+    [],
+  );
 
   useEffect(() => {
     fetchStatus();
@@ -99,6 +170,12 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
     ];
   }, [devSpaceStatus, loading]);
 
+  useEffect(() => {
+    if (sshAliasStep !== SSHAliasStep.NONE) {
+      useDefaultOverlay();
+    }
+  }, [sshAliasStep]);
+
   // Add this useEffect for handling selected options
   useEffect(() => {
     if (selectedOption != null) {
@@ -114,13 +191,20 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
               devSpaceNode.wsURL = info.url
             );
           }
-          navigate(<SSH devSpaceNode={devSpaceNode} jwt={jwt} />);
+          if (!hasBeenPrompted) {
+            setMessage(
+              `Save a permanent SSH alias for ${devSpaceNode.wsName} so you can later just run ssh my-devspace-alias?`,
+            );
+            setSSHAliasStep(SSHAliasStep.CONFIRM);
+          } else {
+            navigate(<SSH devSpaceNode={devSpaceNode} jwt={jwt} />);
+          }
           break;
         }
         case `${DevSpaceMenuOption.START}`:
           canDevSpaceStart(devSpaceNode.landscapeURL, jwt).then(
             (canRun: boolean | string) => {
-              if (typeof canRun === `boolean` && canRun === true) {
+              if (typeof canRun === "boolean" && canRun === true) {
                 setComponent(
                   <DevSpaceUpdate
                     landscapeURL={devSpaceNode.landscapeURL}
@@ -135,7 +219,7 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
                     }}
                   />,
                 );
-              } else if (typeof canRun === `string`) {
+              } else if (typeof canRun === "string") {
                 console.log(canRun);
               }
             },
@@ -190,16 +274,56 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
           <Box flexDirection="row" marginTop={1}>
             <Box justifyContent="center" flexDirection="column">
               <Box flexDirection="row">
-                <Text>
-                  {message}
-                </Text>
+                <Text color={showErrorMessage ? "red" : "null"}>{message}</Text>
               </Box>
-              <Select
-                options={options}
-                onChange={(value: string) => {
-                  setSelectedOption(value);
-                }}
-              />
+              {sshAliasStep === SSHAliasStep.NONE && (
+                <Select
+                  options={options}
+                  onChange={(value: string) => {
+                    setSelectedOption(value);
+                  }}
+                />
+              )}
+              {sshAliasStep === SSHAliasStep.CONFIRM && (
+                <ConfirmInput
+                  onConfirm={() => {
+                    setMessage("Enter SSH Alias:");
+                    setSSHAliasStep(SSHAliasStep.INPUT);
+                    updateDevSpaceSettings(devSpaceNode, true);
+                    setHasBeenPrompted(true);
+                  }}
+                  onCancel={() => {
+                    setSSHAliasStep(SSHAliasStep.NONE);
+                    updateDevSpaceSettings(devSpaceNode, true);
+                    setHasBeenPrompted(true);
+                    navigate(<SSH devSpaceNode={devSpaceNode} jwt={jwt} />);
+                  }}
+                />
+              )}
+              {sshAliasStep === SSHAliasStep.INPUT && (
+                <TextInput
+                  value={sshAlias}
+                  onChange={setSSHAlias}
+                  onSubmit={(input: string) => {
+                    try {
+                      if (!(/^!?(?:[A-Za-z0-9._-]|\?|\*)+$/.test(input))) {
+                        setMessage(devspaceMessages.err_invalid_alias_name);
+                        setShowErrorMessage(true);
+                      } else {
+                        if (input) {
+                          if (showErrorMessage) setShowErrorMessage(false);
+                          setSSHAlias(input);
+                          // setSSHAliasStep(SSHAliasStep.NONE);
+                        }
+                      }
+                    } catch (error) {
+                      setMessage(devspaceMessages.err_invalid_alias_name);
+                      setShowErrorMessage(true);
+                    }
+                  }}
+                  placeholder={`${devSpaceNode.wsName}.devspace`}
+                />
+              )}
             </Box>
           </Box>
         )}

@@ -1,14 +1,9 @@
-import { type JSX, useCallback, useEffect, useState } from "react";
-import { ensureFile, readFile } from "fs-extra";
+import { type JSX, useEffect, useState } from "react";
 import { Box, Text } from "ink";
 import Spinner from "ink-spinner";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
-import {
-  type DevSpaceNode,
-  type DevSpaceSettings,
-  type SSHConfigInfo,
-} from "@/utils/types.ts";
-import { DEVSPACE_SETTINGS_PATH, devspaceMessages } from "@/utils/consts.ts";
+import { type DevSpaceNode, type SSHConfigInfo } from "@/utils/types.ts";
+import { devspaceMessages } from "@/utils/consts.ts";
 import {
   getPK,
   savePK,
@@ -18,35 +13,15 @@ import {
 } from "./utils.ts";
 import { ssh } from "./tunnel.ts";
 
-function SSH({ devSpaceNode, jwt }: {
+function SSH({ devSpaceNode, jwt, newSSHAlias }: {
   devSpaceNode: DevSpaceNode;
   jwt: string;
+  newSSHAlias?: string;
 }): JSX.Element {
   const { app, navigate, goBack } = useNavigation();
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>(
     devspaceMessages.info_obtaining_key,
-  );
-
-  const getDevSpaceSettings = useCallback(
-    async (devSpaceNode: DevSpaceNode): Promise<DevSpaceSettings> => {
-      await ensureFile(DEVSPACE_SETTINGS_PATH);
-      const settingsBuffer: string = await readFile(DEVSPACE_SETTINGS_PATH, {
-        encoding: "utf-8",
-        flag: "r",
-      });
-    },
-    [],
-  );
-
-  const updateDevSpaceSettings = useCallback(
-    async (devSpaceNode: DevSpaceNode): Promise<void> => {
-      const settingsBuffer: string = await readFile(DEVSPACE_SETTINGS_PATH, {
-        encoding: "utf-8",
-        flag: "r",
-      });
-    },
-    [],
   );
 
   useEffect(() => {
