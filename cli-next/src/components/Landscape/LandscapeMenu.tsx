@@ -3,6 +3,7 @@ import { Box } from "ink";
 import { Select } from "@inkjs/ui";
 import Nav from "@/components/UI/Nav.tsx";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
+import { onExit } from "@/utils/terminal.ts";
 import { type LandscapeConfig, LandscapeMenuOption } from "@/utils/types.ts";
 import LandscapeSelect from "./LandscapeSelect.tsx";
 import LandscapeURL from "./LandscapeURL.tsx";
@@ -46,6 +47,8 @@ function LandscapeMenu(): JSX.Element {
           break;
         case "EXIT":
           // Handle exit
+          onExit();
+          process.exit(0);
           break;
       }
     }
