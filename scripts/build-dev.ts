@@ -36,7 +36,7 @@ const buildAndRun = async (): Promise<void> => {
 await buildAndRun();
 
 // Watch for changes
-const watchPath = join(__dirname, "cli-next", "src");
+const watchPath = join(__dirname, "cli", "src");
 
 const watcher = Deno.watchFs(watchPath);
 

@@ -163,10 +163,8 @@ The CLI will then present you with interactive prompts to:
      see relevant options:
      - **Connect:** (If RUNNING) Establishes an SSH tunnel and opens an SSH
        session in your terminal.
-     - **Start:** (If STOPPED) Starts the dev space. Includes polling with a
-       spinner to show progress.
-     - **Stop:** (If RUNNING) Stops the dev space. Includes polling with a
-       spinner.
+     - **Start:** (If STOPPED) Starts the dev space.
+     - **Stop:** (If RUNNING) Stops the dev space.
      - **Delete:** Deletes the dev space (with confirmation).
 
 ### Future Enhancements (Potential) and Known Issues
@@ -192,9 +190,9 @@ The CLI will then present you with interactive prompts to:
   basic. Future versions may include commands to list, add, or remove
   landscapes.
 - The location of the configuration file is typically:
-  - **macOS:** `~/Library/Preferences/sap-devspace-cli/landscape-config.cfg`
-  - **Windows:** `%APPDATA%\sap-devspace-cli\landscape-config.cfg`
-  - **Linux:** `~/.local/share/sap-devspace-cli/landscape-config.cfg`
+  - **macOS:** `~/Library/Preferences/sap-devspace-cli/landscape-config.json`
+  - **Windows:** `%APPDATA%\sap-devspace-cli\landscape-config.json`
+  - **Linux:** `~/.local/share/sap-devspace-cli/landscape-config.json`
 
 ### Authentication
 
@@ -248,7 +246,7 @@ the SSH session tries to start:
 2. **Local SSH Client:** Ensure your local SSH client is attempting to use the
    correct private key (the CLI attempts to configure this automatically for the
    session). The CLI saves the private key to your user's `.ssh` directory
-   (e.g., `~/.ssh/workspacename.key`) and configures `~/.ssh/config` to use it
+   (e.g., `~/.ssh/workspace-id.key`) and configures `~/.ssh/config` to use it
    for the tunnel.
 
 If this error persists, it's likely an issue with the dev space's SSH

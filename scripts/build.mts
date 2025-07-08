@@ -14,7 +14,7 @@ const __rootDirectory = dirname(dirname(fileURLToPath(import.meta.url)));
 const OUT_DIR: string = join(__rootDirectory, "dist");
 const entryPoint: string = join(
   __rootDirectory,
-  "cli-next",
+  "cli",
   "src",
   "index.tsx",
 );

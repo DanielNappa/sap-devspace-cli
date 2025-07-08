@@ -13,7 +13,7 @@
     "jsxImportSource": "react"
   },
   "imports": {
-    "@/": "./cli-next/src/",
+    "@/": "./cli/src/",
     "react": "npm:react",
     "file:///jsx-runtime": "npm:react/jsx-runtime"
   }
