@@ -56,10 +56,11 @@ async function getDevSpace(
     process.exit(1);
   }
 
-  devspace.updateDevSpace(landscapeSession.url, jwt, result.id, {
-    Suspended: false,
-    WorkspaceDisplayName: result.devspaceDisplayName,
-  }).then(async () => {
+  try {
+    await devspace.updateDevSpace(landscapeSession.url, jwt, result.id, {
+      Suspended: false,
+      WorkspaceDisplayName: result.devspaceDisplayName,
+    });
     // While the status of the Dev Space hasn't changed depending on the suspend variable
     while (
       (await devspace.getDevspaceInfo({
@@ -68,13 +69,15 @@ async function getDevSpace(
         wsId: result.id,
       })).status !== devspace.DevSpaceStatus.RUNNING
     );
-  }).catch((error) => {
-    console.error(devspaceMessages.err_ws_update(
-      result.id,
-      error.toString(),
-    ));
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(devspaceMessages.err_ws_update(
+        result.id,
+        error.toString(),
+      ));
+    }
     process.exit(1);
-  });
+  }
 
   return {
     label: `${result.devspaceDisplayName} (${result.packDisplayName})`,

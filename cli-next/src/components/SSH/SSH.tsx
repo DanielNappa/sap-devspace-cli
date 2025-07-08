@@ -4,6 +4,7 @@ import Spinner from "ink-spinner";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
 import { type DevSpaceNode, type SSHConfigInfo } from "@/utils/types.ts";
 import { devspaceMessages } from "@/utils/consts.ts";
+import { ssh } from "./tunnel.ts";
 import {
   getPK,
   savePK,
@@ -11,7 +12,6 @@ import {
   SSHD_SOCKET_PORT,
   updateSSHConfig,
 } from "./utils.ts";
-import { ssh } from "./tunnel.ts";
 
 function SSH({ devSpaceNode, jwt, newHostAlias }: {
   devSpaceNode: DevSpaceNode;

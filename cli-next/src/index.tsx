@@ -80,7 +80,7 @@ if (cli.input[0] === "ssh") {
     ssh.showHelp();
     process.exit(0);
   } else {
-    handleSubcommandSSH(ssh.flags);
+    await handleSubcommandSSH(ssh.flags);
   }
 } else {
   const instance: Instance = render(<App prompt={cli.flags.prompt} />);
