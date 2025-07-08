@@ -313,7 +313,14 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
                         if (input) {
                           if (showErrorMessage) setShowErrorMessage(false);
                           setSSHAlias(input);
-                          // setSSHAliasStep(SSHAliasStep.NONE);
+                          setSSHAliasStep(SSHAliasStep.NONE);
+                          navigate(
+                            <SSH
+                              devSpaceNode={devSpaceNode}
+                              jwt={jwt}
+                              newHostAlias={input}
+                            />,
+                          );
                         }
                       }
                     } catch (error) {

@@ -167,7 +167,6 @@ export async function sshProxyCommand(
       2222, // remote port (the dev-space’s SSHD)
     );
     sessionMap.set(serverUri, session);
-
     const socket = net.connect(localPort, "127.0.0.1", () => {
       // Pipe SSH client ↔ socket
       process.stdin.pipe(socket);

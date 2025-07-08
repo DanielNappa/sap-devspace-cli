@@ -13,10 +13,10 @@ import {
 } from "./utils.ts";
 import { ssh } from "./tunnel.ts";
 
-function SSH({ devSpaceNode, jwt, newSSHAlias }: {
+function SSH({ devSpaceNode, jwt, newHostAlias }: {
   devSpaceNode: DevSpaceNode;
   jwt: string;
-  newSSHAlias?: string;
+  newHostAlias?: string;
 }): JSX.Element {
   const { app, navigate, goBack } = useNavigation();
   const [loading, setLoading] = useState<boolean>(false);
@@ -30,7 +30,7 @@ function SSH({ devSpaceNode, jwt, newSSHAlias }: {
       (pk: string) => {
         const pkFilePath = savePK(pk, devSpaceNode.id);
         const sshConfig: SSHConfigInfo = {
-          ...updateSSHConfig(pkFilePath, devSpaceNode),
+          ...updateSSHConfig(pkFilePath, devSpaceNode, newHostAlias),
           pkFilePath,
         };
         const host: string = `port${SSHD_SOCKET_PORT}-${
@@ -43,7 +43,7 @@ function SSH({ devSpaceNode, jwt, newSSHAlias }: {
             client: { port: sshConfig.port },
             username: "user",
             jwt: jwt,
-            pkFilePath: sshConfig.pkFilePath,
+            pkFilePath: pkFilePath,
           },
           setLoading,
           setMessage,

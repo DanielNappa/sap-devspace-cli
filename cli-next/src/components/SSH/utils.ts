@@ -97,31 +97,34 @@ function composeSSHConfigSectionName(landscape: string, wsId: string): string {
 export function updateSSHConfig(
   sshKeyFilePath: string,
   devSpace: DevSpaceNode,
+  newHostAlias?: string,
 ): SSHConfigInfo {
-  const sectionName = composeSSHConfigSectionName(
-    devSpace.landscapeURL,
-    devSpace.id,
-  );
   const sshConfigFile: string = getSSHConfigFilePath();
   const port = getRandomArbitrary();
-  // // get ssh config object from the ssh config file
-  // const config = getSSHConfig(sshConfigFile) as sshConfig;
-  // // push to the ssh config object with the new configuration
-  // config.remove({ Host: sectionName });
-  // // keep the existing indentation of the next block
-  // config.push(
-  //   sshConfig.parse(
-  //     `Host ${sectionName}
-  // HostName 127.0.0.1
-  // Port ${port}
-  // IdentityFile ${sshKeyFilePath}
-  // User user
-  // NoHostAuthenticationForLocalhost yes\n`,
-  //   )[0]!,
-  // );
-  // // save the SSH config object back to file
-  // writeFileSync(sshConfigFile, sshConfig.stringify(config));
-  return { name: sectionName, port: `${port}` } as SSHConfigInfo;
+  if (newHostAlias != null && typeof newHostAlias === "string") {
+    // get ssh config object from the ssh config file
+    const config = getSSHConfig(sshConfigFile) as sshConfig;
+    // push to the ssh config object with the new configuration
+    config.remove({ Host: newHostAlias });
+    // keep the existing indentation of the next block
+    config.push(
+      sshConfig.parse(
+        `Host ${newHostAlias}
+  User user
+  ProxyCommand ${
+          process.argv[1]
+        } ssh --landscape ${devSpace.landscapeURL} --devspace ${devSpace.wsName}
+  UserKnownHostsFile=/dev/null
+  StrictHostKeyChecking no
+  NoHostAuthenticationForLocalhost yes
+  LogLevel error
+  IdentityFile ${sshKeyFilePath}\n`,
+      )[0]!,
+    );
+    // save the SSH config object back to file
+    writeFileSync(sshConfigFile, sshConfig.stringify(config));
+  }
+  return { name: newHostAlias, port: `${port}` } as SSHConfigInfo;
 }
 
 export function removeSSHConfig(devSpace: DevSpaceNode): void {

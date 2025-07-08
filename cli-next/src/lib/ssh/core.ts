@@ -9,9 +9,8 @@ import {
 import {
   getPK,
   savePK,
-  type SSHConfigInfo,
+  SSH_SOCKET_PORT,
   SSHD_SOCKET_PORT,
-  updateSSHConfig,
 } from "@/components/SSH/utils.ts";
 import { devspaceMessages } from "@/utils/consts.ts";
 import type {
@@ -19,6 +18,8 @@ import type {
   LandscapeConfig,
   LandscapeSession,
 } from "@/utils/types.ts";
+import { getRandomArbitrary } from "@/utils/utils.ts";
+import { sshProxyCommand } from "./tunnel";
 
 async function getDevSpace(
   devSpaceDisplayName: string,
@@ -85,37 +86,6 @@ async function getDevSpace(
   };
 }
 
-async function getSSHConfigurations(
-  devSpaceNode: DevSpaceNode,
-  jwt: string,
-): Promise<void> {
-  getPK(devSpaceNode.landscapeURL, jwt, devSpaceNode.id).then(
-    (pk: string) => {
-      const pkFilePath = savePK(pk, devSpaceNode.id);
-      const sshConfig: SSHConfigInfo = {
-        ...updateSSHConfig(pkFilePath, devSpaceNode),
-        pkFilePath,
-      };
-      const host: string = `port${SSHD_SOCKET_PORT}-${
-        new URL(devSpaceNode.wsURL).hostname
-      }`;
-      // ssh(
-      //   {
-      //     displayName: devSpaceNode.label,
-      //     host: { url: host, port: `${SSH_SOCKET_PORT}` },
-      //     client: { port: sshConfig.port },
-      //     username: "user",
-      //     jwt: jwt,
-      //     pkFilePath: sshConfig.pkFilePath,
-      //   },
-      //   setLoading,
-      //   setMessage,
-      //   app.exit,
-      // );
-    },
-  );
-}
-
 export async function handleSubcommandSSH(
   flags: {
     help: boolean | undefined;
@@ -165,11 +135,25 @@ export async function handleSubcommandSSH(
         devSpaceNode.wsURL = info.url;
       }
 
-      // const sshConfig: SSHConfigInfo = await getSSHConfigurations(
-      //   devSpaceNode,
-      //   jwt,
-      // );
-      // assert(sshConfig != null);
+      getPK(devSpaceNode.landscapeURL, jwt, devSpaceNode.id).then(
+        (pk: string) => {
+          const pkFilePath = savePK(pk, devSpaceNode.id);
+          const host: string = `port${SSHD_SOCKET_PORT}-${
+            new URL(devSpaceNode.wsURL).hostname
+          }`;
+          const port = getRandomArbitrary();
+          sshProxyCommand(
+            {
+              displayName: devSpaceNode.label,
+              host: { url: host, port: `${SSH_SOCKET_PORT}` },
+              client: { port: `${port}` },
+              username: "user",
+              jwt: jwt,
+              pkFilePath: pkFilePath,
+            },
+          );
+        },
+      );
     }
   }
 }
