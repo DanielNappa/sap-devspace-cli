@@ -1,10 +1,11 @@
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
-import { Box, Text, useApp, useInput } from "ink";
+import { useApp, useInput } from "ink";
 import LandscapeMenu from "@/components/Landscape/LandscapeMenu.tsx";
+import Header from "@/components/UI/Header.tsx";
 import HelpOverlay from "@/components/UI/HelpOverlay.tsx";
 import { HelpContext } from "@/hooks/HelpContext.ts";
 import { NavigationContext } from "@/hooks/NavigationContext.ts";
-import { CLI_VERSION } from "@/utils/version.ts";
+import { checkForUpdates } from "@/utils/version.ts";
 
 type Props = {
   prompt?: string | undefined;
@@ -18,6 +19,17 @@ export default function App({ prompt }: Props): JSX.Element {
     JSX.Element | null
   >(null);
   const [overlay, setOverlay] = useState<string | null>(null);
+  const [updateMessage, setUpdateMessage] = useState<string | undefined>(
+    undefined,
+  );
+  const [checkedForUpdates, setCheckedForUpdates] = useState(false);
+
+  useEffect(() => {
+    checkForUpdates().then((message: string | undefined) => {
+      setUpdateMessage(message);
+      setCheckedForUpdates(true);
+    });
+  }, []);
 
   const navigate = useMemo(() => (newComponent: JSX.Element) => {
     setPreviousComponent(component);
@@ -49,22 +61,16 @@ export default function App({ prompt }: Props): JSX.Element {
   return (
     <NavigationContext.Provider value={{ app, navigate, component, goBack }}>
       <HelpContext.Provider value={{ overlay, setOverlay, useDefaultOverlay }}>
-        <Box flexDirection="column">
-          <Box borderStyle="round" paddingX={1} width={72}>
-            <Text>
-              <Text bold>SAP</Text> <Text bold>Dev Space CLI</Text>{" "}
-              <Text dimColor>
-                (experimental) <Text>v{CLI_VERSION}</Text>
-              </Text>
-            </Text>
-          </Box>
-        </Box>
-        {component}
-        {overlay && (
-          <HelpOverlay
-            overlay={overlay}
-            // onExit={() => setOverlay(null)}
-          />
+        {checkedForUpdates && (
+          <>
+            <Header updateMessage={updateMessage} />
+            {component}
+            {overlay && (
+              <HelpOverlay
+                overlay={overlay}
+              />
+            )}
+          </>
         )}
       </HelpContext.Provider>
     </NavigationContext.Provider>

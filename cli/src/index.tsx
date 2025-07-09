@@ -15,14 +15,12 @@ const cli = meow(
 
 	Options
     -h, --help                      Show usage and exit
-    -p, --prompt <prompt>           Send a prompt to Joule and display final output
 
 	Commands
     ssh                             Connect to a Dev Space through SSH
 
 	Examples
 	  $ sap-devspace-cli
-	  $ sap-devspace-cli -p "Does CAP support streaming?"
 
 	Learn More
 	  Use \`sap-devspace-cli <command> [-h | --help]\` for usage about a command.
