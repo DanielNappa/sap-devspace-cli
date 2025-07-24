@@ -4,6 +4,7 @@ import meow from "meow";
 import { handleSubcommandSSH } from "@/lib/ssh/core.ts";
 import { rootCertificateInjection } from "@/utils/utils.ts";
 import { setInkRenderer } from "@/utils/terminal.ts";
+import { checkForUpdates } from "@/utils/version.ts";
 import App from "./App.tsx";
 import "@/utils/process.ts";
 
@@ -81,6 +82,9 @@ if (cli.input[0] === "ssh") {
     await handleSubcommandSSH(ssh.flags);
   }
 } else {
-  const instance: Instance = render(<App prompt={cli.flags.prompt} />);
+  const updateMessage = await checkForUpdates().catch(() => "") as string;
+  const instance: Instance = render(
+    <App prompt={cli.flags.prompt} updateMessage={updateMessage} />,
+  );
   setInkRenderer(instance);
 }

@@ -19,7 +19,7 @@ import type {
   LandscapeSession,
 } from "@/utils/types.ts";
 import { getRandomArbitrary } from "@/utils/utils.ts";
-import { sshProxyCommand } from "./tunnel";
+import { sshProxyCommand } from "./tunnel.ts";
 
 async function getDevSpace(
   devSpaceDisplayName: string,

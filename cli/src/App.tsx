@@ -5,13 +5,13 @@ import Header from "@/components/UI/Header.tsx";
 import HelpOverlay from "@/components/UI/HelpOverlay.tsx";
 import { HelpContext } from "@/hooks/HelpContext.ts";
 import { NavigationContext } from "@/hooks/NavigationContext.ts";
-import { checkForUpdates } from "@/utils/version.ts";
 
 type Props = {
   prompt?: string | undefined;
+  updateMessage?: string | undefined;
 };
 
-export default function App({ prompt }: Props): JSX.Element {
+export default function App({ prompt, updateMessage }: Props): JSX.Element {
   const app = useApp();
   const cwd = useMemo<string>(() => process.cwd(), []) as string;
   const [component, setComponent] = useState<JSX.Element>(<LandscapeMenu />);
@@ -19,17 +19,6 @@ export default function App({ prompt }: Props): JSX.Element {
     JSX.Element | null
   >(null);
   const [overlay, setOverlay] = useState<string | null>(null);
-  const [updateMessage, setUpdateMessage] = useState<string | undefined>(
-    undefined,
-  );
-  const [checkedForUpdates, setCheckedForUpdates] = useState(false);
-
-  useEffect(() => {
-    checkForUpdates().then((message: string | undefined) => {
-      setUpdateMessage(message);
-      setCheckedForUpdates(true);
-    });
-  }, []);
 
   const navigate = useMemo(() => (newComponent: JSX.Element) => {
     setPreviousComponent(component);
@@ -61,16 +50,12 @@ export default function App({ prompt }: Props): JSX.Element {
   return (
     <NavigationContext.Provider value={{ app, navigate, component, goBack }}>
       <HelpContext.Provider value={{ overlay, setOverlay, useDefaultOverlay }}>
-        {checkedForUpdates && (
-          <>
-            <Header updateMessage={updateMessage} />
-            {component}
-            {overlay && (
-              <HelpOverlay
-                overlay={overlay}
-              />
-            )}
-          </>
+        <Header updateMessage={updateMessage} />
+        {component}
+        {overlay && (
+          <HelpOverlay
+            overlay={overlay}
+          />
         )}
       </HelpContext.Provider>
     </NavigationContext.Provider>
