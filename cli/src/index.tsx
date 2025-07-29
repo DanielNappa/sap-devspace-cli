@@ -5,12 +5,12 @@ import {
   handleSubcommandSSH,
   handleSubcommandUpdateDevSpace,
 } from "@/lib/ssh/core.ts";
+import { setInkRenderer } from "@/utils/terminal.ts";
+import { SubcommandType } from "@/utils/types.ts";
 import {
   createMeowSubcommand,
   rootCertificateInjection,
 } from "@/utils/utils.ts";
-import { setInkRenderer } from "@/utils/terminal.ts";
-import { SubcommandType } from "@/utils/types.ts";
 import { checkForUpdates } from "@/utils/version.ts";
 import App from "./App.tsx";
 import "@/utils/process.ts";
