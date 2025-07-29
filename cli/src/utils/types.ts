@@ -68,3 +68,11 @@ export interface SSHConfigInfo {
   port: string;
   pkFilePath: string;
 }
+
+export enum SubcommandType {
+  CREATE = "create",
+  SSH = "ssh",
+  START = "start",
+  STOP = "stop",
+  DELETE = "delete",
+}

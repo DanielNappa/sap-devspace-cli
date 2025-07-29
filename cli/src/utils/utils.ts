@@ -1,5 +1,7 @@
 import { strict as assert } from "node:assert";
 import os from "node:os";
+import meow from "meow";
+import { SubcommandType } from "./types";
 
 export async function rootCertificateInjection(): Promise<void> {
   if (os.platform() === "win32") {
@@ -24,6 +26,46 @@ export async function rootCertificateInjection(): Promise<void> {
   }
 }
 
+export function isValidSubcommandTypeByKey(input: string): boolean {
+  assert(input != null);
+  const memberKey: keyof typeof SubcommandType = input
+    .toUpperCase() as keyof typeof SubcommandType;
+  return memberKey in SubcommandType;
+}
+
+export function createMeowSubcommand(subcommand: string) {
+  assert(isValidSubcommandTypeByKey(subcommand));
+  return meow(
+    `
+	Usage
+	  $ sap-devspace-cli ${subcommand} [options]
+
+	Options
+    -h, --help                      Show usage and exit
+    -l, --landscape <URL>           The full URL of the target landscape 
+    -d, --devspace  <name>          The display name of the target Dev Space
+
+	Examples
+	  $ sap-devspace-cli ${subcommand} -l https://...applicationstudio.cloud.sap -d MyDevSpace
+`,
+    {
+      importMeta: import.meta,
+      flags: {
+        help: { type: "boolean", aliases: ["h"] },
+        landscape: {
+          type: "string",
+          aliases: ["l"],
+          description: "The full URL of the target landscape",
+        },
+        devspace: {
+          type: "string",
+          aliases: ["d"],
+          description: "The display name of the target Dev Space",
+        },
+      },
+    },
+  );
+}
 // From https://stackoverflow.com/questions/40801349/converting-lodashs-uniqby-to-native-javascript
 export const uniqueBy = (array: any[], predicate: string) => {
   if (!Array.isArray(array)) return [];

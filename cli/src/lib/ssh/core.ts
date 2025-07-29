@@ -56,29 +56,6 @@ async function getDevSpace(
     process.exit(1);
   }
 
-  try {
-    await devspace.updateDevSpace(landscapeSession.url, jwt, result.id, {
-      Suspended: false,
-      WorkspaceDisplayName: result.devspaceDisplayName,
-    });
-    // While the status of the Dev Space hasn't changed depending on the suspend variable
-    while (
-      (await devspace.getDevspaceInfo({
-        landscapeUrl: landscapeSession.url,
-        jwt: jwt,
-        wsId: result.id,
-      })).status !== devspace.DevSpaceStatus.RUNNING
-    );
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(devspaceMessages.err_ws_update(
-        result.id,
-        error.toString(),
-      ));
-    }
-    process.exit(1);
-  }
-
   return {
     label: `${result.devspaceDisplayName} (${result.packDisplayName})`,
     id: result.id,
@@ -89,13 +66,78 @@ async function getDevSpace(
   };
 }
 
-export async function handleSubcommandSSH(
+async function canDevSpaceStart(
+  landscapeURL: string,
+  jwt: string,
+): Promise<boolean | string> {
+  assert(landscapeURL != null);
+  assert(jwt != null);
+  const devSpaces: devspace.DevspaceInfo[] = await getDevSpaces(
+    landscapeURL,
+    jwt,
+  );
+  if (!devSpaces) return false;
+  if (
+    devSpaces.filter(
+      (devSpace: devspace.DevspaceInfo) =>
+        devSpace.status === devspace.DevSpaceStatus.RUNNING ||
+        devSpace.status === devspace.DevSpaceStatus.STARTING,
+    ).length < 2
+  ) {
+    return true;
+  } else {
+    console.log(`There are already 2 Dev Spaces running for ${landscapeURL}`);
+    return false;
+  }
+}
+
+async function updateDevSpace(
+  devSpaceNode: DevSpaceNode,
+  jwt: string,
+  suspend: boolean,
+): Promise<void> {
+  await devspace
+    .updateDevSpace(devSpaceNode.landscapeURL, jwt, devSpaceNode.id, {
+      Suspended: suspend,
+      WorkspaceDisplayName: devSpaceNode.wsName,
+    });
+  try {
+    // While the status of the Dev Space hasn't changed depending on the suspend variable
+    while (
+      (await devspace.getDevspaceInfo({
+        landscapeUrl: devSpaceNode.landscapeURL,
+        jwt: jwt,
+        wsId: devSpaceNode.id,
+      })).status !== (suspend
+        ? devspace.DevSpaceStatus.STOPPED
+        : devspace.DevSpaceStatus.RUNNING)
+    );
+    console.log(
+      devspaceMessages.info_devspace_state_updated(
+        devSpaceNode.wsName,
+        devSpaceNode.id,
+        suspend,
+      ),
+    );
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      const message = devspaceMessages.err_ws_update(
+        devSpaceNode.id,
+        error.toString(),
+      );
+      console.error(message);
+      console.trace(error);
+    }
+  }
+}
+
+async function handleSubcommand(
   flags: {
     help: boolean | undefined;
     landscape: string | undefined;
     devspace: string | undefined;
   } & Record<string, unknown>,
-): Promise<void> {
+): Promise<{ devSpaceNode: DevSpaceNode; jwt: string }> {
   assert(flags.devspace != null);
   assert(flags.landscape != null);
 
@@ -127,36 +169,121 @@ export async function handleSubcommandSSH(
         jwt,
       );
 
-      // Poll the API until it gives us a non-empty wsURL
-      while (devSpaceNode.wsURL.length === 0) {
-        const info: devspace.DevspaceInfo = await devspace.getDevspaceInfo({
-          landscapeUrl: devSpaceNode.landscapeURL,
-          jwt,
-          wsId: devSpaceNode.id,
-        });
-        assert(info != null);
-        devSpaceNode.wsURL = info.url;
-      }
+      return {
+        devSpaceNode: devSpaceNode,
+        jwt: jwt,
+      };
+    }
+  }
+}
 
-      getPK(devSpaceNode.landscapeURL, jwt, devSpaceNode.id).then(
-        (pk: string) => {
-          const pkFilePath = savePK(pk, devSpaceNode.id);
-          const host: string = `port${SSHD_SOCKET_PORT}-${
-            new URL(devSpaceNode.wsURL).hostname
-          }`;
-          const port = getRandomArbitrary();
-          sshProxyCommand(
-            {
-              displayName: devSpaceNode.label,
-              host: { url: host, port: `${SSH_SOCKET_PORT}` },
-              client: { port: `${port}` },
-              username: "user",
-              jwt: jwt,
-              pkFilePath: pkFilePath,
-            },
-          );
+export async function handleSubcommandSSH(
+  flags: {
+    help: boolean | undefined;
+    landscape: string | undefined;
+    devspace: string | undefined;
+  } & Record<string, unknown>,
+): Promise<void> {
+  const { devSpaceNode, jwt }: { devSpaceNode: DevSpaceNode; jwt: string } =
+    await handleSubcommand(flags);
+  assert(devSpaceNode != null);
+  assert(jwt != null);
+
+  // Start Dev Space if not already started
+  try {
+    await devspace.updateDevSpace(
+      devSpaceNode.landscapeURL,
+      jwt,
+      devSpaceNode.id,
+      {
+        Suspended: false,
+        WorkspaceDisplayName: devSpaceNode.wsName,
+      },
+    );
+    // While the status of the Dev Space hasn't changed depending on the suspend variable
+    while (
+      (await devspace.getDevspaceInfo({
+        landscapeUrl: devSpaceNode.landscapeURL,
+        jwt: jwt,
+        wsId: devSpaceNode.id,
+      })).status !== devspace.DevSpaceStatus.RUNNING
+    );
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(devspaceMessages.err_ws_update(
+        devSpaceNode.id,
+        error.toString(),
+      ));
+    }
+    process.exit(1);
+  }
+
+  // Poll the API until it gives us a non-empty wsURL
+  while (devSpaceNode.wsURL.length === 0) {
+    const info: devspace.DevspaceInfo = await devspace.getDevspaceInfo({
+      landscapeUrl: devSpaceNode.landscapeURL,
+      jwt,
+      wsId: devSpaceNode.id,
+    });
+    assert(info != null);
+    devSpaceNode.wsURL = info.url;
+  }
+
+  getPK(devSpaceNode.landscapeURL, jwt, devSpaceNode.id).then(
+    (pk: string) => {
+      const pkFilePath = savePK(pk, devSpaceNode.id);
+      const host: string = `port${SSHD_SOCKET_PORT}-${
+        new URL(devSpaceNode.wsURL).hostname
+      }`;
+      const port = getRandomArbitrary();
+      sshProxyCommand(
+        {
+          displayName: devSpaceNode.label,
+          host: { url: host, port: `${SSH_SOCKET_PORT}` },
+          client: { port: `${port}` },
+          username: "user",
+          jwt: jwt,
+          pkFilePath: pkFilePath,
         },
       );
+    },
+  );
+}
+
+export async function handleSubcommandUpdateDevSpace(
+  flags: {
+    help: boolean | undefined;
+    landscape: string | undefined;
+    devspace: string | undefined;
+  } & Record<string, unknown>,
+  suspend: boolean,
+): Promise<void> {
+  const { devSpaceNode, jwt }: { devSpaceNode: DevSpaceNode; jwt: string } =
+    await handleSubcommand(flags);
+  assert(devSpaceNode != null);
+  assert(jwt != null);
+
+  // Start the Dev Space
+  if (!suspend) {
+    const canRun = await canDevSpaceStart(devSpaceNode.landscapeURL, jwt);
+    if (devSpaceNode.status === devspace.DevSpaceStatus.RUNNING) {
+      console.log(`The '${devSpaceNode.wsName}' dev space is already running`);
+      process.exit(0);
+    } else if (typeof canRun === `boolean` && canRun === true) {
+      return await updateDevSpace(devSpaceNode, jwt, suspend);
+    } else if (typeof canRun === `boolean` && canRun === false) {
+      console.log(`Cannot start the '${devSpaceNode.wsName}' dev space`);
+      process.exit(0);
+    } else if (typeof canRun === `string`) {
+      console.log(canRun);
+      process.exit(0);
+    }
+  } else {
+    if (devSpaceNode.status === devspace.DevSpaceStatus.STOPPED) {
+      console.log(`The '${devSpaceNode.wsName}' dev space has already stopped`);
+      process.exit(0);
+    } else {
+      return await updateDevSpace(devSpaceNode, jwt, suspend);
     }
   }
 }

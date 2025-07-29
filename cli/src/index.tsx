@@ -1,9 +1,16 @@
 #!/usr/bin/env node
 import { type Instance, render } from "ink";
 import meow from "meow";
-import { handleSubcommandSSH } from "@/lib/ssh/core.ts";
-import { rootCertificateInjection } from "@/utils/utils.ts";
+import {
+  handleSubcommandSSH,
+  handleSubcommandUpdateDevSpace,
+} from "@/lib/ssh/core.ts";
+import {
+  createMeowSubcommand,
+  rootCertificateInjection,
+} from "@/utils/utils.ts";
 import { setInkRenderer } from "@/utils/terminal.ts";
+import { SubcommandType } from "@/utils/types.ts";
 import { checkForUpdates } from "@/utils/version.ts";
 import App from "./App.tsx";
 import "@/utils/process.ts";
@@ -19,6 +26,8 @@ const cli = meow(
 
 	Commands
     ssh                             Connect to a Dev Space through SSH
+    start                           Start a Dev Space
+    stop                            Stop a Dev Space
 
 	Examples
 	  $ sap-devspace-cli
@@ -39,47 +48,66 @@ const cli = meow(
   },
 );
 
-const ssh = meow(
-  `
-	Usage
-	  $ sap-devspace-cli ssh [options]
-
-	Options
-    -h, --help                      Show usage and exit
-    -l, --landscape <URL>           The full URL of the target landscape 
-    -d, --devspace  <name>          The display name of the target Dev Space
-
-	Examples
-	  $ sap-devspace-cli ssh -l https://...applicationstudio.cloud.sap -d MyDevSpace
-`,
-  {
-    importMeta: import.meta,
-    flags: {
-      help: { type: "boolean", aliases: ["h"] },
-      landscape: {
-        type: "string",
-        aliases: ["l"],
-        description: "The full URL of the target landscape",
-      },
-      devspace: {
-        type: "string",
-        aliases: ["d"],
-        description: "The display name of the target Dev Space",
-      },
-    },
-  },
-);
+const create = createMeowSubcommand(SubcommandType.CREATE);
+const ssh = createMeowSubcommand(SubcommandType.SSH);
+const start = createMeowSubcommand(SubcommandType.START);
+const stop = createMeowSubcommand(SubcommandType.STOP);
+const deleteDevSpace = createMeowSubcommand(SubcommandType.DELETE);
 
 // Runs only on Win32 systems to inject system certificates to address issues with corporate networks
 await rootCertificateInjection();
 
-// Hand off to the SSH command
-if (cli.input[0] === "ssh") {
-  if (ssh.flags.help || (!ssh.flags.devspace && !ssh.flags.landscape)) {
-    ssh.showHelp();
-    process.exit(0);
-  } else {
-    await handleSubcommandSSH(ssh.flags);
+if (cli.input[0] != null) {
+  switch (cli.input[0]) {
+    case SubcommandType.CREATE: {
+      // TO-DO
+      break;
+    }
+    case SubcommandType.SSH: {
+      if (ssh.flags.help || (!ssh.flags.devspace && !ssh.flags.landscape)) {
+        ssh.showHelp();
+        process.exit(0);
+      } else {
+        await handleSubcommandSSH(ssh.flags);
+      }
+      break;
+    }
+    case SubcommandType.START: {
+      if (
+        start.flags.help || (!start.flags.devspace && !start.flags.landscape)
+      ) {
+        start.showHelp();
+        process.exit(0);
+      } else {
+        await handleSubcommandUpdateDevSpace(start.flags, false);
+      }
+      break;
+    }
+    case SubcommandType.STOP: {
+      if (stop.flags.help || (!stop.flags.devspace && !stop.flags.landscape)) {
+        stop.showHelp();
+        process.exit(0);
+      } else {
+        await handleSubcommandUpdateDevSpace(stop.flags, true);
+      }
+      break;
+    }
+    case SubcommandType.DELETE: {
+      if (
+        deleteDevSpace.flags.help ||
+        (!deleteDevSpace.flags.devspace && !deleteDevSpace.flags.landscape)
+      ) {
+        deleteDevSpace.showHelp();
+        process.exit(0);
+      } else {
+        // TO-DO
+      }
+      break;
+    }
+    default: {
+      cli.showHelp();
+      process.exit(0);
+    }
   }
 } else {
   const updateMessage = await checkForUpdates().catch(() => "") as string;

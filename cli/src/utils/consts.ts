@@ -149,8 +149,7 @@ export const devspaceMessages = {
     wsName: string,
     wsId: string,
     suspend: boolean,
-  ) =>
-    `The ${wsName} (${wsId}) dev space was ${suspend ? "stopped" : "started"}`,
+  ) => `The '${wsName}' dev space was ${suspend ? "stopped" : "started"}`,
   info_wsid_copied: `The dev space ID was copied to the clipboard.`,
   info_devspace_deleted: (wsId: string) =>
     `The '${wsId}' dev space has been deleted.`,

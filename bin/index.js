@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --no-warnings --enable-source-maps
+#!/usr/bin/env -S node --no-warnings
 /*
  * Adapted from https://github.com/openai/codex/blob/main/codex-cli/bin/codex.js
  */
@@ -13,12 +13,12 @@ const __rootDirectory = dirname(dirname(__filename));
 
 // Resolve the path to the compiled CLI bundle
 const cliPath = join(__rootDirectory, "dist", "index.js");
-const cliUrl = pathToFileURL(cliPath).href;
+const cliURL = pathToFileURL(cliPath).href;
 
 // Load and execute the CLI
 (async () => {
   try {
-    await import(cliUrl);
+    await import(cliURL);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error(error);
