@@ -5,24 +5,18 @@ import { SubcommandType } from "./types";
 
 export async function rootCertificateInjection(): Promise<void> {
   if (os.platform() === "win32") {
-    try {
-      const ca = await import("win-ca");
-      const api = ca.default || ca;
-
-      if (api && typeof api.inject === "function") {
-        assert(api != null);
-        assert(typeof api.inject === "function");
-        api.inject("+");
-      } else {
-        console.error('Could not find "inject" method for "win-ca" library');
-      }
+   try {
+      const { globalAgent } = await import("https");
+      const { getCACertificates } = await import("node:tls");
+      
+      globalAgent.options.ca = getCACertificates('system');
     } catch (error) {
       if (error instanceof Error) {
         console.error(
-          `Failed to initialize "win-ca" for system certificates: ${error.message}`,
+          `Failed to initialize system certificates: ${error.message}`,
         );
       }
-    }
+    } 
   }
 }
 

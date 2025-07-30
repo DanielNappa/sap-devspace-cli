@@ -16,12 +16,11 @@
     "@types/semver": "^7.7.0",
     "@types/websocket": "^1.0.10",
     "@types/which": "^3.0.4",
-    "@types/win-ca": "^3.5.4",
     "esbuild": "^0.25.5",
     "node-rsa": "^1.1.1"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.15.0"
   },
   "dependencies": {
     "@clack/prompts": "^0.10.1",
@@ -44,8 +43,7 @@
     "semver": "^7.7.2",
     "ssh-config": "^5.0.3",
     "websocket": "1.0.34",
-    "which": "^5.0.0",
-    "win-ca": "^3.5.1"
+    "which": "^5.0.0"
   },
   "scripts": {
     "build": "npx tsx scripts/build.mts",

@@ -107,12 +107,12 @@ editor-agnostic command-line interface.
 | Requirement       | Details                                                         |
 | ----------------- | --------------------------------------------------------------- |
 | Operating systems | macOS, Windows (Linux should work but is less tested by author) |
-| Node.js           | **Version 22 or newer** (as per `package.json`)                 |
+| Node.js           | **Version 22.15.0 or newer** (as per `package.json`)           |
 | `ssh` client      | A working SSH client must be available in your system's PATH.   |
 
 > **Note for Windows Users:** If you are behind a corporate proxy that performs
 > SSL inspection (like Zscaler), the CLI attempts to automatically integrate
-> with Windows system certificate authorities using `win-ca`. If issues persist,
+> with Windows system certificate authorities. If issues persist,
 > ensure your corporate CAs are correctly installed in your Windows trust store.
 
 ---
@@ -212,10 +212,9 @@ If you are on Windows and behind a corporate proxy that inspects SSL/TLS traffic
 (like Zscaler), you might encounter "unable to get local issuer certificate"
 errors when the CLI tries to make HTTPS requests to SAP BTP services.
 
-- **Automatic Fix Attempt:** This CLI includes `win-ca`, which attempts to
-  automatically use your Windows system's trusted certificate authorities. This
-  often resolves the issue if your corporate proxy's root CA certificate is
-  installed and trusted by Windows.
+- **Automatic Fix Attempt:** This CLI automatically uses your Windows system's 
+  trusted certificate authorities (Node.js 22.15.0+ feature). This often resolves the 
+  issue if your corporate proxy's root CA certificate is installed and trusted by Windows.
 - **If Issues Persist:**
   1. Ensure your corporate proxy's root CA certificate is correctly installed in
      your Windows "Trusted Root Certification Authorities" store. Consult your

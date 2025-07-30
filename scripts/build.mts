@@ -70,7 +70,7 @@ esbuild
     loader: { ".node": "file" },
     // Do not bundle the contents of package.json at build time: always read it
     // at runtime.
-    external: [packagePath, "vscode", "node:child_process", "win-ca"],
+    external: [packagePath, "vscode", "node:child_process"],
     bundle: true,
     format: "esm",
     platform: "node",
@@ -80,5 +80,16 @@ esbuild
     sourcemap: isDevBuild ? "inline" : true,
     plugins: [ignoreReactDevToolsPlugin],
     inject: [inject],
+  })
+  .then(() => {
+    // Copy additional files to dist
+    const filesToCopy: string[] = ["README.md", "LICENSE"];
+    filesToCopy.forEach((file: string) => {
+      const source: string = join(__rootDirectory, file);
+      const destination: string = join(OUT_DIR, file);
+      if (fs.existsSync(source)) {
+        fs.copyFileSync(source, destination);
+      }
+    });
   })
   .catch(() => process.exit(1));
