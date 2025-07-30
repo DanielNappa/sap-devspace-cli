@@ -5,18 +5,18 @@ import { SubcommandType } from "./types";
 
 export async function rootCertificateInjection(): Promise<void> {
   if (os.platform() === "win32") {
-   try {
+    try {
       const { globalAgent } = await import("https");
       const { getCACertificates } = await import("node:tls");
-      
-      globalAgent.options.ca = getCACertificates('system');
+
+      globalAgent.options.ca = getCACertificates("system");
     } catch (error) {
       if (error instanceof Error) {
         console.error(
           `Failed to initialize system certificates: ${error.message}`,
         );
       }
-    } 
+    }
   }
 }
 

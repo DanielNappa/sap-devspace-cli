@@ -13,19 +13,20 @@ const rootPackage = JSON.parse(readFileSync(rootPackagePath, "utf8"));
 function processExportMap(m) {
   for (const key in m) {
     const value = m[key];
-    if (typeof value === 'string') m[key] = value.replace(/^\.\/dist\//, './');
+    if (typeof value === "string") m[key] = value.replace(/^\.\/dist\//, "./");
     else processExportMap(value);
   }
 }
 processExportMap(rootPackage.exports);
 
-for (const key of ['types', 'main', 'module']) {
-  if (typeof rootPackage[key] === 'string') rootPackage[key] = rootPackage[key].replace(/^(\.\/)?dist\//, './');
+for (const key of ["types", "main", "module"]) {
+  if (typeof rootPackage[key] === "string") {
+    rootPackage[key] = rootPackage[key].replace(/^(\.\/)?dist\//, "./");
+  }
 }
 
 delete rootPackage.module;
 delete rootPackage.dependencies;
 delete rootPackage.devDependencies;
-delete rootPackage.scripts.prepack;
 
 console.log(JSON.stringify(rootPackage, null, 2));
