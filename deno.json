@@ -14,7 +14,7 @@
   },
   "imports": {
     "@/": "./cli/src/",
-    "react": "npm:react",
-    "file:///jsx-runtime": "npm:react/jsx-runtime"
+    "react": "npm:react@19.1.1",
+    "file:///jsx-runtime": "npm:react@19.1.1/jsx-runtime"
   }
 }

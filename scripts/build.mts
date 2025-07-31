@@ -9,9 +9,12 @@ import * as fs from "fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const __rootDirectory = dirname(dirname(fileURLToPath(import.meta.url)));
-const OUT_DIR: string = join(__rootDirectory, "dist");
+const __dirname: string = dirname(fileURLToPath(import.meta.url));
+const __rootDirectory: string = dirname(
+  dirname(fileURLToPath(import.meta.url)),
+);
+const __distDirectory: string = join(__rootDirectory, "dist");
+const __distBinDirectory: string = join(__distDirectory, "bin");
 const entryPoint: string = join(
   __rootDirectory,
   "cli",
@@ -59,7 +62,7 @@ const isDevBuild: boolean = process.argv.includes("--dev") ||
   process.env.NODE_ENV === "development";
 
 // Build Hygiene, ensure we drop previous dist dir and any leftover files
-const outPath: string = resolve(OUT_DIR);
+const outPath: string = resolve(__distDirectory);
 if (fs.existsSync(outPath)) {
   fs.rmSync(outPath, { recursive: true, force: true });
 }
@@ -75,7 +78,9 @@ esbuild
     format: "esm",
     platform: "node",
     tsconfig: tsConfig,
-    outfile: isDevBuild ? `${OUT_DIR}/index-dev.js` : `${OUT_DIR}/index.js`,
+    outfile: isDevBuild
+      ? `${__distBinDirectory}/index-dev.js`
+      : `${__distBinDirectory}/index.js`,
     minify: !isDevBuild,
     sourcemap: isDevBuild ? "inline" : true,
     plugins: [ignoreReactDevToolsPlugin],
@@ -86,7 +91,7 @@ esbuild
     const filesToCopy: string[] = ["README.md", "LICENSE"];
     filesToCopy.forEach((file: string) => {
       const source: string = join(__rootDirectory, file);
-      const destination: string = join(OUT_DIR, file);
+      const destination: string = join(__distDirectory, file);
       if (fs.existsSync(source)) {
         fs.copyFileSync(source, destination);
       }

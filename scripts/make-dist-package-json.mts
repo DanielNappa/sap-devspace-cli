@@ -1,12 +1,13 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const __rootDirectory = dirname(dirname(fileURLToPath(import.meta.url)));
-const OUT_DIR: string = join(__rootDirectory, "dist");
+const __distDirectory: string = join(__rootDirectory, "dist");
 
 const rootPackagePath: string = join(__rootDirectory, "package.json");
+const distPackagePath: string = join(__distDirectory, "package.json");
 
 const rootPackage = JSON.parse(readFileSync(rootPackagePath, "utf8"));
 
@@ -29,4 +30,5 @@ delete rootPackage.module;
 delete rootPackage.dependencies;
 delete rootPackage.devDependencies;
 
+writeFileSync(JSON.stringify(rootPackage, null, 2));
 console.log(JSON.stringify(rootPackage, null, 2));

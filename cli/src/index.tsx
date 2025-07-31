@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --no-warnings --use-system-ca --enable-source-maps
 import { type Instance, render } from "ink";
 import meow from "meow";
 import {
