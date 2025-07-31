@@ -3,12 +3,8 @@
   "description": "An editor-agnostic, pure CLI adaptation of the SAP Business Application Studio Toolkit extension for VSCode.",
   "version": "0.0.5",
   "license": "Apache-2.0",
-  "main": "./dist/index.js",
-  "module": "./cli/src/index.ts",
+  "module": "cli/src/index.ts",
   "type": "module",
-  "bin": {
-    "sap-devspace-cli": "bin/index.js"
-  },
   "devDependencies": {
     "@types/bun": "^1.2.19",
     "@types/fs-extra": "^11.0.4",
@@ -55,7 +51,6 @@
   },
   "files": [
     "bin",
-    "dist",
     "README.md",
     "LICENSE"
   ],

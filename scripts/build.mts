@@ -23,6 +23,7 @@ const entryPoint: string = join(
 );
 const tsConfig: string = join(__rootDirectory, "tsconfig.json");
 const packagePath: string = join(__rootDirectory, "package.json");
+const distPackagePath: string = join(__distDirectory, "package.json");
 const inject: string = join(__dirname, "require-shim.ts");
 
 /**
@@ -88,6 +89,7 @@ esbuild
   })
   .then(() => {
     // Copy additional files to dist
+    const rootPackage = JSON.parse(fs.readFileSync(packagePath, "utf8"));
     const filesToCopy: string[] = ["README.md", "LICENSE"];
     filesToCopy.forEach((file: string) => {
       const source: string = join(__rootDirectory, file);
@@ -96,5 +98,23 @@ esbuild
         fs.copyFileSync(source, destination);
       }
     });
+    // Produce production package.json with bin and main
+    const distPackage = {
+      name: rootPackage.name,
+      description: rootPackage.description,
+      version: rootPackage.version,
+      license: rootPackage.license,
+      type: rootPackage.type,
+      main: "bin/index.js",
+      bin: {
+        [rootPackage.name]: "bin/index.js",
+      },
+      engines: rootPackage.engines,
+      files: rootPackage.files,
+      repository: rootPackage.repository,
+      keywords: rootPackage.keywords,
+    };
+
+    fs.writeFileSync(distPackagePath, JSON.stringify(distPackage, null, 2));
   })
   .catch(() => process.exit(1));
