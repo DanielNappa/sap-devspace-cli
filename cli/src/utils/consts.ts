@@ -45,7 +45,7 @@ export const BAS_LOGO_SMALL: string = `⠀⠀⠀⠀⠀⠀⠀⠀⢰⣦⣄⠀⠀�
 export const BAS_INTERNAL_PROXY_PORT: number = 8887;
 // Forward BAS's internal proxy for Joule
 export const PROXY_LOCAL_PORT: number = getRandomArbitrary();
-export const JWT_TIMEOUT = 60 * 1000; // 60s
+export const JWT_TIMEOUT = 180 * 1000; // 60s
 export const USER_DATA_FOLDER: string = process.env.APPDATA ||
   (process.platform == "darwin"
     ? `${process.env.HOME}/` +

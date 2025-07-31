@@ -21,10 +21,8 @@ export type LandscapeSession = {
 };
 
 export enum LandscapeMenuOption {
-  ADD,
   DELETE,
   LOGIN,
-  EXIT,
 }
 
 export interface DevSpaceSettings {

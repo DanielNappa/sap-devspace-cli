@@ -405,8 +405,6 @@ export function TextInput({
   );
 }
 
-export default TextInput;
-
 type UncontrolledProps = {
   readonly initialValue?: string;
 } & Except<TextInputProps, "value" | "onChange">;
