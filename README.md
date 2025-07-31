@@ -107,7 +107,7 @@ editor-agnostic command-line interface.
 | Requirement       | Details                                                         |
 | ----------------- | --------------------------------------------------------------- |
 | Operating systems | macOS, Windows (Linux should work but is less tested by author) |
-| Node.js           | **Version 22.15.0 or newer** (as per `package.json`)            |
+| Node.js           | **Version 23.8.0 or newer** (as per `package.json`)             |
 | `ssh` client      | A working SSH client must be available in your system's PATH.   |
 
 > **Note for Windows Users:** If you are behind a corporate proxy that performs
@@ -213,9 +213,9 @@ If you are on Windows and behind a corporate proxy that inspects SSL/TLS traffic
 errors when the CLI tries to make HTTPS requests to SAP BTP services.
 
 - **Automatic Fix Attempt:** This CLI automatically uses your Windows system's
-  trusted certificate authorities (Node.js 22.15.0+ feature). This often
-  resolves the issue if your corporate proxy's root CA certificate is installed
-  and trusted by Windows.
+  trusted certificate authorities (Node.js 23.8.0+ feature). This often resolves
+  the issue if your corporate proxy's root CA certificate is installed and
+  trusted by Windows.
 - **If Issues Persist:**
   1. Ensure your corporate proxy's root CA certificate is correctly installed in
      your Windows "Trusted Root Certification Authorities" store. Consult your
