@@ -7,10 +7,7 @@ import {
 } from "@/lib/ssh/core.ts";
 import { setInkRenderer } from "@/utils/terminal.ts";
 import { SubcommandType } from "@/utils/types.ts";
-import {
-  createMeowSubcommand,
-  rootCertificateInjection,
-} from "@/utils/utils.ts";
+import { createMeowSubcommand } from "@/utils/utils.ts";
 import { checkForUpdates } from "@/utils/version.ts";
 import App from "./App.tsx";
 import "@/utils/process.ts";
@@ -53,9 +50,6 @@ const ssh = createMeowSubcommand(SubcommandType.SSH);
 const start = createMeowSubcommand(SubcommandType.START);
 const stop = createMeowSubcommand(SubcommandType.STOP);
 const deleteDevSpace = createMeowSubcommand(SubcommandType.DELETE);
-
-// Runs only on Win32 systems to inject system certificates to address issues with corporate networks
-await rootCertificateInjection();
 
 if (cli.input[0] != null) {
   switch (cli.input[0]) {

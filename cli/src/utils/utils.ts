@@ -1,24 +1,6 @@
 import { strict as assert } from "node:assert";
-import os from "node:os";
 import meow from "meow";
-import { SubcommandType } from "./types";
-
-export async function rootCertificateInjection(): Promise<void> {
-  if (os.platform() === "win32") {
-    try {
-      const { globalAgent } = await import("https");
-      const { getCACertificates } = await import("node:tls");
-
-      globalAgent.options.ca = getCACertificates("system");
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(
-          `Failed to initialize system certificates: ${error.message}`,
-        );
-      }
-    }
-  }
-}
+import { SubcommandType } from "./types.ts";
 
 export function isValidSubcommandTypeByKey(input: string): boolean {
   assert(input != null);

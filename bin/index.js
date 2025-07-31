@@ -1,4 +1,4 @@
-#!/usr/bin/env -S node --no-warnings
+#!/usr/bin/env -S node --no-warnings --use-system-ca
 /*
  * Adapted from https://github.com/openai/codex/blob/main/codex-cli/bin/codex.js
  */
