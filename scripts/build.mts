@@ -13,16 +13,16 @@ const __dirname: string = dirname(fileURLToPath(import.meta.url));
 const __rootDirectory: string = dirname(
   dirname(fileURLToPath(import.meta.url)),
 );
-const __distDirectory: string = join(__rootDirectory, "dist");
+const __cliDirectory: string = join(__rootDirectory, "packages", "cli");
+const __distDirectory: string = join(__cliDirectory, "dist");
 const __distBinDirectory: string = join(__distDirectory, "bin");
 const entryPoint: string = join(
-  __rootDirectory,
-  "cli",
+  __cliDirectory,
   "src",
   "index.tsx",
 );
-const tsConfig: string = join(__rootDirectory, "tsconfig.json");
-const packagePath: string = join(__rootDirectory, "package.json");
+const tsConfig: string = join(__cliDirectory, "tsconfig.json");
+const packagePath: string = join(__cliDirectory, "package.json");
 const distPackagePath: string = join(__distDirectory, "package.json");
 const inject: string = join(__dirname, "require-shim.ts");
 

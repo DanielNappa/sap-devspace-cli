@@ -13,7 +13,7 @@ import { getUserAgent } from "package-manager-detector";
 import which from "which";
 import semver from "semver";
 // Read the version directly from package.json.
-import pkg from "../../../package.json" with { type: "json" };
+import pkg from "../../package.json" with { type: "json" };
 
 interface UpdateCheckState {
   lastUpdateCheck?: string;

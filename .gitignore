@@ -139,3 +139,5 @@ dist
 .pnp.*
 package-lock.json
 extension.js
+packages/.DS_Store
+.DS_Store

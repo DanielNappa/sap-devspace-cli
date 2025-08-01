@@ -1,20 +1,4 @@
 {
   "nodeModulesDir": "auto",
-  "compilerOptions": {
-    "types": [
-      "react",
-      "@types/react"
-    ],
-    "lib": [
-      "deno.ns",
-      "dom"
-    ],
-    "jsx": "react-jsx",
-    "jsxImportSource": "react"
-  },
-  "imports": {
-    "@/": "./cli/src/",
-    "react": "npm:react@19.1.1",
-    "file:///jsx-runtime": "npm:react@19.1.1/jsx-runtime"
-  }
+  "workspace": ["packages/*"]
 }
