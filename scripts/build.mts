@@ -112,6 +112,8 @@ esbuild
       engines: rootPackage.engines,
       files: rootPackage.files,
       repository: rootPackage.repository,
+      bugs: rootPackage.bugs,
+      homepage: rootPackage.homepage,
       keywords: rootPackage.keywords,
     };
 
