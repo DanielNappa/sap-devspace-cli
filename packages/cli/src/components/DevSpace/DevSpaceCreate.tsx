@@ -9,7 +9,7 @@ import Spinner from "ink-spinner";
 import {
   createDevSpace,
   getDevSpacesSpec,
-} from "@sap/bas-sdk/dist/src/apis/get-devspace";
+} from "@sap/bas-sdk/dist/src/apis/get-devspace.js";
 import type {
   DevSpaceCreation,
   DevSpaceExtension,

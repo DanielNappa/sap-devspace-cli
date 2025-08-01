@@ -2,6 +2,7 @@
 import { type Instance, render } from "ink";
 import meow from "meow";
 import {
+  handleSubcommandDelete,
   handleSubcommandSSH,
   handleSubcommandUpdateDevSpace,
 } from "@/lib/ssh/core.ts";
@@ -25,6 +26,7 @@ const cli = meow(
     ssh                             Connect to a Dev Space through SSH
     start                           Start a Dev Space
     stop                            Stop a Dev Space
+    delete                          Delete a Dev Space
 
 	Examples
 	  $ sap-devspace-cli
@@ -58,7 +60,7 @@ if (cli.input[0] != null) {
       break;
     }
     case SubcommandType.SSH: {
-      if (ssh.flags.help || (!ssh.flags.devspace && !ssh.flags.landscape)) {
+      if (ssh.flags.help || (!ssh.flags.devspace || !ssh.flags.landscape)) {
         ssh.showHelp();
         process.exit(0);
       } else {
@@ -68,7 +70,7 @@ if (cli.input[0] != null) {
     }
     case SubcommandType.START: {
       if (
-        start.flags.help || (!start.flags.devspace && !start.flags.landscape)
+        start.flags.help || (!start.flags.devspace || !start.flags.landscape)
       ) {
         start.showHelp();
         process.exit(0);
@@ -78,7 +80,7 @@ if (cli.input[0] != null) {
       break;
     }
     case SubcommandType.STOP: {
-      if (stop.flags.help || (!stop.flags.devspace && !stop.flags.landscape)) {
+      if (stop.flags.help || (!stop.flags.devspace || !stop.flags.landscape)) {
         stop.showHelp();
         process.exit(0);
       } else {
@@ -89,12 +91,12 @@ if (cli.input[0] != null) {
     case SubcommandType.DELETE: {
       if (
         deleteDevSpace.flags.help ||
-        (!deleteDevSpace.flags.devspace && !deleteDevSpace.flags.landscape)
+        (!deleteDevSpace.flags.devspace || !deleteDevSpace.flags.landscape)
       ) {
         deleteDevSpace.showHelp();
         process.exit(0);
       } else {
-        // TO-DO
+        await handleSubcommandDelete(deleteDevSpace.flags);
       }
       break;
     }

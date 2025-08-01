@@ -151,8 +151,8 @@ export const devspaceMessages = {
     suspend: boolean,
   ) => `The '${wsName}' dev space was ${suspend ? "stopped" : "started"}`,
   info_wsid_copied: `The dev space ID was copied to the clipboard.`,
-  info_devspace_deleted: (wsId: string) =>
-    `The '${wsId}' dev space has been deleted.`,
+  info_devspace_deleted: (wsName: string) =>
+    `The '${wsName}' dev space has been deleted.`,
   info_can_run_only_2_devspaces:
     `You can only run 2 dev spaces at a time. To run another dev space, you must stop a running one.`,
 };

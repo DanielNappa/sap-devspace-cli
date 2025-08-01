@@ -19,13 +19,13 @@ export function DevSpaceDelete({ devSpaceNode, jwt, onFinish }: {
   useEffect(() => {
     if (acceptedDeletion) {
       setMessage(`Deleting ${devSpaceNode.label}`);
-      deletePK(devSpaceNode.id);
-      removeSSHConfig(devSpaceNode);
       devspace.deleteDevSpace(
         devSpaceNode.landscapeURL,
         jwt,
         devSpaceNode.id,
       ).then(() => {
+        deletePK(devSpaceNode.id);
+        removeSSHConfig(devSpaceNode);
         setLoading(false);
         setMessage(`Deleted ${devSpaceNode.label}`);
         onFinish();

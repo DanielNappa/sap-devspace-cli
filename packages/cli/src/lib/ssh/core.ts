@@ -7,7 +7,9 @@ import {
   removeLandscape,
 } from "@/components/Landscape/utils.ts";
 import {
+  deletePK,
   getPK,
+  removeSSHConfig,
   savePK,
   SSH_SOCKET_PORT,
   SSHD_SOCKET_PORT,
@@ -284,6 +286,43 @@ export async function handleSubcommandUpdateDevSpace(
       process.exit(0);
     } else {
       return await updateDevSpace(devSpaceNode, jwt, suspend);
+    }
+  }
+}
+
+export async function handleSubcommandDelete(
+  flags: {
+    help: boolean | undefined;
+    landscape: string | undefined;
+    devspace: string | undefined;
+  } & Record<string, unknown>,
+): Promise<void> {
+  const { devSpaceNode, jwt }: { devSpaceNode: DevSpaceNode; jwt: string } =
+    await handleSubcommand(flags);
+  assert(devSpaceNode != null);
+  assert(jwt != null);
+
+  try {
+    // Delete from API first to ensure it succeeds before local cleanup
+    await devspace.deleteDevSpace(
+      devSpaceNode.landscapeURL,
+      jwt,
+      devSpaceNode.id,
+    );
+
+    // Clean up local resources after successful API deletion
+    deletePK(devSpaceNode.id);
+    removeSSHConfig(devSpaceNode);
+
+    console.log(devspaceMessages.info_devspace_deleted(devSpaceNode.wsName));
+  } catch (error) {
+    if (error instanceof Error) {
+      const message = devspaceMessages.err_devspace_delete(
+        devSpaceNode.wsName,
+        error.toString(),
+      );
+      console.error(message);
+      process.exit(1);
     }
   }
 }
