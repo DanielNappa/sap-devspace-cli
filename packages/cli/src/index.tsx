@@ -1,11 +1,9 @@
 #!/usr/bin/env -S node --no-warnings --use-system-ca --enable-source-maps
 import { type Instance, render } from "ink";
 import meow from "meow";
-import {
-  handleSubcommandDelete,
-  handleSubcommandSSH,
-  handleSubcommandUpdateDevSpace,
-} from "@/lib/ssh/core.ts";
+import { handleSubcommandSSH } from "@/lib/ssh/core.ts";
+import { handleSubcommandDelete } from "./lib/devspace/core.ts";
+import { handleSubcommandUpdateDevSpace } from "./lib/devspace/core.ts";
 import { setInkRenderer } from "@/utils/terminal.ts";
 import { SubcommandType } from "@/utils/types.ts";
 import { createMeowSubcommand } from "@/utils/utils.ts";
