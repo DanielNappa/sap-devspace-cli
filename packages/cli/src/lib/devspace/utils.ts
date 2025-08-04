@@ -9,6 +9,14 @@ import type {
   LandscapeSession,
 } from "@/utils/types.ts";
 
+function getHostnameOrThrow(landscapeURL: string): string {
+  try {
+    return new URL(landscapeURL).hostname;
+  } catch {
+    throw new Error(`Invalid URL: ${landscapeURL}`);
+  }
+}
+
 export async function getDevSpace(
   devSpaceDisplayName: string,
   selectedLandscape: LandscapeConfig,
@@ -19,7 +27,7 @@ export async function getDevSpace(
   addLandscape(selectedLandscape.url, jwt);
 
   const landscapeSession: LandscapeSession = {
-    name: new URL(selectedLandscape.url).hostname,
+    name: getHostnameOrThrow(selectedLandscape.url),
     url: selectedLandscape.url,
     jwt: jwt,
   };
