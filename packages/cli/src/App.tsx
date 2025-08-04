@@ -1,5 +1,5 @@
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
-import { useApp, useInput } from "ink";
+import { Box, useApp, useInput } from "ink";
 import LandscapeMenu from "@/components/Landscape/LandscapeMenu.tsx";
 import Header from "@/components/UI/Header.tsx";
 import HelpOverlay from "@/components/UI/HelpOverlay.tsx";
@@ -51,7 +51,9 @@ export default function App({ prompt, updateMessage }: Props): JSX.Element {
     <NavigationContext.Provider value={{ app, navigate, component, goBack }}>
       <HelpContext.Provider value={{ overlay, setOverlay, useDefaultOverlay }}>
         <Header updateMessage={updateMessage} />
-        {component}
+        <Box paddingX={1}>
+          {component}
+        </Box>
         {overlay && (
           <HelpOverlay
             overlay={overlay}
