@@ -3,7 +3,7 @@
 /**
  * Each time Deno starts or restarts this file (on initial run +
  * whenever a *.ts(x) changes), we:
- *   1) run `npm run build`
+ *   1) run `deno run -A scripts/build.mts`
  *   2) run `node bin/index.js […whatever flags passed]`
  *
  * Any flags you pass into this script become `Deno.args` and get
