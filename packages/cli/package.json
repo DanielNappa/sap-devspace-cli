@@ -10,8 +10,8 @@
     "@types/fs-extra": "^11.0.4",
     "@types/react": "^19.1.9",
     "@types/semver": "^7.7.0",
-    "@types/websocket": "^1.0.10",
     "@types/which": "^3.0.4",
+    "@types/ws": "^8.18.1",
     "esbuild": "^0.25.8",
     "node-rsa": "^1.1.1"
   },
@@ -36,8 +36,8 @@
     "react": "^19.1.1",
     "semver": "^7.7.2",
     "ssh-config": "^5.0.3",
-    "websocket": "1.0.35",
-    "which": "^5.0.0"
+    "which": "^5.0.0",
+    "ws": "^8.17.1"
   },
   "scripts": {
     "build": "npx tsx ../../scripts/build.mts",

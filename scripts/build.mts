@@ -5,7 +5,7 @@
  */
 import type { Plugin, PluginBuild } from "esbuild";
 import * as esbuild from "esbuild";
-import * as fs from "fs";
+import * as fs from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 

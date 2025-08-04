@@ -1,4 +1,7 @@
 {
   "nodeModulesDir": "auto",
-  "workspace": ["packages/*"]
+  "workspace": ["packages/*"],
+  "imports": {
+    "esbuild": "npm:esbuild"
+  }
 }

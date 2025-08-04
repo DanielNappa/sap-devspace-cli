@@ -1,4 +1,4 @@
-import { strict as assert } from "assert";
+import { strict as assert } from "node:assert";
 import { devspace } from "@sap/bas-sdk";
 import { getDevSpaces } from "@/components/DevSpace/utils.ts";
 import { addLandscape, removeLandscape } from "@/components/Landscape/utils.ts";

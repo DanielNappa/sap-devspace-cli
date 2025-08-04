@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import WebSocket from "websocket";
+import WebSocket from "ws";
 import type { Dispatch, SetStateAction } from "react";
 import type { Instance } from "ink";
 import {
@@ -32,14 +32,16 @@ function closeSessions(sessions?: string[]): void {
 
 /* istanbul ignore next */
 class connectionClientStream extends BaseStream {
-  public constructor(private readonly connection: WebSocket.connection) {
+  public constructor(private readonly connection: WebSocket) {
     super();
-
     connection.on(
       "message",
-      (data: { type: string; binaryData: Buffer<ArrayBufferLike> }) => {
-        if (data.type === "binary") {
-          this.onData(data.binaryData);
+      (data: WebSocket.RawData, isBinary: boolean) => {
+        if (isBinary) {
+          const buffer: Buffer<ArrayBufferLike> = Buffer.isBuffer(data)
+            ? data
+            : Buffer.from(data as ArrayBuffer);
+          this.onData(buffer);
         }
       },
     );
@@ -74,7 +76,7 @@ class connectionClientStream extends BaseStream {
     if (!error) {
       this.connection.close();
     } else {
-      this.connection.drop((<any> error).code, error.message);
+      this.connection.close((<any> error).code, error.message);
     }
     this.disposed = true;
     this.closedEmitter.fire({ error });
@@ -136,16 +138,18 @@ export async function ssh(
 
   config.addService(PortForwardingService);
 
-  const wsClient = new WebSocket.client();
-
-  wsClient.connect(serverURI, "ssh", null, {
-    Authorization: `bearer ${opts.jwt}`,
+  const websocket = new WebSocket(serverURI, "ssh", {
+    origin: undefined,
+    headers: {
+      Authorization: `bearer ${opts.jwt}`,
+    },
   });
+
   const stream = await new Promise<Stream>((resolve, reject) => {
-    wsClient.on("connect", (connection: WebSocket.connection) => {
-      resolve(new connectionClientStream(connection));
+    websocket.on("open", () => {
+      resolve(new connectionClientStream(websocket));
     });
-    wsClient.on("connectFailed", function error(error: any) {
+    websocket.on("error", function (error: unknown) {
       reject(new Error(`Failed to connect to server at ${serverURI}:${error}`));
     });
   });
@@ -262,10 +266,10 @@ export async function forwardBASInternalProxy(
   setMessage: Dispatch<SetStateAction<string>>,
 ): Promise<void> {
   setMessage(`Connecting to ${opts.displayName}`);
-  const serverUri = `wss://${opts.host.url}:${opts.host.port}`;
+  const serverURI = `wss://${opts.host.url}:${opts.host.port}`;
   // close the opened session if exists
   const isContinue = new Promise((res) => {
-    const session = sessionMap.get(serverUri);
+    const session = sessionMap.get(serverURI);
     if (session) {
       void session
         .close(SshDisconnectReason.byApplication)
@@ -288,17 +292,19 @@ export async function forwardBASInternalProxy(
 
   config.addService(PortForwardingService);
 
-  const wsClient = new WebSocket.client();
-
-  wsClient.connect(serverUri, "ssh", null, {
-    Authorization: `bearer ${opts.jwt}`,
+  const websocket = new WebSocket(serverURI, "ssh", {
+    origin: undefined,
+    headers: {
+      Authorization: `bearer ${opts.jwt}`,
+    },
   });
+
   const stream = await new Promise<Stream>((resolve, reject) => {
-    wsClient.on("connect", (connection: WebSocket.connection) => {
-      resolve(new connectionClientStream(connection));
+    websocket.on("open", () => {
+      resolve(new connectionClientStream(websocket));
     });
-    wsClient.on("connectFailed", function error(error: any) {
-      reject(new Error(`Failed to connect to server at ${serverUri}:${error}`));
+    websocket.on("error", function (error: unknown) {
+      reject(new Error(`Failed to connect to server at ${serverURI}:${error}`));
     });
   });
 
@@ -319,7 +325,7 @@ export async function forwardBASInternalProxy(
     const pfs: PortForwardingService = session.activateService(
       PortForwardingService,
     );
-    sessionMap.set(serverUri, session);
+    sessionMap.set(serverURI, session);
 
     await pfs.forwardToRemotePort(
       "127.0.0.1", // remote host inside the dev-space

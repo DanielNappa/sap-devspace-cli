@@ -1,5 +1,5 @@
+import { strict as assert } from "node:assert";
 import { devspace } from "@sap/bas-sdk";
-import { strict as assert } from "assert";
 import { deletePK, removeSSHConfig } from "@/components/SSH/utils.ts";
 import { handleSubcommand } from "@/lib/cli/core.ts";
 import { devspaceMessages } from "@/utils/consts.ts";

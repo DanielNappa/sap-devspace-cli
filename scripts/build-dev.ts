@@ -30,7 +30,7 @@ const run = async (cmd: string[]): Promise<void> => {
 };
 
 const buildAndRun = async (): Promise<void> => {
-  await run(["npm", "run", "build"]);
+  await run(["deno", "run", "-A", "scripts/build.mts"]);
   await run([entryPoint, ...Deno.args]);
 };
 
