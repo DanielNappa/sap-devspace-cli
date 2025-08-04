@@ -19,15 +19,15 @@
     "node": ">=23.8.0"
   },
   "dependencies": {
-    "@hono/node-server": "^1.18.0",
+    "@hono/node-server": "^1.18.1",
     "@inkjs/ui": "^2.0.0",
     "@microsoft/dev-tunnels-ssh": "^3.12.5",
     "@microsoft/dev-tunnels-ssh-tcp": "^3.12.5",
     "@sap/bas-sdk": "^3.11.6",
-    "chalk": "^5.4.1",
+    "chalk": "^5.5.0",
     "fast-npm-meta": "^0.4.4",
     "fs-extra": "^11.3.0",
-    "hono": "^4.8.10",
+    "hono": "^4.8.12",
     "ink": "^6.1.0",
     "ink-spinner": "^5.0.0",
     "meow": "^13.2.0",
@@ -37,7 +37,7 @@
     "semver": "^7.7.2",
     "ssh-config": "^5.0.3",
     "which": "^5.0.0",
-    "ws": "^8.17.1"
+    "ws": "^8.18.3"
   },
   "scripts": {
     "build": "npx tsx ../../scripts/build.mts",
