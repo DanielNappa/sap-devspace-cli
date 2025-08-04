@@ -41,11 +41,13 @@
   },
   "scripts": {
     "build": "npx tsx ../../scripts/build.mts",
+    "build:bun": "bun run ../../scripts/build.mts",
     "dev": "npx tsx src/index.tsx",
     "dev:watch": "npx tsx --watch src/index.tsx",
     "dev:bun:watch": "bun --watch src/index.tsx",
     "dev:deno:watch": "deno run -A --watch src/index.tsx",
-    "test": "npm run build && dist/bin/index.js"
+    "test": "npm run build && dist/bin/index.js",
+    "test:bun": "bun run build:bun && dist/bin/index.js"
   },
   "files": [
     "bin",

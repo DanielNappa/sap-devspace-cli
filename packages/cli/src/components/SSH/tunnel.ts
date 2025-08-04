@@ -110,10 +110,10 @@ export async function ssh(
   exit: (error?: Error) => void,
 ): Promise<void> {
   setMessage(`Connecting to ${opts.displayName}`);
-  const serverUri = `wss://${opts.host.url}:${opts.host.port}`;
+  const serverURI = `wss://${opts.host.url}:${opts.host.port}`;
   // close the opened session if exists
   const isContinue = new Promise((res) => {
-    const session = sessionMap.get(serverUri);
+    const session = sessionMap.get(serverURI);
     if (session) {
       void session
         .close(SshDisconnectReason.byApplication)
@@ -138,7 +138,7 @@ export async function ssh(
 
   const wsClient = new WebSocket.client();
 
-  wsClient.connect(serverUri, "ssh", null, {
+  wsClient.connect(serverURI, "ssh", null, {
     Authorization: `bearer ${opts.jwt}`,
   });
   const stream = await new Promise<Stream>((resolve, reject) => {
@@ -146,7 +146,7 @@ export async function ssh(
       resolve(new connectionClientStream(connection));
     });
     wsClient.on("connectFailed", function error(error: any) {
-      reject(new Error(`Failed to connect to server at ${serverUri}:${error}`));
+      reject(new Error(`Failed to connect to server at ${serverURI}:${error}`));
     });
   });
 
@@ -177,7 +177,7 @@ export async function ssh(
     setMessage(
       `SSH connected to ${opts.displayName} on port ${localPort}`,
     );
-    sessionMap.set(serverUri, session);
+    sessionMap.set(serverURI, session);
 
     await pfs.forwardToRemotePort(
       "127.0.0.1", // remote host inside the dev-space
@@ -237,7 +237,7 @@ export async function ssh(
         );
         void session.close(SshDisconnectReason.byApplication)
           .catch((err) => console.error("Error closing SSH session:", err));
-        sessionMap.delete(serverUri);
+        sessionMap.delete(serverURI);
       },
     );
   } catch (error) {

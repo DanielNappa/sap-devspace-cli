@@ -102,10 +102,10 @@ export async function sshProxyCommand(
     pkFilePath: string;
   },
 ): Promise<void> {
-  const serverUri = `wss://${opts.host.url}:${opts.host.port}`;
+  const serverURI = `wss://${opts.host.url}:${opts.host.port}`;
   // close the opened session if exists
   const isContinue = new Promise((res) => {
-    const session = sessionMap.get(serverUri);
+    const session = sessionMap.get(serverURI);
     if (session) {
       void session
         .close(SshDisconnectReason.byApplication)
@@ -130,7 +130,7 @@ export async function sshProxyCommand(
 
   const wsClient = new WebSocket.client();
 
-  wsClient.connect(serverUri, "ssh", null, {
+  wsClient.connect(serverURI, "ssh", null, {
     Authorization: `bearer ${opts.jwt}`,
   });
   const stream = await new Promise<Stream>((resolve, reject) => {
@@ -138,7 +138,7 @@ export async function sshProxyCommand(
       resolve(new connectionClientStream(connection));
     });
     wsClient.on("connectFailed", function error(error: any) {
-      reject(new Error(`Failed to connect to server at ${serverUri}:${error}`));
+      reject(new Error(`Failed to connect to server at ${serverURI}:${error}`));
     });
   });
 
@@ -166,7 +166,7 @@ export async function sshProxyCommand(
       "127.0.0.1", // local host
       2222, // remote port (the dev-space’s SSHD)
     );
-    sessionMap.set(serverUri, session);
+    sessionMap.set(serverURI, session);
     const socket = net.connect(localPort, "127.0.0.1", () => {
       // Pipe SSH client ↔ socket
       process.stdin.pipe(socket);
@@ -177,7 +177,7 @@ export async function sshProxyCommand(
     socket.on("close", () => {
       void session.close(SshDisconnectReason.byApplication)
         .catch((err) => console.error("Error closing SSH session:", err));
-      sessionMap.delete(serverUri);
+      sessionMap.delete(serverURI);
       process.exit(0);
     });
     socket.on("error", (error) => {
