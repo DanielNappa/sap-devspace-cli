@@ -9,6 +9,8 @@ import type {
   LandscapeSession,
 } from "@/utils/types.ts";
 
+const MAX_RUNNING_DEVSPACES: number = 2;
+
 function getHostnameOrThrow(landscapeURL: string): string {
   try {
     return new URL(landscapeURL).hostname;
@@ -78,7 +80,7 @@ export async function canDevSpaceStart(
       (devSpace: devspace.DevspaceInfo) =>
         devSpace.status === devspace.DevSpaceStatus.RUNNING ||
         devSpace.status === devspace.DevSpaceStatus.STARTING,
-    ).length < 2
+    ).length < MAX_RUNNING_DEVSPACES
   ) {
     return true;
   } else {

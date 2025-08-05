@@ -242,6 +242,7 @@ export async function ssh(
         void session.close(SshDisconnectReason.byApplication)
           .catch((err) => console.error("Error closing SSH session:", err));
         sessionMap.delete(serverURI);
+        closeSessions();
       },
     );
   } catch (error) {

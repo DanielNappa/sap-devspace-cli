@@ -182,23 +182,50 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
       switch (selectedOption) {
         case `${DevSpaceMenuOption.CONNECT}`: {
           // Poll the API until it gives us a non-empty wsURL
-          while (devSpaceNode.wsURL.length === 0) {
-            devspace.getDevspaceInfo({
-              landscapeUrl: devSpaceNode.landscapeURL,
-              jwt,
-              wsId: devSpaceNode.id,
-            }).then((info: devspace.DevspaceInfo) =>
-              devSpaceNode.wsURL = info.url
-            );
-          }
-          if (!hasBeenPrompted) {
-            setMessage(
-              `Save a permanent SSH alias for ${devSpaceNode.wsName} so you can later just run ssh my-devspace-alias?`,
-            );
-            setSSHAliasStep(SSHAliasStep.CONFIRM);
-          } else {
-            navigate(<SSH devSpaceNode={devSpaceNode} jwt={jwt} />);
-          }
+          (async (): Promise<void> => {
+            const maxRetries = 30; // timeout after ~30 seconds
+            let retries = 0;
+
+            while (devSpaceNode.wsURL.length === 0 && retries < maxRetries) {
+              try {
+                const info: devspace.DevspaceInfo = await devspace
+                  .getDevspaceInfo({
+                    landscapeUrl: devSpaceNode.landscapeURL,
+                    jwt,
+                    wsId: devSpaceNode.id,
+                  });
+                devSpaceNode.wsURL = info.url;
+
+                if (devSpaceNode.wsURL.length === 0) {
+                  // Wait 1 second before next poll
+                  await new Promise((resolve) => setTimeout(resolve, 1000));
+                  retries++;
+                }
+              } catch (error) {
+                console.error("Failed to poll devspace info:", error);
+                setMessage("Failed to connect to Dev Space. Please try again.");
+                setSelectedOption(undefined);
+                return;
+              }
+            }
+
+            if (retries >= maxRetries) {
+              setMessage(
+                "Timeout waiting for Dev Space URL. Please try again.",
+              );
+              setSelectedOption(undefined);
+              return;
+            }
+
+            if (!hasBeenPrompted) {
+              setMessage(
+                `Save a permanent SSH alias for ${devSpaceNode.wsName} so you can later just run ssh my-devspace-alias?`,
+              );
+              setSSHAliasStep(SSHAliasStep.CONFIRM);
+            } else {
+              navigate(<SSH devSpaceNode={devSpaceNode} jwt={jwt} />);
+            }
+          })();
           break;
         }
         case `${DevSpaceMenuOption.START}`:

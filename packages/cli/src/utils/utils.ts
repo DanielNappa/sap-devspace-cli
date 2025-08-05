@@ -43,15 +43,18 @@ export function createMeowSubcommand(subcommand: string) {
   );
 }
 // From https://stackoverflow.com/questions/40801349/converting-lodashs-uniqby-to-native-javascript
-export const uniqueBy = (array: any[], predicate: string) => {
+export function uniqueBy<T extends Record<PropertyKey, unknown>>(
+  array: (T | undefined)[],
+  predicate: keyof T,
+) {
   if (!Array.isArray(array)) return [];
 
   const cb = typeof predicate === "function"
     ? predicate
-    : (o: { [x: string]: any }) => o[predicate];
+    : (o: T | undefined) => o?.[predicate];
 
   const pickedObjects = array
-    .filter((item) => item)
+    .filter((item): item is T => Boolean(item))
     .reduce((map, item) => {
       const key = cb(item);
 
@@ -62,7 +65,7 @@ export const uniqueBy = (array: any[], predicate: string) => {
     .values();
 
   return [...pickedObjects];
-};
+}
 
 export function pickByStringIndex<T>(
   array: T[],
