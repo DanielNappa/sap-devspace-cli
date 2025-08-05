@@ -1,4 +1,5 @@
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
+import process from "node:process";
 import { Box, useApp, useInput } from "ink";
 import LandscapeMenu from "@/components/Landscape/LandscapeMenu.tsx";
 import Header from "@/components/UI/Header.tsx";

@@ -259,7 +259,7 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
               wsID={devSpaceNode.id}
               wsName={devSpaceNode.wsName}
               jwt={jwt}
-              suspend={true}
+              suspend
               onFinish={() => {
                 setComponent(undefined);
                 setSelectedOption(undefined);

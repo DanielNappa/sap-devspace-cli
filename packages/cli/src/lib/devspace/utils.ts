@@ -1,4 +1,5 @@
 import { strict as assert } from "node:assert";
+import process from "node:process";
 import { devspace } from "@sap/bas-sdk";
 import { getDevSpaces } from "@/components/DevSpace/utils.ts";
 import { addLandscape, removeLandscape } from "@/components/Landscape/utils.ts";

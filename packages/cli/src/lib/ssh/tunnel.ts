@@ -1,4 +1,6 @@
+import { Buffer } from "node:buffer";
 import net from "node:net";
+import process from "node:process";
 import WebSocket from "ws";
 import type { Dispatch, SetStateAction } from "react";
 import {

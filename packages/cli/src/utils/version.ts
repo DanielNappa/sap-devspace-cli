@@ -9,6 +9,7 @@ import { getLatestVersion } from "fast-npm-meta";
 import { execFileSync } from "node:child_process";
 import { readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import process from "node:process";
 import { getUserAgent } from "package-manager-detector";
 import which from "which";
 import semver from "semver";

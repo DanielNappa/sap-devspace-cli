@@ -1,4 +1,6 @@
+import { Buffer } from "node:buffer";
 import { spawn } from "node:child_process";
+import process from "node:process";
 import WebSocket from "ws";
 import type { Dispatch, SetStateAction } from "react";
 import type { Instance } from "ink";

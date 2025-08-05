@@ -1,4 +1,5 @@
 import { type JSX, useEffect, useMemo, useState } from "react";
+import process from "node:process";
 import { Box } from "ink";
 import { Select } from "@inkjs/ui";
 import Nav from "@/components/UI/Nav.tsx";

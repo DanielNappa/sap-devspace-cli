@@ -2,6 +2,7 @@
  * Adopted directly from
  * https://github.com/openai/codex/blob/main/codex-cli/src/utils/terminal.ts
  */
+import process from "node:process";
 import type { Instance } from "ink";
 
 let inkRenderer: Instance | null = null;

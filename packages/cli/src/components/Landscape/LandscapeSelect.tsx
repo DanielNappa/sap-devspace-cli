@@ -58,7 +58,7 @@ function LandscapeSelect(
 
   return (
     <Box justifyContent="center" flexDirection="column" marginTop={1}>
-      <Box flexDirection="column" width={"70%"}>
+      <Box flexDirection="column" width="70%">
         <Text>
           {`Select a landscape${
             landscapeMenuOption === LandscapeMenuOption.DELETE

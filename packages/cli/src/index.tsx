@@ -1,4 +1,5 @@
 #!/usr/bin/env -S node --no-warnings --use-system-ca --enable-source-maps
+import process from "node:process";
 import { type Instance, render } from "ink";
 import meow from "meow";
 import { handleSubcommandSSH } from "@/lib/ssh/core.ts";

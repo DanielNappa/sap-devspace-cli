@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import {
   existsSync,
   mkdirSync,
@@ -7,6 +8,7 @@ import {
 } from "node:fs";
 import { homedir } from "node:os";
 import { join, parse } from "node:path";
+import process from "node:process";
 import { URL } from "node:url";
 import { remotessh } from "@sap/bas-sdk";
 import sshConfig from "ssh-config";

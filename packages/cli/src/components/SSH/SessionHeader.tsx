@@ -1,5 +1,6 @@
-import { Box, type Instance, render, Text } from "ink";
 import { type JSX, useMemo } from "react";
+import { Box, type Instance, render, Text } from "ink";
+import process from "node:process";
 
 export interface SessionHeaderProps {
   localPort: number;
