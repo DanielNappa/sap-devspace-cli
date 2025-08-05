@@ -45,8 +45,8 @@ class connectionClientStream extends BaseStream {
       if (!code) {
         this.onEnd();
       } else {
-        const error = new Error(reason);
-        (<any> error).code = code;
+        const error = new Error(reason) as Error & { code?: number };
+        error.code = code ?? 1011;
         this.onError(error);
       }
     });
@@ -72,7 +72,10 @@ class connectionClientStream extends BaseStream {
     if (!error) {
       this.connection.close();
     } else {
-      this.connection.close((<any> error).code, error.message);
+      this.connection.close(
+        (error as Error & { code?: number }).code ?? 1011,
+        error.message,
+      );
     }
     this.disposed = true;
     this.closedEmitter.fire({ error });
