@@ -4,8 +4,9 @@ import { type Instance, render } from "ink";
 import meow from "meow";
 import { handleSubcommandSSH } from "@/lib/ssh/core.ts";
 import {
+  handleSubcommandCreate,
   handleSubcommandDelete,
-  handleSubcommandUpdateDevSpace,
+  handleSubcommandUpdate,
 } from "@/lib/devspace/core.ts";
 import { setInkRenderer } from "@/utils/terminal.ts";
 import { SubcommandType } from "@/utils/types.ts";
@@ -48,7 +49,6 @@ const cli = meow(
   },
 );
 
-const create = createMeowSubcommand(SubcommandType.CREATE);
 const ssh = createMeowSubcommand(SubcommandType.SSH);
 const start = createMeowSubcommand(SubcommandType.START);
 const stop = createMeowSubcommand(SubcommandType.STOP);
@@ -57,7 +57,7 @@ const deleteDevSpace = createMeowSubcommand(SubcommandType.DELETE);
 if (cli.input[0] != null) {
   switch (cli.input[0]) {
     case SubcommandType.CREATE: {
-      // TO-DO
+      await handleSubcommandCreate(cli.flags);
       break;
     }
     case SubcommandType.SSH: {
@@ -76,7 +76,7 @@ if (cli.input[0] != null) {
         start.showHelp();
         process.exit(0);
       } else {
-        await handleSubcommandUpdateDevSpace(start.flags, false);
+        await handleSubcommandUpdate(start.flags, false);
       }
       break;
     }
@@ -85,7 +85,7 @@ if (cli.input[0] != null) {
         stop.showHelp();
         process.exit(0);
       } else {
-        await handleSubcommandUpdateDevSpace(stop.flags, true);
+        await handleSubcommandUpdate(stop.flags, true);
       }
       break;
     }
@@ -109,7 +109,7 @@ if (cli.input[0] != null) {
 } else {
   const updateMessage = await checkForUpdates().catch(() => "") as string;
   const instance: Instance = render(
-    <App prompt={cli.flags.prompt} updateMessage={updateMessage} />,
+    <App _prompt={cli.flags.prompt} updateMessage={updateMessage} />,
   );
   setInkRenderer(instance);
 }

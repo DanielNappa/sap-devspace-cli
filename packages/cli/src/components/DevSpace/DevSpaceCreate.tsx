@@ -79,34 +79,6 @@ function DevSpaceCreate(
                 label: pack.tagline || pack.name,
               })),
             );
-            // const metadata: { [key: string]: any } = {};
-            // filteredPacks.forEach((devSpacePack: DevSpacePack) => {
-            //   const organizedDataLocal = organizePackExtensions(
-            //     devSpacePack.name,
-            //     devSpacesSpecLocal.packs,
-            //     devSpacesSpecLocal.extensions,
-            //   ) as PackMetadata;
-
-            //   if (!organizedDataLocal) {
-            //     console.error(
-            //       "Could not process extension data for the selected pack.",
-            //     );
-            //   }
-            //   metadata[devSpacePack.tagline] ??= organizedDataLocal.additional
-            //     .extensions.map((
-            //       devSpaceExtension: DevSpaceExtension,
-            //     ) => ({
-            //       name: devSpaceExtension.name,
-            //       namespace: devSpaceExtension.namespace,
-            //       tagline: devSpaceExtension.tagline,
-            //     }));
-            // });
-            // const __dirname = dirname(fileURLToPath(import.meta.url));
-
-            // const metadataPath: string = join(__dirname, "metadata.json");
-            // writeFileSync(metadataPath, JSON.stringify(metadata, null, 2), {
-            //   encoding: "utf8",
-            // });
           }
         });
         break;

@@ -13,12 +13,11 @@ import process from "node:process";
 import { getUserAgent } from "package-manager-detector";
 import which from "which";
 import semver from "semver";
+import { CheckState } from "./types.ts";
 // Read the version directly from package.json.
 import pkg from "../../package.json" with { type: "json" };
 
-interface UpdateCheckState {
-  lastUpdateCheck?: string;
-}
+type UpdateCheckState = CheckState<"Update">;
 
 interface UpdateCheckInfo {
   currentVersion: string;
@@ -32,7 +31,7 @@ export interface UpdateOptions {
 
 export const CLI_VERSION: string = (pkg as { version: string }).version;
 
-const UPDATE_CHECK_FREQUENCY = 1000 * 60 * 60 * 24; // 1 day
+const UPDATE_CHECK_FREQUENCY: number = 1000 * 60 * 60 * 24; // 1 day
 
 function isInstalled(manager: AgentName): boolean {
   try {

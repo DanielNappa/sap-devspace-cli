@@ -7,6 +7,14 @@ export type LandscapeConfig = {
   default?: boolean;
 };
 
+/**
+ * A generic type to track the last time a specific check was performed.
+ * @template T - The type of check being performed (e.g., 'Update', 'Auth').
+ */
+export type CheckState<T extends string> = {
+  [K in `last${T}Check`]?: string;
+};
+
 export interface LandscapeInfo {
   name: string;
   url: string;
