@@ -3,6 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import process from "node:process";
 import { devspace } from "@sap/bas-sdk";
+import meow from "meow";
 import chalk from "chalk";
 import { organizePackExtensions } from "@/components/DevSpace/utils.ts";
 import { deletePK, removeSSHConfig } from "@/components/SSH/utils.ts";
@@ -42,7 +43,6 @@ type DevSpaceMetadata = Record<string, MappedDevSpaceExtension[]>;
 export async function handleSubcommandCreate(
   flags: {
     help: boolean | undefined;
-    landscape: string | undefined;
   } & Record<string, unknown>,
 ): Promise<void> {
   assert(flags.landscape != null);
@@ -98,28 +98,85 @@ export async function handleSubcommandCreate(
         }));
     });
     // Update cached metadata
-    await writeFile(metadataPath, JSON.stringify(metadata, null, 2), {
-      encoding: "utf8",
-    });
+    await writeFile(
+      metadataPath,
+      JSON.stringify(
+        {
+          ...metadata,
+          lastMetaCheck: new Date().toUTCString(),
+        },
+        null,
+        2,
+      ),
+      {
+        encoding: "utf8",
+      },
+    );
+  }
+  const create = meow(
+    `
+	Usage
+	  $ sap-devspace-cli create [options]
+
+	Options
+    -h, --help                      Show usage and exit
+    -l, --landscape <URL>           The full URL of the target landscape 
+    -n, --name      <name>          The display name of the new Dev Space
+    -t, --type      <type>          The type of the new Dev Space
+    -e, --extension                 (Optional) additional extensions to enhance the new Dev Space
+
+	Examples
+	  $ sap-devspace-cli create -l https://...applicationstudio.cloud.sap -n MyDevSpace
+`,
+    {
+      importMeta: import.meta,
+      flags: {
+        help: { type: "boolean", aliases: ["h"] },
+        landscape: {
+          type: "string",
+          aliases: ["l"],
+          description: "The full URL of the target landscape",
+          isRequired: true,
+        },
+        name: {
+          type: "string",
+          aliases: ["n"],
+          description: "The display name of the new Dev Space",
+          isRequired: true,
+        },
+        type: {
+          type: "string",
+          aliases: ["t"],
+          description: "The type of the new Dev Space",
+          isRequired: true,
+        },
+        extension: { type: "string", isMultiple: true, default: [] },
+      },
+    },
+  );
+  if (
+    create.flags.help ||
+    (!create.flags.landscape || !create.flags.name || !create.flags.type)
+  ) {
+    create.showHelp();
+    process.exit(0);
   }
 
-  // if (ssh.flags.help || (!ssh.flags.landscape)) {
-  //   cli.showHelp();
-  //   process.exit(0);
-  // }
-
-  // try {
-  //   if (!(/^[a-zA-Z0-9][a-zA-Z0-9_]{0,39}$/.test(input))) {
-  //     console.log(chalk.red(devspaceMessages.err_invalid_devspace_name));
-  //   } else {
-  //     if (input) {
-
-  //     }
-  //   }
-  // } catch {
-  //   console.log(chalk.red(devspaceMessages.err_invalid_devspace_name));
-  // }
+  try {
+    if (!(/^[a-zA-Z0-9][a-zA-Z0-9_]{0,39}$/.test(create.flags.name))) {
+      console.log(chalk.red(devspaceMessages.err_invalid_devspace_name));
+      process.exit(1);
+    }
+    // TODO: Implement actual Dev Space creation logic
+    console.log(
+      `Creating Dev Space: ${create.flags.name} of type: ${create.flags.type}`,
+    );
+  } catch {
+    console.log(chalk.red(devspaceMessages.err_invalid_devspace_name));
+    process.exit(1);
+  }
 }
+
 export async function handleSubcommandUpdate(
   flags: {
     help: boolean | undefined;
