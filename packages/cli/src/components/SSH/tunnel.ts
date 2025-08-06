@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { spawn } from "node:child_process";
+import type { ChildProcess, StdioOptions } from "node:child_process";
 import process from "node:process";
 import WebSocket from "ws";
 import type { Dispatch, SetStateAction } from "react";
@@ -20,6 +20,21 @@ import { clearTerminal, onExit } from "@/utils/terminal.ts";
 import { RenderSessionHeader } from "./SessionHeader.tsx";
 import { getSSHConfigFilePath } from "./utils.ts";
 
+interface SpawnOptions {
+  stdio: StdioOptions | undefined;
+  env?: Record<string, string | undefined>;
+  cwd?: string;
+  onExit?: (
+    exitCode: number | null,
+    signalCode:
+      | Deno.Signal
+      | NodeJS.Signals
+      | number
+      | string
+      | null
+      | undefined,
+  ) => void;
+}
 const sessionMap: Map<string, SshClientSession> = new Map();
 
 function closeSessions(sessions?: string[]): void {
@@ -32,6 +47,80 @@ function closeSessions(sessions?: string[]): void {
   });
 }
 
+// Promise<
+//   | Bun.SyncSubprocess
+//   | Deno.ChildProcess
+//   | ChildProcess
+// >
+async function spawnProcess(
+  command: string,
+  args: string[],
+  options: SpawnOptions,
+): Promise<Bun.Subprocess | Deno.ChildProcess | ChildProcess> {
+  const runtime = navigator.userAgent;
+
+  if (runtime.startsWith("Bun")) {
+    // Use Bun.spawn to launch the terminal, not ssh directly
+    // const { spawn } = await import("bun-pty");
+    // const pty = spawn(
+    //   command,
+    //   args,
+    //   {
+    //     name: process.env.TERM || process.env.COLORTERM || "xterm-256color",
+    //     cwd: process.cwd(),
+    //   },
+    // );
+
+    // // Manually wire up the PTY to the process's stdio
+    //   process.stdin.setRawMode(true);
+    //   process.stdin.on('data', (data) => pty.write(data));
+    //   pty.onData((data) => process.stdout.write(data));
+
+    //   const resizeHandler = () => pty.resize(process.stdout.columns, process.stdout.rows);
+    //   process.stdout.on('resize', resizeHandler);
+
+    //   pty.onExit((event) => {
+    //     // Cleanup: restore terminal to a normal state
+    //     process.stdin.setRawMode(false);
+    //     process.stdin.removeAllListeners('data');
+    //     process.stdout.removeListener('resize', resizeHandler);
+    //     options.onExit?.(event.exitCode, event.signalCode);
+    //   });
+
+    //   return pty;
+
+    // const sshProcess = spawnSync(command, args, {shell: true, ...options});
+    // sshProcess.on("exit", (code, signal) => {
+    //   options.onExit?.(code, signal);
+    // });
+
+    // return sshProcess;
+    // // Use PTY for proper terminal interaction
+  } else if (runtime.startsWith("Deno")) {
+    const sshDenoCommand = new Deno.Command(command, {
+      args: args,
+      stdin: "inherit",
+      stdout: "inherit",
+    });
+    const sshChildProcess: Deno.ChildProcess = sshDenoCommand.spawn();
+    // Handle exit asynchronously
+    sshChildProcess.status.then((status: Deno.CommandStatus) => {
+      options.onExit?.(status.code, status.signal ?? null);
+    });
+
+    return sshChildProcess;
+  } else {
+    // Node.js - use standard spawn
+    const { spawn } = await import("node:child_process");
+
+    const sshProcess = spawn(command, args, options);
+    sshProcess.on("exit", (code, signal) => {
+      options.onExit?.(code, signal);
+    });
+
+    return sshProcess;
+  }
+}
 /* istanbul ignore next */
 class connectionClientStream extends BaseStream {
   public constructor(private readonly connection: WebSocket) {
@@ -58,7 +147,7 @@ class connectionClientStream extends BaseStream {
     });
   }
 
-  public async write(data: Buffer): Promise<void> {
+  public write(data: Buffer): Promise<void> {
     if (this.disposed) {
       throw new ObjectDisposedError(this);
     }
@@ -70,7 +159,7 @@ class connectionClientStream extends BaseStream {
     return Promise.resolve();
   }
 
-  public async close(error?: Error): Promise<void> {
+  public close(error?: Error): Promise<void> {
     if (this.disposed) {
       throw new ObjectDisposedError(this);
     }
@@ -89,7 +178,7 @@ class connectionClientStream extends BaseStream {
     return Promise.resolve();
   }
 
-  public dispose(): void {
+  public override dispose(): void {
     if (!this.disposed) {
       this.connection.close();
     }
@@ -200,8 +289,7 @@ export async function ssh(
     onExit();
     exit();
 
-    const sshCommand: string = [
-      "ssh",
+    const sshArgs: string[] = [
       "-i",
       opts.pkFilePath,
       "-p",
@@ -211,45 +299,33 @@ export async function ssh(
       "-o",
       "UserKnownHostsFile=/dev/null", // Avoids polluting known_hosts for localhost ports
       `${opts.username}@127.0.0.1`,
-    ].join(" ");
+    ];
+
+    const sshCommandString: string = ["ssh"].concat(sshArgs).join(" ");
 
     const instance: Instance = RenderSessionHeader({
       localPort: localPort,
       sshConfigFile: getSSHConfigFilePath(),
       pkFilePath: opts.pkFilePath,
-      sshCommand: sshCommand,
+      sshCommandString: sshCommandString,
     });
 
     instance.unmount();
 
-    const sshProcess = spawn("ssh", [
-      "-i",
-      opts.pkFilePath,
-      "-p",
-      `${localPort}`,
-      "-o",
-      "StrictHostKeyChecking=no", // For first connection to localhost
-      "-o",
-      "UserKnownHostsFile=/dev/null", // Avoids polluting known_hosts for localhost ports
-      `${opts.username}@127.0.0.1`,
-    ], {
+    await spawnProcess("ssh", sshArgs, {
       stdio: "inherit",
       env: process.env,
-    });
-
-    // When the user’s ssh exits, close the tunneled session cleanly
-    sshProcess.on(
-      "exit",
-      (code: number | null, signal: NodeJS.Signals | null) => {
+      onExit(exitCode: number | null, signalCode) {
+        // When the user’s ssh exits, close the tunneled session cleanly
         console.log(
-          `SSH process exited (code=${code}, signal=${signal}), closing tunnel…`,
+          `SSH process exited (code=${exitCode}, signal=${signalCode}), closing tunnel…`,
         );
         void session.close(SshDisconnectReason.byApplication)
           .catch((err) => console.error("Error closing SSH session:", err));
         sessionMap.delete(serverURI);
         closeSessions();
       },
-    );
+    });
   } catch (error) {
     if (error instanceof Error) {
       console.log(`SSH session dropped : ${error?.message}`);

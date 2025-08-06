@@ -6,14 +6,14 @@ export interface SessionHeaderProps {
   localPort: number;
   sshConfigFile: string;
   pkFilePath: string;
-  sshCommand: string;
+  sshCommandString: string;
 }
 
 function SessionHeader({
   localPort,
   sshConfigFile,
   pkFilePath,
-  sshCommand,
+  sshCommandString: sshCommandString,
 }: SessionHeaderProps): JSX.Element {
   const CWD = useMemo(() => process.cwd(), []);
   return (
@@ -50,7 +50,7 @@ function SessionHeader({
         flexDirection="column"
       >
         <Text>
-          <Text>{sshCommand}</Text>
+          <Text>{sshCommandString}</Text>
         </Text>
       </Box>
     </>
@@ -61,14 +61,14 @@ export function RenderSessionHeader({
   localPort,
   sshConfigFile,
   pkFilePath,
-  sshCommand,
+  sshCommandString: sshCommandString,
 }: SessionHeaderProps): Instance {
   return render(
     <SessionHeader
       localPort={localPort}
       sshConfigFile={sshConfigFile}
       pkFilePath={pkFilePath}
-      sshCommand={sshCommand}
+      sshCommandString={sshCommandString}
     />,
   );
 }

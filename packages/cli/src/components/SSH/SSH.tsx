@@ -25,9 +25,14 @@ function SSH({ devSpaceNode, jwt, newHostAlias }: {
   );
 
   useEffect(() => {
-    setLoading(true);
-    getPK(devSpaceNode.landscapeURL, jwt, devSpaceNode.id).then(
-      (pk: string) => {
+    (async () => {
+      setLoading(true);
+      try {
+        const pk: string = await getPK(
+          devSpaceNode.landscapeURL,
+          jwt,
+          devSpaceNode.id,
+        );
         const pkFilePath = savePK(pk, devSpaceNode.id);
         const sshConfig: SSHConfigInfo = {
           ...updateSSHConfig(pkFilePath, devSpaceNode, newHostAlias),
@@ -36,7 +41,7 @@ function SSH({ devSpaceNode, jwt, newHostAlias }: {
         const host: string = `port${SSHD_SOCKET_PORT}-${
           new URL(devSpaceNode.wsURL).hostname
         }`;
-        ssh(
+        await ssh(
           {
             displayName: devSpaceNode.label,
             host: { url: host, port: `${SSH_SOCKET_PORT}` },
@@ -49,8 +54,11 @@ function SSH({ devSpaceNode, jwt, newHostAlias }: {
           setMessage,
           app.exit,
         );
-      },
-    );
+      } catch (error) {
+        console.error("SSH connection failed:", error);
+        app.exit();
+      }
+    })();
   }, []);
 
   return (
