@@ -41,7 +41,7 @@ export function DevSpaceUpdate(
             : devspace.DevSpaceStatus.RUNNING)
         );
         setMessage(
-          devspaceMessages.info_devspace_state_updated(wsName, wsID, suspend),
+          devspaceMessages.info_devspace_state_updated(wsName, suspend),
         );
         setLoading(false);
         useDefaultOverlay();

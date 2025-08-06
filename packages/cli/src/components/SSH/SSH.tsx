@@ -18,7 +18,7 @@ function SSH({ devSpaceNode, jwt, newHostAlias }: {
   jwt: string;
   newHostAlias?: string;
 }): JSX.Element {
-  const { app, navigate, goBack } = useNavigation();
+  const { app } = useNavigation();
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>(
     devspaceMessages.info_obtaining_key,

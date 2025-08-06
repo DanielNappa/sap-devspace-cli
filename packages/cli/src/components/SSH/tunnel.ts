@@ -60,42 +60,8 @@ async function spawnProcess(
   const runtime = navigator.userAgent;
 
   if (runtime.startsWith("Bun")) {
-    // Use Bun.spawn to launch the terminal, not ssh directly
-    // const { spawn } = await import("bun-pty");
-    // const pty = spawn(
-    //   command,
-    //   args,
-    //   {
-    //     name: process.env.TERM || process.env.COLORTERM || "xterm-256color",
-    //     cwd: process.cwd(),
-    //   },
-    // );
-
-    // // Manually wire up the PTY to the process's stdio
-    //   process.stdin.setRawMode(true);
-    //   process.stdin.on('data', (data) => pty.write(data));
-    //   pty.onData((data) => process.stdout.write(data));
-
-    //   const resizeHandler = () => pty.resize(process.stdout.columns, process.stdout.rows);
-    //   process.stdout.on('resize', resizeHandler);
-
-    //   pty.onExit((event) => {
-    //     // Cleanup: restore terminal to a normal state
-    //     process.stdin.setRawMode(false);
-    //     process.stdin.removeAllListeners('data');
-    //     process.stdout.removeListener('resize', resizeHandler);
-    //     options.onExit?.(event.exitCode, event.signalCode);
-    //   });
-
-    //   return pty;
-
-    // const sshProcess = spawnSync(command, args, {shell: true, ...options});
-    // sshProcess.on("exit", (code, signal) => {
-    //   options.onExit?.(code, signal);
-    // });
-
-    // return sshProcess;
-    // // Use PTY for proper terminal interaction
+    // Bun support is not yet implemented
+    throw new Error("Bun runtime is not yet supported for SSH spawning");
   } else if (runtime.startsWith("Deno")) {
     const sshDenoCommand = new Deno.Command(command, {
       args: args,

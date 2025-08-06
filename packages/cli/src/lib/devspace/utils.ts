@@ -114,7 +114,6 @@ export async function updateDevSpace(
     console.log(
       devspaceMessages.info_devspace_state_updated(
         devSpaceNode.wsName,
-        devSpaceNode.id,
         suspend,
       ),
     );

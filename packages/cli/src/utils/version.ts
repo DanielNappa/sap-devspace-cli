@@ -83,7 +83,7 @@ function getGlobalBinDir(manager: AgentName): string | undefined {
   return undefined;
 }
 
-export async function detectInstallerByPath(): Promise<AgentName | undefined> {
+export function detectInstallerByPath(): AgentName | undefined {
   // e.g. /usr/local/bin/codex
   const invoked = process.argv[1] && resolve(process.argv[1]);
   if (!invoked) {
@@ -185,7 +185,7 @@ export async function checkForUpdates(): Promise<string | undefined> {
   }
 
   // Detect global installer
-  let managerName = await detectInstallerByPath();
+  let managerName = detectInstallerByPath();
 
   // Fallback to the local package manager
   if (!managerName) {

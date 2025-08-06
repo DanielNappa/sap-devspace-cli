@@ -43,7 +43,7 @@ function LandscapeURL(): JSX.Element {
                 navigate(<LandscapeMenu />);
               }
             }
-          } catch (error) {
+          } catch {
             setMessage(
               "Enter the URL origin without any paths or parameters",
             );

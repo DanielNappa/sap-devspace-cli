@@ -1,10 +1,10 @@
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { ConfirmInput, type Option, Select } from "@inkjs/ui";
-import Spinner from "ink-spinner";
 import type { devspace } from "@sap/bas-sdk";
 import { getDevSpaces } from "@/components/DevSpace/utils.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
+import { Loading } from "@/components/UI/Loading.tsx";
 import { useHelp } from "@/hooks/HelpContext.ts";
 import type { DevSpaceNode, LandscapeSession } from "@/utils/types.ts";
 import DevSpaceAction from "./DevSpaceAction.tsx";
@@ -108,17 +108,7 @@ function DevSpaceMenu({ landscapeSession }: {
   return (
     <>
       {loading
-        ? (
-          <Box flexDirection="row" marginTop={1}>
-            <Box justifyContent="center" flexDirection="column">
-              <Text>
-                <Text>
-                  <Spinner type="bouncingBar" />
-                </Text>
-              </Text>
-            </Box>
-          </Box>
-        )
+        ? <Loading type="bouncingBar" />
         : (component || (
           <Box justifyContent="center" flexDirection="column" marginTop={1}>
             <Box flexDirection="column" width="70%">

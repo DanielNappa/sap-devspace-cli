@@ -1,6 +1,3 @@
-// import { writeFileSync } from "node:fs";
-// import { dirname, join } from "node:path";
-// import { fileURLToPath } from "node:url";
 import { type JSX, useEffect, useState } from "react";
 import chalk from "chalk";
 import { Box, Text } from "ink";
@@ -249,7 +246,7 @@ function DevSpaceCreate(
                   setCurrentStep(DevSpaceCreateStep.PACKOPTIONS);
                 }
               }
-            } catch (error) {
+            } catch {
               setMessage(devspaceMessages.err_invalid_devspace_name);
               setShowErrorMessage(true);
             }

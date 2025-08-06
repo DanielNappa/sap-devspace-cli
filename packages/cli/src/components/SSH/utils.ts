@@ -46,7 +46,7 @@ export async function getPK(
   jwt: string,
   wsId: string,
 ): Promise<string> {
-  return remotessh.getKey(landscapeURL, jwt, wsId);
+  return await remotessh.getKey(landscapeURL, jwt, wsId);
 }
 
 function composeKeyFileName(folder: string, fileName: string): string {

@@ -4,9 +4,9 @@ import { ensureFile } from "fs-extra";
 import open from "open";
 import { Box, Text, useInput } from "ink";
 import { ConfirmInput, type Option, Select } from "@inkjs/ui";
-import Spinner from "ink-spinner";
 import { devspace } from "@sap/bas-sdk";
 import SSH from "@/components/SSH/SSH.tsx";
+import { Loading } from "@/components/UI/Loading.tsx";
 import { TextInput } from "@/components/UI/TextInput.tsx";
 import { useHelp } from "@/hooks/HelpContext.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
@@ -124,23 +124,21 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
 
   useInput((input, _) => {
     if (input === "o" && (devSpaceStatus === devspace.DevSpaceStatus.RUNNING)) {
-      (async (): Promise<void> => {
-        const url: URL = new URL(devSpaceNode.landscapeURL);
-        // It correctly handles whether a '#' already exists or not.
-        url.hash = devSpaceNode.id;
-        // The hash alone is usually sufficient for these single-page applications.
-        if (
-          !url.pathname.endsWith("/") && !url.pathname.endsWith("index.html")
-        ) {
-          url.pathname += "/index.html";
-        } else if (
-          url.pathname.endsWith("/") && !url.pathname.endsWith("index.html")
-        ) {
-          url.pathname += "index.html";
-        }
-        const externalBASURL: string = url.toString();
-        open(externalBASURL);
-      })();
+      const url: URL = new URL(devSpaceNode.landscapeURL);
+      // It correctly handles whether a '#' already exists or not.
+      url.hash = devSpaceNode.id;
+      // The hash alone is usually sufficient for these single-page applications.
+      if (
+        !url.pathname.endsWith("/") && !url.pathname.endsWith("index.html")
+      ) {
+        url.pathname += "/index.html";
+      } else if (
+        url.pathname.endsWith("/") && !url.pathname.endsWith("index.html")
+      ) {
+        url.pathname += "index.html";
+      }
+      const externalBASURL: string = url.toString();
+      open(externalBASURL);
     }
   });
 
@@ -286,17 +284,7 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
   return (
     <>
       {loading
-        ? (
-          <Box flexDirection="row" marginTop={1}>
-            <Box justifyContent="center" flexDirection="column">
-              <Text>
-                <Text>
-                  <Spinner type="bouncingBar" />
-                </Text>
-              </Text>
-            </Box>
-          </Box>
-        )
+        ? <Loading type="bouncingBar" />
         : component || (
           <Box flexDirection="row" marginTop={1}>
             <Box justifyContent="center" flexDirection="column">
@@ -350,7 +338,7 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
                           );
                         }
                       }
-                    } catch (error) {
+                    } catch {
                       setMessage(devspaceMessages.err_invalid_alias_name);
                       setShowErrorMessage(true);
                     }

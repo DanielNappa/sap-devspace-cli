@@ -77,7 +77,7 @@ export function organizePackExtensions(
     );
 
   assert(additionalExtensionCandidates != null);
-  const predefinedExtensionIDs: Set<String> = new Set(
+  const predefinedExtensionIDs: Set<string> = new Set(
     visiblePredefinedExtensions.map((extension: DevSpaceExtension) =>
       `${extension.namespace}/${extension.name}`
     ),

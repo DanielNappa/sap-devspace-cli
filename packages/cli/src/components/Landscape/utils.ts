@@ -28,7 +28,7 @@ export function getLandscapesConfig(): LandscapeConfig[] {
           { jwt: item.jwt ?? "" },
           item.default ? { default: item.default } : {},
         );
-      } catch (error) {
+      } catch {
         // if not a valid JSON - consider it as a URL - TODO: remove this in future (backward compatibility)
         if (landscape.trim().length > 0) {
           return { url: landscape };

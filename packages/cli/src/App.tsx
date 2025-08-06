@@ -1,5 +1,4 @@
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
-import process from "node:process";
 import { Box, useApp, useInput } from "ink";
 import LandscapeMenu from "@/components/Landscape/LandscapeMenu.tsx";
 import Header from "@/components/UI/Header.tsx";
@@ -8,13 +7,13 @@ import { HelpContext } from "@/hooks/HelpContext.ts";
 import { NavigationContext } from "@/hooks/NavigationContext.ts";
 
 type Props = {
-  prompt?: string | undefined;
+  _prompt?: string | undefined;
   updateMessage?: string | undefined;
 };
 
-export default function App({ prompt, updateMessage }: Props): JSX.Element {
+export default function App({ _prompt, updateMessage }: Props): JSX.Element {
   const app = useApp();
-  const cwd = useMemo<string>(() => process.cwd(), []) as string;
+  // const cwd = useMemo<string>(() => process.cwd(), []) as string;
   const [component, setComponent] = useState<JSX.Element>(<LandscapeMenu />);
   const [previousComponent, setPreviousComponent] = useState<
     JSX.Element | null

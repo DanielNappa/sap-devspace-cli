@@ -54,7 +54,7 @@ class connectionClientStream extends BaseStream {
     });
   }
 
-  public async write(data: Buffer): Promise<void> {
+  public write(data: Buffer): Promise<void> {
     if (this.disposed) {
       throw new ObjectDisposedError(this);
     }
@@ -66,7 +66,7 @@ class connectionClientStream extends BaseStream {
     return Promise.resolve();
   }
 
-  public async close(error?: Error): Promise<void> {
+  public close(error?: Error): Promise<void> {
     if (this.disposed) {
       throw new ObjectDisposedError(this);
     }
@@ -85,7 +85,7 @@ class connectionClientStream extends BaseStream {
     return Promise.resolve();
   }
 
-  public dispose(): void {
+  public override dispose(): void {
     if (!this.disposed) {
       this.connection.close();
     }

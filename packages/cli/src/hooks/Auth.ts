@@ -15,7 +15,7 @@ interface RequestBody {
   jwt?: string | undefined;
 }
 
-async function getJWTFromServer(landscapeURL: string): Promise<string> {
+function getJWTFromServer(landscapeURL: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     const app: Hono = new Hono();
 
@@ -61,7 +61,7 @@ export async function closeListener(landscapeURL: string): Promise<void> {
   serverCache.delete(landscapeURL);
 }
 
-async function getJWTFromServerWithTimeout(
+function getJWTFromServerWithTimeout(
   ms: number,
   promise: Promise<string>,
 ): Promise<string> {
@@ -77,14 +77,14 @@ async function getJWTFromServerWithTimeout(
   return Promise.race([promise, timeout]);
 }
 
-async function onJWTReceived(opt: {
+function onJWTReceived(opt: {
   jwtPromise: Promise<string>;
   landscapeURL: string;
 }): Promise<void> {
   return closeListener(opt.landscapeURL);
 }
 
-async function retrieveJWTFromRemote(
+function retrieveJWTFromRemote(
   landscapeURL: string,
 ): Promise<string | undefined> {
   const jwtPromise = getJWTFromServerWithTimeout(
@@ -98,7 +98,7 @@ async function retrieveJWTFromRemote(
   });
 }
 
-async function receiveJWT(opt: {
+function receiveJWT(opt: {
   jwtPromise: Promise<string>;
   landscapeURL: string;
 }): Promise<string | undefined> {
@@ -121,7 +121,7 @@ export async function getJWT(landscapeURL: string): Promise<string> {
   }
 }
 
-export async function hasJWT(landscapeURL: string): Promise<boolean> {
+export function hasJWT(landscapeURL: string): Promise<boolean> {
   return getJWT(landscapeURL)
     .then((jwt) => !core.isJwtExpired(jwt))
     .catch((_) => false);

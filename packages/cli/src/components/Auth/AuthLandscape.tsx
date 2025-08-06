@@ -5,6 +5,7 @@ import { Alert, ConfirmInput } from "@inkjs/ui";
 import { core } from "@sap/bas-sdk";
 import DevSpaceMenu from "@/components/DevSpace/DevSpaceMenu.tsx";
 import { addLandscape, removeLandscape } from "@/components/Landscape/utils.ts";
+import { Loading } from "@/components/UI/Loading.tsx";
 import { closeListener, getJWT } from "@/hooks/Auth.ts";
 import { useNavigation } from "@/hooks/NavigationContext.ts";
 import type { LandscapeConfig, LandscapeSession } from "@/utils/types.ts";
@@ -14,6 +15,7 @@ function AuthLandscape(
 ): JSX.Element {
   const { navigate } = useNavigation();
   const [loginToLandscape, setLoginToLandscape] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [showCancellationMessage, setShowCancellationMessage] = useState<
     boolean
   >(false);
@@ -22,8 +24,8 @@ function AuthLandscape(
   );
   const [receivedJWT, setReceivedJWT] = useState<boolean>(false);
 
-  const handleSuccessfulAuth: (jwt: string) => Promise<void> = useCallback(
-    async (jwt: string) => {
+  const handleSuccessfulAuth: (jwt: string) => void = useCallback(
+    (jwt: string) => {
       // Update existing config if JWT didn't previously exist for landscape URL, and overwrite the config with the new JWT
       removeLandscape(selectedLandscape.url);
       addLandscape(selectedLandscape.url, jwt);
@@ -46,27 +48,26 @@ function AuthLandscape(
   );
 
   useEffect(() => {
-    (async (): Promise<void> => {
-      if (
-        !(selectedLandscape?.jwt && selectedLandscape.jwt.length > 1 &&
-          !core.isJwtExpired(selectedLandscape.jwt))
-      ) {
-        return;
-      } else {
-        const jwt: string = selectedLandscape.jwt;
-        await handleSuccessfulAuth(jwt);
-      }
-    })();
+    if (
+      !(selectedLandscape?.jwt && selectedLandscape.jwt.length > 1 &&
+        !core.isJwtExpired(selectedLandscape.jwt))
+    ) {
+      return;
+    } else {
+      const jwt: string = selectedLandscape.jwt;
+      handleSuccessfulAuth(jwt);
+    }
   }, []);
 
   useEffect(() => {
     if (loginToLandscape) {
       (async (): Promise<void> => {
+        setLoading(true);
         open(core.getExtLoginPath(selectedLandscape.url));
         // If jwt exists and is not expired then use it otherwise update existing
         // LandscapeConfig with new JWT
         const jwt: string = await getJWT(selectedLandscape.url);
-        await handleSuccessfulAuth(jwt);
+        handleSuccessfulAuth(jwt);
       })();
     } else {
       (async (): Promise<void> => {
@@ -82,33 +83,39 @@ function AuthLandscape(
   }, [receivedJWT]);
 
   return (
-    <Box justifyContent="center" flexDirection="column" marginTop={1}>
-      {receivedJWT
-        ? (
-          <Box justifyContent="center" flexDirection="column" width={72}>
-            <Alert variant="success">
-              {message}
-            </Alert>
-          </Box>
-        )
+    <>
+      {loading
+        ? <Loading type="bouncingBar" />
         : (
-          <Text color={showCancellationMessage ? "red" : "null"}>
-            {message}
-          </Text>
+          <Box justifyContent="center" flexDirection="column" marginTop={1}>
+            {receivedJWT
+              ? (
+                <Box justifyContent="center" flexDirection="column" width={72}>
+                  <Alert variant="success">
+                    {message}
+                  </Alert>
+                </Box>
+              )
+              : (
+                <Text color={showCancellationMessage ? "red" : "null"}>
+                  {message}
+                </Text>
+              )}
+            {!receivedJWT && (
+              <ConfirmInput
+                onConfirm={() => {
+                  setLoginToLandscape(true);
+                }}
+                onCancel={() => {
+                  setLoginToLandscape(false);
+                  setMessage("Operation cancelled");
+                  setShowCancellationMessage(true);
+                }}
+              />
+            )}
+          </Box>
         )}
-      {!receivedJWT && (
-        <ConfirmInput
-          onConfirm={() => {
-            setLoginToLandscape(true);
-          }}
-          onCancel={() => {
-            setLoginToLandscape(false);
-            setMessage("Operation cancelled");
-            setShowCancellationMessage(true);
-          }}
-        />
-      )}
-    </Box>
+    </>
   );
 }
 
