@@ -116,7 +116,7 @@ export async function handleSubcommandCreate(
   const create = meow(
     `
 	Usage
-	  $ sap-devspace-cli create [options]
+	  $ ds create [options]
 
 	Options
     -h, --help                      Show usage and exit
@@ -126,7 +126,7 @@ export async function handleSubcommandCreate(
     -e, --extension                 (Optional) additional extensions to enhance the new Dev Space
 
 	Examples
-	  $ sap-devspace-cli create -l https://...applicationstudio.cloud.sap -n MyDevSpace
+	  $ ds create -l https://...applicationstudio.cloud.sap -n MyDevSpace
 `,
     {
       importMeta: import.meta,

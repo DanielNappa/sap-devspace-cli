@@ -14,7 +14,7 @@ export function createMeowSubcommand(subcommand: string) {
   return meow(
     `
 	Usage
-	  $ sap-devspace-cli ${subcommand} [options]
+	  $ ds ${subcommand} [options]
 
 	Options
     -h, --help                      Show usage and exit
@@ -22,7 +22,7 @@ export function createMeowSubcommand(subcommand: string) {
     -d, --devspace  <name>          The display name of the target Dev Space
 
 	Examples
-	  $ sap-devspace-cli ${subcommand} -l https://...applicationstudio.cloud.sap -d MyDevSpace
+	  $ ds ${subcommand} -l https://...applicationstudio.cloud.sap -d MyDevSpace
 `,
     {
       importMeta: import.meta,

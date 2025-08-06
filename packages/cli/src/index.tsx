@@ -18,8 +18,8 @@ import "@/utils/process.ts";
 const cli = meow(
   `
 	Usage
-	  $ sap-devspace-cli [options]
-	  $ sap-devspace-cli <command>
+	  $ ds [options]
+	  $ ds <command>
 
 	Options
     -h, --help                      Show usage and exit
@@ -31,7 +31,7 @@ const cli = meow(
     delete                          Delete a Dev Space
 
 	Examples
-	  $ sap-devspace-cli
+	  $ ds
 
 	Learn More
 	  Use \`sap-devspace-cli <command> [-h | --help]\` for usage about a command.
