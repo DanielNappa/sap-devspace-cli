@@ -1,4 +1,3 @@
-// deno-lint-ignore-file no-process-global
 /**
  * Build script adapted from
  * https://github.com/openai/codex/blob/main/codex-cli/build.mjs
@@ -7,6 +6,7 @@ import type { Plugin, PluginBuild } from "esbuild";
 import * as esbuild from "esbuild";
 import * as fs from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 const __dirname: string = dirname(fileURLToPath(import.meta.url));
@@ -40,7 +40,7 @@ const ignoreReactDevToolsPlugin: Plugin = {
     // return an empty module.
     build.onResolve(
       { filter: /^react-devtools-core$/ },
-      (args: { path: any }) => {
+      (args: esbuild.OnResolveArgs) => {
         return { path: args.path, namespace: "ignore-devtools" };
       },
     );
@@ -107,7 +107,7 @@ esbuild
       type: rootPackage.type,
       main: "bin/index.js",
       bin: {
-        [rootPackage.name]: "bin/index.js",
+        "ds": "bin/index.js",
       },
       engines: rootPackage.engines,
       files: rootPackage.files,
