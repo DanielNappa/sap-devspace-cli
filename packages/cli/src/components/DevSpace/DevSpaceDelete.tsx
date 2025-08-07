@@ -13,7 +13,11 @@ export function DevSpaceDelete({ devSpaceNode, jwt, onFinish }: {
 }): JSX.Element {
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>(
-    `Are you sure you want to delete ${devSpaceNode.label}?`,
+    `You have chosen to delete the '${devSpaceNode.label}' dev space.\n` +
+      `All files stored in this dev space will be deleted.\n` +
+      `This action cannot be reverted.\n` +
+      `Make sure your files have been backed up (for example, in the source control system).\n` +
+      `Are you sure you want to continue?`,
   );
   const [acceptedDeletion, setAcceptedDeletion] = useState<boolean>(false);
   useEffect(() => {

@@ -19,12 +19,12 @@ import { canDevSpaceStart, updateDevSpace } from "./utils.ts";
 import {
   createDevSpace,
   getDevSpacesSpec,
-} from "@sap/bas-sdk/dist/src/apis/get-devspace.d.ts";
-import {
+} from "@sap/bas-sdk/dist/src/apis/get-devspace";
+import type {
   DevSpaceExtension,
   DevSpacePack,
   DevSpaceSpec,
-} from "@sap/bas-sdk/dist/src/utils/devspace-utils.ts";
+} from "@sap/bas-sdk/dist/src/utils/devspace-utils";
 
 type MetadataCheckState = CheckState<"Metadata">;
 

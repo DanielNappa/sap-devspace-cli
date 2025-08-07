@@ -34,7 +34,7 @@ const cli = meow(
 	  $ ds
 
 	Learn More
-	  Use \`sap-devspace-cli <command> [-h | --help]\` for usage about a command.
+	  Use \`ds <command> [-h | --help]\` for usage about a command.
 `,
   {
     importMeta: import.meta,

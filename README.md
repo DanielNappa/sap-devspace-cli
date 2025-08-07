@@ -65,7 +65,7 @@ editor-agnostic command-line interface.
 
 2. **Run the CLI:**
    ```shell
-   sap-devspace-cli
+   ds
    ```
 
    The CLI will guide you through:
@@ -141,7 +141,7 @@ npx sap-devspace-cli
 Simply run the command:
 
 ```shell
-sap-devspace-cli
+ds
 ```
 
 The CLI will then present you with interactive prompts to:
@@ -169,8 +169,6 @@ The CLI will then present you with interactive prompts to:
 
 ### Future Enhancements (Potential) and Known Issues
 
-- Non-interactive mode for scripting (e.g.,
-  `sap-devspace-cli connect --landscape <url_or_alias> --devspace <name_or_id>`).
 - Configuration file for more advanced settings.
 - More detailed error reporting and verbose logging options configurable by
 - Return back to main selection after deleting a dev space.

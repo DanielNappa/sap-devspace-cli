@@ -13,7 +13,7 @@ import process from "node:process";
 import { getUserAgent } from "package-manager-detector";
 import which from "which";
 import semver from "semver";
-import { CheckState } from "./types.ts";
+import type { CheckState } from "./types.ts";
 // Read the version directly from package.json.
 import pkg from "../../package.json" with { type: "json" };
 
