@@ -44,6 +44,7 @@
     "build": "npx tsx ../../scripts/build.mts",
     "build:bun": "bun run ../../scripts/build.mts",
     "dev": "npx tsx src/index.tsx",
+    "dev:spy": "NODE_OPTIONS='--require ../../scripts/patcher.cjs' npx tsx src/index.tsx",
     "dev:watch": "npx tsx --watch src/index.tsx",
     "dev:bun:watch": "bun --watch src/index.tsx",
     "dev:deno:watch": "deno run -A --watch src/index.tsx",

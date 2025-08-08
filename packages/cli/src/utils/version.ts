@@ -154,8 +154,16 @@ export async function checkForUpdates(): Promise<string | undefined> {
   let state: UpdateCheckState | undefined;
   try {
     state = JSON.parse(await readFile(stateFile, "utf8"));
-  } catch {
-    // ignore
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.warn(
+        chalk.yellow(`Could not read update check cache: ${error.message}`),
+      );
+    } else {
+      console.warn(
+        chalk.yellow("Could not read update check cache: Unknown error"),
+      );
+    }
   }
 
   // Bail out if we checked less than the configured frequency ago

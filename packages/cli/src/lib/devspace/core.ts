@@ -58,8 +58,16 @@ export async function handleSubcommandCreate(
   let state: MetadataCheckState | undefined;
   try {
     state = JSON.parse(await readFile(metadataPath, "utf8"));
-  } catch {
-    // ignore
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.warn(
+        chalk.yellow(`Could not read metadata cache: ${error.message}`),
+      );
+    } else {
+      console.warn(
+        chalk.yellow("Could not read metadata cache: Unknown error"),
+      );
+    }
   }
 
   // Fetch new metadata if we haven't checked recently or if no previous check exists
@@ -103,7 +111,7 @@ export async function handleSubcommandCreate(
       JSON.stringify(
         {
           ...metadata,
-          lastMetaCheck: new Date().toUTCString(),
+          lastMetaDataCheck: new Date().toUTCString(),
         },
         null,
         2,
