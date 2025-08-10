@@ -46,37 +46,36 @@ if (fs.existsSync(outPath)) {
 
 function postBuild() {
   // Copy additional files to dist
-    const rootPackage = JSON.parse(fs.readFileSync(packagePath, "utf8"));
-    const filesToCopy: string[] = ["README.md", "LICENSE"];
-    filesToCopy.forEach((file: string) => {
-      const source: string = join(__rootDirectory, file);
-      const destination: string = join(__distDirectory, file);
-      if (fs.existsSync(source)) {
-        fs.copyFileSync(source, destination);
-      }
-    });
-    // Produce production package.json with bin and main
-    const distPackage = {
-      name: rootPackage.name,
-      description: rootPackage.description,
-      version: rootPackage.version,
-      license: rootPackage.license,
-      type: rootPackage.type,
-      main: "bin/index.js",
-      bin: {
-        "ds": "bin/index.js",
-      },
-      engines: rootPackage.engines,
-      files: rootPackage.files,
-      repository: rootPackage.repository,
-      bugs: rootPackage.bugs,
-      homepage: rootPackage.homepage,
-      keywords: rootPackage.keywords,
-    };
+  const rootPackage = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+  const filesToCopy: string[] = ["README.md", "LICENSE"];
+  filesToCopy.forEach((file: string) => {
+    const source: string = join(__rootDirectory, file);
+    const destination: string = join(__distDirectory, file);
+    if (fs.existsSync(source)) {
+      fs.copyFileSync(source, destination);
+    }
+  });
+  // Produce production package.json with bin and main
+  const distPackage = {
+    name: rootPackage.name,
+    description: rootPackage.description,
+    version: rootPackage.version,
+    license: rootPackage.license,
+    type: rootPackage.type,
+    main: "bin/index.js",
+    bin: {
+      "ds": "bin/index.js",
+    },
+    engines: rootPackage.engines,
+    files: rootPackage.files,
+    repository: rootPackage.repository,
+    bugs: rootPackage.bugs,
+    homepage: rootPackage.homepage,
+    keywords: rootPackage.keywords,
+  };
 
-    fs.writeFileSync(distPackagePath, JSON.stringify(distPackage, null, 2));
+  fs.writeFileSync(distPackagePath, JSON.stringify(distPackage, null, 2));
 }
-
 
 if (runtime.startsWith("Bun")) {
   const { build } = await import("bun");
@@ -114,14 +113,14 @@ if (runtime.startsWith("Bun")) {
     sourcemap: isDevBuild ? "inline" : "external",
     plugins: [ignoreReactDevToolsPlugin],
   }).then(async () => {
-    postBuild() 
+    postBuild();
     const bundle = Bun.file(join(__distBinDirectory, "index.js"));
     const contents = await bundle.text();
 
     // Replace the shebang line
-    const updated = await contents.replace(
+    const updated = contents.replace(
       /^#!.*\n/,
-      "#!/usr/bin/env bun\n"
+      "#!/usr/bin/env bun\n",
     );
 
     // Write back the modified file
@@ -174,7 +173,7 @@ if (runtime.startsWith("Bun")) {
     plugins: [ignoreReactDevToolsPlugin],
     inject: [inject],
   }).then(() => {
-    postBuild()
+    postBuild();
   })
     .catch(() => process.exit(1));
 }
