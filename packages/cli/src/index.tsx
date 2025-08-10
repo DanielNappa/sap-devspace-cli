@@ -40,11 +40,6 @@ const cli = meow(
     importMeta: import.meta,
     flags: {
       help: { type: "boolean", aliases: ["h"] },
-      prompt: {
-        type: "string",
-        aliases: ["p"],
-        description: "Send a prompt to Joule and display final output",
-      },
     },
   },
 );
@@ -109,7 +104,7 @@ if (cli.input[0] != null) {
 } else {
   const updateMessage = await checkForUpdates().catch(() => "") as string;
   const instance: Instance = render(
-    <App _prompt={cli.flags.prompt} updateMessage={updateMessage} />,
+    <App updateMessage={updateMessage} />,
   );
   setInkRenderer(instance);
 }

@@ -2,7 +2,9 @@
   "compilerOptions": {
     "types": [
       "react",
-      "@types/react"
+      "@types/react",
+      "@types/bun",
+      "@types/node"
     ],
     "lib": [
       "deno.ns",

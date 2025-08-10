@@ -37,6 +37,9 @@ export function getSSHConfigFilePath(): string {
   );
 }
 
+// Instance type derived from the static `parse` return
+type SSHConfig = ReturnType<typeof sshConfig.parse>;
+
 function getSSHConfigFolderPath(): string {
   return parse(getSSHConfigFilePath()).dir;
 }
@@ -64,7 +67,7 @@ export function savePK(pk: string, wsID: string): string {
   if (existsSync(fileName)) {
     unlinkSync(fileName);
   }
-  writeFileSync(fileName, `${pk}\n`, { mode: "0400", flag: "w" });
+  writeFileSync(fileName, `${pk}\n`, { mode: 0o400, flag: "w" });
   return fileName;
 }
 
@@ -79,7 +82,7 @@ export function deletePK(wsID: string): void {
   console.log(message);
 }
 
-function getSSHConfig(sshConfigFile: string): sshConfig | undefined {
+function getSSHConfig(sshConfigFile: string): SSHConfig | undefined {
   let configData: Buffer;
   if (existsSync(sshConfigFile)) {
     configData = readFileSync(sshConfigFile);
@@ -105,7 +108,7 @@ export function updateSSHConfig(
   const port = getRandomArbitrary();
   if (newHostAlias != null && typeof newHostAlias === "string") {
     // get ssh config object from the ssh config file
-    const config = getSSHConfig(sshConfigFile) as sshConfig;
+    const config = getSSHConfig(sshConfigFile) as SSHConfig;
     // push to the ssh config object with the new configuration
     config.remove({ Host: newHostAlias });
     // keep the existing indentation of the next block
@@ -132,7 +135,7 @@ export function updateSSHConfig(
 export function removeSSHConfig(devSpace: DevSpaceNode): void {
   const sshConfigFile: string = getSSHConfigFilePath();
   // get ssh config object form ssh config file
-  const config = getSSHConfig(sshConfigFile) as sshConfig;
+  const config = getSSHConfig(sshConfigFile) as SSHConfig;
   // remove the section by name
   config.remove({
     Host: `${composeSSHConfigSectionName(devSpace.landscapeURL, devSpace.id)}`,

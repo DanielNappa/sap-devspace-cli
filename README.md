@@ -170,9 +170,12 @@ The CLI will then present you with interactive prompts to:
 ### Future Enhancements (Potential) and Known Issues
 
 - Configuration file for more advanced settings.
-- More detailed error reporting and verbose logging options configurable by
-- Return back to main selection after deleting a dev space.
-- Assertion failure occurs when there a no dev spaces in the landscape.
+- More detailed error reporting and user-configurable verbose logging options.
+- Hono server is not terminated when the user cancels authentication in the
+  browser.
+  - Workaround: Exit the CLI (Ctrl+C) to stop the server, then retry
+    authentication.
+- Assertion failure occurs when there are no dev spaces in the landscape.
 - ERR_Invalid_URL is thrown on newly created dev spaces when attempting to
   connect.
 

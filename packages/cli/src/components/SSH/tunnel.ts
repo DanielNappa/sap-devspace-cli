@@ -60,8 +60,17 @@ async function spawnProcess(
   const runtime = navigator.userAgent;
 
   if (runtime.startsWith("Bun")) {
+    console.log(command);
+    console.log(args);
     // Bun support is not yet implemented
-    throw new Error("Bun runtime is not yet supported for SSH spawning");
+    // const sshBunCommand = Bun.spawn({
+    //   cmd: args
+    // });
+    // await sshBunCommand.exited; // resolves when process exit
+    // if (sshBunCommand.killed) {
+    //   options.onExit?.(sshBunCommand.exitCode, sshBunCommand.signalCode ?? null);
+    // }
+    // return sshBunCommand
   } else if (runtime.startsWith("Deno")) {
     const sshDenoCommand = new Deno.Command(command, {
       args: args,

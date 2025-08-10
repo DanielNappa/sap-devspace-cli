@@ -7,11 +7,10 @@ import { HelpContext } from "@/hooks/HelpContext.ts";
 import { NavigationContext } from "@/hooks/NavigationContext.ts";
 
 type Props = {
-  _prompt?: string | undefined;
   updateMessage?: string | undefined;
 };
 
-export default function App({ _prompt, updateMessage }: Props): JSX.Element {
+export default function App({ updateMessage }: Props): JSX.Element {
   const app = useApp();
   // const cwd = useMemo<string>(() => process.cwd(), []) as string;
   const [component, setComponent] = useState<JSX.Element>(<LandscapeMenu />);

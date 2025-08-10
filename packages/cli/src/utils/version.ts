@@ -155,9 +155,17 @@ export async function checkForUpdates(): Promise<string | undefined> {
   try {
     state = JSON.parse(await readFile(stateFile, "utf8"));
   } catch (error: unknown) {
-    if (error instanceof Error) {
+    const isErrno = !!error && typeof error === "object" &&
+      "code" in (error as Error);
+    const code = isErrno ? (error as NodeJS.ErrnoException).code : undefined;
+
+    // Ignore missing file on first run
+    if (code === "ENOENT") {
+      // no-op
+    } else if (error instanceof Error) {
+      const suffix = code ? ` (${code})` : "";
       console.warn(
-        chalk.yellow(`Could not read update check cache: ${error.message}`),
+        chalk.yellow(`Could not read update check cache${suffix}.`),
       );
     } else {
       console.warn(

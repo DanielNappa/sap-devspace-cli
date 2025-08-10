@@ -31,6 +31,7 @@ const run = async (cmd: string[]): Promise<void> => {
 
 const buildAndRun = async (): Promise<void> => {
   await run(["deno", "run", "-A", "scripts/build.mts"]);
+  console.log([entryPoint, ...Deno.args]);
   await run([entryPoint, ...Deno.args]);
 };
 

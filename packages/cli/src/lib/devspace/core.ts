@@ -19,7 +19,7 @@ import { canDevSpaceStart, updateDevSpace } from "./utils.ts";
 import {
   createDevSpace,
   getDevSpacesSpec,
-} from "@sap/bas-sdk/dist/src/apis/get-devspace";
+} from "@sap/bas-sdk/dist/src/apis/get-devspace.js";
 import type {
   DevSpaceExtension,
   DevSpacePack,
@@ -46,8 +46,10 @@ export async function handleSubcommandCreate(
   } & Record<string, unknown>,
 ): Promise<void> {
   assert(flags.landscape != null);
-
-  const result: LandscapeConfig | undefined = getAuthenticatedLandscape(flags);
+  const typedFlags = flags as typeof flags & { landscape: string };
+  const result: LandscapeConfig | undefined = getAuthenticatedLandscape(
+    typedFlags,
+  );
   assert(result.url != null);
   assert(result.jwt != null);
 
@@ -111,7 +113,7 @@ export async function handleSubcommandCreate(
       JSON.stringify(
         {
           ...metadata,
-          lastMetaDataCheck: new Date().toUTCString(),
+          lastMetadataCheck: new Date().toUTCString(),
         },
         null,
         2,

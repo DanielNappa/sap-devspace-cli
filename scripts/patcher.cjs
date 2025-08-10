@@ -1,16 +1,52 @@
-import { Buffer } from "node:buffer";
+const { Buffer } = require("node:buffer");
 const http = require("node:http");
 const https = require("node:https");
 const { URL } = require("node:url");
 
 const NOISY_DATA_PREFIX = "data:application/octet-stream;base64";
+const MAX_BODY_PREVIEW = 4096;
 function formatUrl(u) {
   const s = String(u);
   return s.length > 200
-    ? s.slice(0, 200) + "…(truncated " + (s.length -
-      200) +
-      " chars)"
+    ? s.slice(0, 200) + "…(truncated " + (s.length - 200) + " chars)"
     : s;
+}
+
+// Redact sensitive headers (request/response)
+function redactHeaders(obj) {
+  try {
+    if (!obj || typeof obj !== "object") return obj;
+    const out = Array.isArray(obj) ? [...obj] : { ...obj };
+    const lowerKeys = new Set([
+      "authorization",
+      "proxy-authorization",
+      "x-approuter-authorization",
+      "x-api-key",
+      "api-key",
+      "cookie",
+      "set-cookie",
+    ]);
+    // Node http headers are usually lowercased keys
+    for (const k of Object.keys(out)) {
+      const lk = k.toLowerCase();
+      if (lowerKeys.has(lk)) {
+        out[k] = "[REDACTED]";
+      }
+    }
+    return out;
+  } catch {
+    return obj;
+  }
+}
+
+// Normalize fetch Headers or plain object into a simple object for logging
+function normalizeFetchHeaders(h) {
+  try {
+    if (h && typeof h.entries === "function") {
+      return Object.fromEntries(h.entries());
+    }
+  } catch {}
+  return h || {};
 }
 
 function makeWrapper(original, proto) {
@@ -39,9 +75,6 @@ function makeWrapper(original, proto) {
     const method = (opts.method || "GET").toUpperCase();
     const headers = Object.assign({}, opts.headers);
 
-    // Optional: redact secrets unless you explicitly want to see them
-    // const redactedHeaders = { ...headers, authorization: headers.authorization ? '[REDACTED]' : undefined };
-
     // Call original to get the request object
     const req = original.call(this, urlObj, opts, callback);
 
@@ -69,26 +102,40 @@ function makeWrapper(original, proto) {
 
       // Log the request once we know the final body
       try {
-        // Print request line and headers
-        // If you want to see auth headers, log `headers`; otherwise redact
-        if (typeof url === "string" && url.startsWith(NOISY_DATA_PREFIX)) {
-          // Skip logging entirely for noisy data: URLs return origFetch(input, init); } const displayUrl = formatUrl(url);
-          console.error(`[http-spy] fetch ${method} ${displayUrl}`);
-          console.error(
-            `[http-spy] fetch request headers: ${
-              JSON.stringify(headers, null, 2)
-            }`,
-          );
-        }
+        const displayUrl = formatUrl(urlObj.toString());
+        console.error(`[http-spy] ${method} ${displayUrl}`);
+        console.error(
+          `[http-spy] Request headers: ${
+            JSON.stringify(redactHeaders(headers), null, 2)
+          }`,
+        );
+
+        const contentType =
+          (headers && (headers["content-type"] || headers["Content-Type"])) ||
+          "";
+        const isOctetStream = typeof contentType === "string" &&
+          contentType.includes("application/octet-stream");
+
         if (bodyPreview && bodyPreview.length > 0) {
-          const printable = bodyPreview.length > 4096
-            ? bodyPreview.slice(0, 4096)
-            : bodyPreview;
-          console.error(
-            `[http-spy] Request body (${bodyPreview.length} bytes): ${
-              printable.toString("utf8")
-            }`,
-          );
+          if (isOctetStream) {
+            console.error(
+              `[http-spy] Request body skipped (application/octet-stream, ${bodyPreview.length} bytes)`,
+            );
+          } else {
+            let text = bodyPreview.toString("utf8");
+            // Try to pretty-print JSON; fall back to raw text
+            try {
+              const json = JSON.parse(text);
+              text = JSON.stringify(json, null, 2);
+            } catch {}
+            if (text.length > MAX_BODY_PREVIEW) {
+              text = text.slice(0, MAX_BODY_PREVIEW) +
+                `…(truncated ${text.length - MAX_BODY_PREVIEW} chars)`;
+            }
+            console.error(
+              `[http-spy] Request body (${bodyPreview.length} bytes): ${text}`,
+            );
+          }
         }
       } catch (e) {
         // don't let logging break the request
@@ -99,10 +146,19 @@ function makeWrapper(original, proto) {
 
     req.on("response", (res) => {
       try {
-        const respUrl = formatUrl(res.url);
-        console.error(`[http-spy] fetch response ${res.status} ${respUrl}`);
-        console.error(`[http-spy] fetch response headers:
-${JSON.stringify(Object.fromEntries(res.headers.entries()), null, 2)}`);
+        const respUrl = formatUrl(urlObj.toString());
+        console.error(
+          `[http-spy] Response ${method} ${respUrl} -> ${res.statusCode}`,
+        );
+        console.error(
+          `[http-spy] Response headers: ${
+            JSON.stringify(
+              redactHeaders(res.headers),
+              null,
+              2,
+            )
+          }`,
+        );
       } catch (e) {}
     });
 
@@ -131,19 +187,39 @@ if (typeof globalThis.fetch === "function") {
     try {
       const url = typeof input === "string" ? input : input.url;
       const method = (init.method || "GET").toUpperCase();
-      const headers = init.headers ||
+      const rawHeaders = init.headers ||
         (typeof input !== "string" && input.headers) || {};
-      console.error(`[http-spy] fetch ${method} ${url}`);
+      const headers = normalizeFetchHeaders(rawHeaders);
+
+      // Avoid floods from base64 data URLs
+      if (typeof url === "string" && url.startsWith(NOISY_DATA_PREFIX)) {
+        return origFetch(input, init);
+      }
+
+      const displayUrl = formatUrl(url);
+      console.error(`[http-spy] fetch ${method} ${displayUrl}`);
       console.error(
-        `[http-spy] fetch request headers: ${JSON.stringify(headers, null, 2)}`,
+        `[http-spy] fetch request headers: ${
+          JSON.stringify(
+            redactHeaders(headers),
+            null,
+            2,
+          )
+        }`,
       );
     } catch {}
     const res = await origFetch(input, init);
     try {
-      console.error(`[http-spy] fetch response ${res.status} ${res.url}`);
+      const respUrl = formatUrl(res.url);
+      console.error(`[http-spy] fetch response ${res.status} ${respUrl}`);
       console.error(
         `[http-spy] fetch response headers: ${
-          JSON.stringify(Object.fromEntries(res.headers.entries()), null, 2)
+          JSON.stringify(
+            // res.headers is a Headers instance in fetch
+            redactHeaders(Object.fromEntries(res.headers.entries())),
+            null,
+            2,
+          )
         }`,
       );
     } catch {}
