@@ -80,26 +80,35 @@ function makeWrapper(original, proto) {
 
     // Capture request body (only for small payloads; guard size in practice)
     const chunks = [];
+    let totalSize = 0;
+    const MAX_BUFFER_SIZE = 1024 * 1024; // 1MB limit
     const oldWrite = req.write;
     const oldEnd = req.end;
 
     req.write = function (chunk, encoding, cb) {
       if (chunk) {
-        chunks.push(
-          Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, encoding),
-        );
+        const buffer = Buffer.isBuffer(chunk)
+          ? chunk
+          : Buffer.from(chunk, encoding);
+        if (totalSize + buffer.length <= MAX_BUFFER_SIZE) {
+          chunks.push(buffer);
+          totalSize += buffer.length;
+        }
       }
       return oldWrite.call(this, chunk, encoding, cb);
     };
 
     req.end = function (chunk, encoding, cb) {
       if (chunk) {
-        chunks.push(
-          Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, encoding),
-        );
+        const buffer = Buffer.isBuffer(chunk)
+          ? chunk
+          : Buffer.from(chunk, encoding);
+        if (totalSize + buffer.length <= MAX_BUFFER_SIZE) {
+          chunks.push(buffer);
+          totalSize += buffer.length;
+        }
       }
       const bodyPreview = chunks.length ? Buffer.concat(chunks) : null;
-
       // Log the request once we know the final body
       try {
         const displayUrl = formatUrl(urlObj.toString());
@@ -185,10 +194,17 @@ if (typeof globalThis.fetch === "function") {
   const origFetch = globalThis.fetch;
   globalThis.fetch = async (input, init = {}) => {
     try {
-      const url = typeof input === "string" ? input : input.url;
+      const url = typeof input === "string"
+        ? input
+        : (input && typeof input === "object" && "url" in input)
+        ? input.url
+        : "";
       const method = (init.method || "GET").toUpperCase();
       const rawHeaders = init.headers ||
-        (typeof input !== "string" && input.headers) || {};
+        (typeof input === "object" && input && "headers" in input
+          ? input.headers
+          : {}) ||
+        {};
       const headers = normalizeFetchHeaders(rawHeaders);
 
       // Avoid floods from base64 data URLs

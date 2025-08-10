@@ -31,7 +31,51 @@ const run = async (cmd: string[]): Promise<void> => {
 
 const buildAndRun = async (): Promise<void> => {
   await run(["deno", "run", "-A", "scripts/build.mts"]);
-  console.log([entryPoint, ...Deno.args]);
+  const verbose = Deno.env.get("DEBUG") === "1" ||
+    Deno.env.get("VERBOSE") === "1" ||
+    Deno.args.includes("--verbose") ||
+    Deno.args.includes("-v");
+  // Redact common sensitive flags
+  const redacted = (() => {
+    const out: string[] = [];
+    const redactLong = new Set(["--token", "--password", "--secret", "--key"]);
+    for (let i = 0; i < Deno.args.length; i++) {
+      const a = Deno.args[i];
+      // Long form: --flag=value
+      if (/^--(?:token|password|secret|key)=/i.test(a)) {
+        out.push(a.replace(/=.*/, "=****"));
+        continue;
+      }
+      // Long form: --flag <value>
+      if (redactLong.has(a.toLowerCase())) {
+        out.push(a);
+        const next = Deno.args[i + 1];
+        if (next && !next.startsWith("-")) {
+          out.push("****");
+          i++;
+        }
+        continue;
+      }
+      // Short form: -k=value
+      if (/^-[tpsk]=/i.test(a)) {
+        out.push(a.replace(/=.*/, "=****"));
+        continue;
+      }
+      // Short form: -k <value>
+      if (/^-[tpsk]$/i.test(a)) {
+        out.push(a);
+        const next = Deno.args[i + 1];
+        if (next && !next.startsWith("-")) {
+          out.push("****");
+          i++;
+        }
+        continue;
+      }
+      out.push(a);
+    }
+    return out;
+  })();
+  if (verbose) console.log("Running:", [entryPoint, ...redacted]);
   await run([entryPoint, ...Deno.args]);
 };
 

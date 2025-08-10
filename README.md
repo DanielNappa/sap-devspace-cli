@@ -167,7 +167,7 @@ The CLI will then present you with interactive prompts to:
      - **Stop:** (If RUNNING) Stops the dev space.
      - **Delete:** Deletes the dev space (with confirmation).
 
-### Future Enhancements (Potential) and Known Issues
+### [Future Enhancements (Potential) and Known Issues](#future-enhancements-potential-and-known-issues)
 
 - Configuration file for more advanced settings.
 - More detailed error reporting and user-configurable verbose logging options.

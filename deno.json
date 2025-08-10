@@ -4,9 +4,9 @@
     "esbuild": "npm:esbuild"
   },
   "tasks": {
-    "compile:mac-arm64": "deno compile --config packages/cli/deno.json --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target aarch64-apple-darwin --output ds packages/cli/src/index.tsx",
-    "compile:mac-x64": "deno compile --config packages/cli/deno.json --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target x86_64-apple-darwin --output ds packages/cli/src/index.tsx",
-    "compile:linux-x64": "deno compile --config packages/cli/deno.json --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target x86_64-unknown-linux-gnu --output ds packages/cli/src/index.tsx",
-    "compile:win-x64": "deno compile --config packages/cli/deno.json --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target x86_64-pc-windows-msvc --output ds packages/cli/src/index.tsx"
+    "compile:deno:mac-arm64": "deno compile --config packages/cli/deno.json --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target aarch64-apple-darwin --output ds packages/cli/src/index.tsx",
+    "compile:deno:mac-x64": "deno compile --config packages/cli/deno.json --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target x86_64-apple-darwin --output ds packages/cli/src/index.tsx",
+    "compile:deno:linux-x64": "deno compile --config packages/cli/deno.json --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target x86_64-unknown-linux-gnu --output ds packages/cli/src/index.tsx",
+    "compile:deno:win-x64": "deno compile --config packages/cli/deno.json --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target x86_64-pc-windows-msvc --output ds packages/cli/src/index.tsx"
   }
 }
