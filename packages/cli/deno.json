@@ -3,8 +3,7 @@
     "types": [
       "react",
       "@types/react",
-      "@types/bun",
-      "@types/node"
+      "@types/bun"
     ],
     "lib": [
       "deno.ns",

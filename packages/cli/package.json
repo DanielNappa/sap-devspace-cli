@@ -45,6 +45,10 @@
   "scripts": {
     "build": "npx tsx ../../scripts/build.mts",
     "build:bun": "bun run ../../scripts/build.mts",
+    "compile:bun:mac-arm64": "bun build --compile --target=bun-darwin-arm64 ./src/index.tsx --outfile myapp",
+    "compile:bun:mac-x64": "bun build --compile --target=bun-darwin-x64 ./src/index.tsx --outfile myapp",
+    "compile:bun:linux-x64": "bun build --compile --target=bun-linux-x64-modern ./src/index.tsx --outfile myapp",
+    "compile:bun:win-x64": "bun build --compile --target=bun-windows-x64-modern ./src/index.tsx --outfile myapp",
     "dev": "npx tsx src/index.tsx",
     "dev:spy": "npx tsx src/spy.ts",
     "dev:bun:spy": "bun src/spy.ts",

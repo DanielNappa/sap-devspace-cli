@@ -7,7 +7,7 @@ import { HelpContext } from "@/hooks/HelpContext.ts";
 import { NavigationContext } from "@/hooks/NavigationContext.ts";
 
 type Props = {
-  updateMessage?: string | undefined;
+  updateMessage?: string;
 };
 
 export default function App({ updateMessage }: Props): JSX.Element {
@@ -47,8 +47,21 @@ export default function App({ updateMessage }: Props): JSX.Element {
   }, []);
 
   return (
-    <NavigationContext.Provider value={{ app, navigate, component, goBack }}>
-      <HelpContext.Provider value={{ overlay, setOverlay, useDefaultOverlay }}>
+    <NavigationContext.Provider
+      value={useMemo(() => ({ app, navigate, component, goBack }), [
+        app,
+        navigate,
+        component,
+        goBack,
+      ])}
+    >
+      <HelpContext.Provider
+        value={useMemo(() => ({ overlay, setOverlay, useDefaultOverlay }), [
+          overlay,
+          setOverlay,
+          useDefaultOverlay,
+        ])}
+      >
         <Header updateMessage={updateMessage} />
         <Box paddingX={1}>
           {component}

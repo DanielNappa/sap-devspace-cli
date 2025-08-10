@@ -15,6 +15,10 @@ import { Buffer } from "node:buffer";
 // Noble-backed ECDH for P-521 (ecdh-sha2-nistp521)
 export class NobleECDH521 extends KeyExchangeAlgorithm {
   constructor(name: string, keySizeInBits: number, hashAlgorithmName: string) {
+    // Validate that P-521 uses SHA-512 as per standard
+    if (!hashAlgorithmName.includes("512")) {
+      throw new Error("P-521 requires SHA-512 hash algorithm");
+    }
     super(
       name,
       keySizeInBits,
@@ -59,7 +63,16 @@ export class NobleECDH521 extends KeyExchangeAlgorithm {
 
       async sign(data: Buffer): Promise<Buffer> {
         // For KEX, "sign" is H(data) with negotiated hash
-        const alg = hashAlgorithmName.replace("SHA2-", "SHA-");
+        // Map SSH hash names to WebCrypto names
+        const algMap: Record<string, string> = {
+          "SHA2-256": "SHA-256",
+          "SHA2-384": "SHA-384",
+          "SHA2-512": "SHA-512",
+        };
+        const alg = algMap[hashAlgorithmName] || hashAlgorithmName;
+        if (!alg || !algMap[hashAlgorithmName]) {
+          throw new Error(`Unsupported hash algorithm: ${hashAlgorithmName}`);
+        }
         const hashBuffer = await crypto.subtle.digest(alg, data);
         return Buffer.from(hashBuffer);
       }
@@ -139,8 +152,10 @@ class NobleECDSA521KeyPair implements DtKeyPair {
   getPublicKeyBytes(algorithmName?: string): Promise<Buffer | null> {
     if (!this.publicKey) return Promise.resolve(null);
     const alg = algorithmName || this.algorithmName;
+    // Calculate exact size: 4 + alg.length + 4 + "nistp521".length + 4 + publicKey.length
+    const bufferSize = 12 + alg.length + 8 + this.publicKey.length;
     const w = new SshDataWriter(
-      Buffer.alloc(alg.length + "nistp521".length + 10 + this.publicKey.length),
+      Buffer.alloc(bufferSize),
     );
     w.writeString(alg, "ascii");
     w.writeString("nistp521", "ascii");
@@ -149,10 +164,12 @@ class NobleECDSA521KeyPair implements DtKeyPair {
   }
 
   importParameters(_params: ECParameters): Promise<void> {
+    // Not needed for SSH operations - P-521 parameters are fixed
     return Promise.reject(new Error("Not implemented"));
   }
 
   exportParameters(): Promise<ECParameters> {
+    // Not needed for SSH operations - P-521 parameters are fixed
     return Promise.reject(new Error("Not implemented"));
   }
 
@@ -166,6 +183,8 @@ class NobleECDSA521SignerVerifier implements DtSigner, DtVerifier {
   ) {}
 
   get digestLength(): number {
+    // Maximum SSH signature size: (4+66+1)*2 for two mpints (r,s)
+    // 4 bytes length prefix + up to 1 byte padding + 66 bytes value
     return 4 + 1 + 66 + 4 + 1 + 66;
   }
 
@@ -176,6 +195,11 @@ class NobleECDSA521SignerVerifier implements DtSigner, DtVerifier {
     // noble-curves v2 returns signature object; convert to compact bytes
     const sigObj = p521.sign(hash, this.keyPair.privateKey, { prehash: false });
     const compact = sigObj.toBytes("compact");
+    if (compact.length !== 132) {
+      throw new Error(
+        `Unexpected signature size: ${compact.length}, expected 132`,
+      );
+    }
     const n = 66;
     const r = compact.slice(0, n);
     const s = compact.slice(n);

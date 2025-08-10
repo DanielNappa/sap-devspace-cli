@@ -5,7 +5,9 @@ import WebSocket from "ws";
 import type { Dispatch, SetStateAction } from "react";
 import {
   BaseStream,
+  KeyExchangeAlgorithm,
   ObjectDisposedError,
+  PublicKeyAlgorithm,
   SshAlgorithms,
   SshClientSession,
   SshDisconnectReason,
@@ -15,7 +17,6 @@ import {
 } from "@microsoft/dev-tunnels-ssh";
 import { PortForwardingService } from "@microsoft/dev-tunnels-ssh-tcp";
 import { BAS_INTERNAL_PROXY_PORT, PROXY_LOCAL_PORT } from "@/utils/consts.ts";
-import { NobleECDH521, NobleECDSA521 } from "./p521-adapter.ts";
 
 const sessionMap: Map<string, SshClientSession> = new Map();
 
@@ -115,9 +116,9 @@ export async function sshProxyCommand(
 
   const config = new SshSessionConfiguration();
   try {
-    const useWebCrypto = typeof self === "object" &&
-      !!(typeof crypto === "object" && crypto.subtle);
+    const useWebCrypto = !!globalThis?.crypto?.subtle;
     if (useWebCrypto) {
+      const { NobleECDH521, NobleECDSA521 } = await import("./p521-adapter.ts");
       SshAlgorithms.keyExchange.ecdhNistp521Sha512 = new NobleECDH521(
         "ecdh-sha2-nistp521",
         521,
@@ -128,12 +129,12 @@ export async function sshProxyCommand(
         "SHA2-512",
       );
     }
-  } catch (err: unknown) {
-    const reason = err instanceof Error ? err.message : String(err);
+  } catch (error: unknown) {
+    const reason = error instanceof Error ? error.message : String(error);
     console.warn(
       `[ssh] Failed to enable P-521 algorithms with WebCrypto. Falling back. Reason: ${reason}`,
     );
-
+  } finally {
     // Ensure slots are populated to avoid null assertions later.
     // Prefer existing values; otherwise fall back to broadly supported algorithms.
     SshAlgorithms.keyExchange.ecdhNistp521Sha512 =
@@ -159,11 +160,31 @@ export async function sshProxyCommand(
       );
     }
   }
+  const kexCandidates = [
+    SshAlgorithms.keyExchange.ecdhNistp521Sha512,
+    SshAlgorithms.keyExchange.ecdhNistp256Sha256,
+    SshAlgorithms.keyExchange.curve25519Sha256,
+  ].filter(Boolean);
+
+  if (kexCandidates.length === 0) {
+    throw new Error("[ssh] No suitable key exchange algorithm available.");
+  }
   config.keyExchangeAlgorithms.push(
-    SshAlgorithms.keyExchange.ecdhNistp521Sha512!,
+    ...kexCandidates as (KeyExchangeAlgorithm | null)[],
   );
-  config.publicKeyAlgorithms.push(SshAlgorithms.publicKey.ecdsaSha2Nistp521!);
-  config.publicKeyAlgorithms.push(SshAlgorithms.publicKey.rsa2048!);
+
+  const pkCandidates = [
+    SshAlgorithms.publicKey.ecdsaSha2Nistp521,
+    SshAlgorithms.publicKey.ecdsaSha2Nistp256,
+    SshAlgorithms.publicKey.rsa2048,
+  ].filter(Boolean);
+
+  if (pkCandidates.length === 0) {
+    throw new Error("[ssh] No suitable public key algorithm available.");
+  }
+  config.publicKeyAlgorithms.push(
+    ...pkCandidates as (PublicKeyAlgorithm | null)[],
+  );
   config.encryptionAlgorithms.push(SshAlgorithms.encryption.aes256Gcm!);
   config.protocolExtensions.push(SshProtocolExtensionNames.sessionReconnect);
   config.protocolExtensions.push(SshProtocolExtensionNames.sessionLatency);

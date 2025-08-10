@@ -67,7 +67,7 @@ export function savePK(pk: string, wsID: string): string {
   if (existsSync(fileName)) {
     unlinkSync(fileName);
   }
-  writeFileSync(fileName, `${pk}\n`, { mode: 0o400, flag: "w" });
+  writeFileSync(fileName, `${pk}\n`, { mode: 0o600, flag: "w" });
   return fileName;
 }
 
@@ -82,7 +82,7 @@ export function deletePK(wsID: string): void {
   console.log(message);
 }
 
-function getSSHConfig(sshConfigFile: string): SSHConfig | undefined {
+function getSSHConfig(sshConfigFile: string): SSHConfig {
   let configData: Buffer;
   if (existsSync(sshConfigFile)) {
     configData = readFileSync(sshConfigFile);
@@ -105,7 +105,7 @@ export function updateSSHConfig(
   newHostAlias?: string,
 ): SSHConfigInfo {
   const sshConfigFile: string = getSSHConfigFilePath();
-  const port = getRandomArbitrary();
+  const port: number = getRandomArbitrary();
   if (newHostAlias != null && typeof newHostAlias === "string") {
     // get ssh config object from the ssh config file
     const config = getSSHConfig(sshConfigFile) as SSHConfig;

@@ -48,11 +48,6 @@ function closeSessions(sessions?: string[]): void {
   });
 }
 
-// Promise<
-//   | Bun.SyncSubprocess
-//   | Deno.ChildProcess
-//   | ChildProcess
-// >
 async function spawnProcess(
   command: string,
   args: string[],
@@ -61,22 +56,29 @@ async function spawnProcess(
   const runtime = navigator.userAgent;
 
   if (runtime.startsWith("Bun")) {
-    const sshBunCommand = Bun.spawn({
-      cmd: [command, ...args],
-      stdio: ["inherit", "inherit", "inherit"],
-    });
-    void sshBunCommand.exited.then(() => {
-      options.onExit?.(
-        sshBunCommand.exitCode,
-        sshBunCommand.signalCode ?? null,
-      );
-    }).catch(() => {
-      options.onExit?.(
-        sshBunCommand.exitCode,
-        sshBunCommand.signalCode ?? null,
-      );
-    });
-    return sshBunCommand;
+    try {
+      const sshBunCommand = Bun.spawn({
+        cmd: [command, ...args],
+        stdio: ["inherit", "inherit", "inherit"],
+        env: options.env,
+        cwd: options.cwd,
+      });
+      void sshBunCommand.exited.then(() => {
+        options.onExit?.(
+          sshBunCommand.exitCode,
+          sshBunCommand.signalCode ?? null,
+        );
+      }).catch(() => {
+        options.onExit?.(
+          sshBunCommand.exitCode,
+          sshBunCommand.signalCode ?? null,
+        );
+      });
+      return sshBunCommand;
+    } catch (error) {
+      console.error("Failed to spawn Bun process:", error);
+      throw error;
+    }
   } else if (runtime.startsWith("Deno")) {
     const sshDenoCommand = new Deno.Command(command, {
       args: args,
@@ -203,8 +205,14 @@ export async function ssh(
 
   const config = new SshSessionConfiguration();
   try {
-    const useWebCrypto = typeof globalThis === "object" &&
-      !!(globalThis.crypto && globalThis.crypto.subtle);
+    const useWebCrypto: boolean = (() => {
+      try {
+        return typeof globalThis === "object" &&
+          !!(globalThis.crypto?.subtle?.importKey);
+      } catch {
+        return false;
+      }
+    })();
     if (useWebCrypto) {
       SshAlgorithms.keyExchange.ecdhNistp521Sha512 = new NobleECDH521(
         "ecdh-sha2-nistp521",
@@ -216,8 +224,8 @@ export async function ssh(
         "SHA2-512",
       );
     }
-  } catch (err: unknown) {
-    const reason = err instanceof Error ? err.message : String(err);
+  } catch (error: unknown) {
+    const reason = error instanceof Error ? error.message : String(error);
     console.warn(
       `[ssh] Failed to enable P-521 algorithms with WebCrypto. Falling back. Reason: ${reason}`,
     );

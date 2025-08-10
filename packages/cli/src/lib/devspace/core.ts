@@ -28,7 +28,7 @@ import type {
 
 type MetadataCheckState = CheckState<"Metadata">;
 
-const METADATA_CHECK_FREQUENCY: number = 1000 * 60 * 60 * 12; // 1 day
+const METADATA_CHECK_FREQUENCY: number = 1000 * 60 * 60 * 12; // 12 hours
 
 // The shape of the extension data being mapped to
 interface MappedDevSpaceExtension {
@@ -50,6 +50,7 @@ export async function handleSubcommandCreate(
   const result: LandscapeConfig | undefined = getAuthenticatedLandscape(
     typedFlags,
   );
+  assert(result != null);
   assert(result.url != null);
   assert(result.jwt != null);
 
@@ -59,15 +60,21 @@ export async function handleSubcommandCreate(
   // Load previous check timestamp
   let state: MetadataCheckState | undefined;
   try {
-    state = JSON.parse(await readFile(metadataPath, "utf8"));
-  } catch (error: unknown) {
-    if (error instanceof Error) {
+    const raw = await readFile(metadataPath, "utf8");
+    state = JSON.parse(raw);
+  } catch (error) {
+    const err = error as NodeJS.ErrnoException | SyntaxError | Error;
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      // Missing cache is fine; start fresh without warning.
+    } else if (err instanceof SyntaxError) {
       console.warn(
-        chalk.yellow(`Could not read metadata cache: ${error.message}`),
+        chalk.yellow("Ignoring corrupted metadata cache (JSON parse error)."),
       );
     } else {
       console.warn(
-        chalk.yellow("Could not read metadata cache: Unknown error"),
+        chalk.yellow(
+          `Could not read metadata cache: ${err.message ?? "Unknown error"}`,
+        ),
       );
     }
   }

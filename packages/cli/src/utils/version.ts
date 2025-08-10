@@ -119,7 +119,7 @@ export function renderUpdateCommand({
 
 function renderUpdateMessage(options: UpdateOptions) {
   const updateCommand = renderUpdateCommand(options);
-  return `To update, run ${chalk.magenta(updateCommand)} to update.`;
+  return `To update, run ${chalk.magenta(updateCommand)}`;
 }
 
 async function writeState(stateFilePath: string, state: UpdateCheckState) {
@@ -155,13 +155,22 @@ export async function checkForUpdates(): Promise<string | undefined> {
   try {
     state = JSON.parse(await readFile(stateFile, "utf8"));
   } catch (error: unknown) {
-    const isErrno = !!error && typeof error === "object" &&
-      "code" in (error as Error);
-    const code = isErrno ? (error as NodeJS.ErrnoException).code : undefined;
+    const code = typeof error === "object" &&
+        error !== null &&
+        "code" in (error as Record<string, unknown>)
+      ? (error as NodeJS.ErrnoException).code
+      : undefined;
 
     // Ignore missing file on first run
     if (code === "ENOENT") {
-      // no-op
+      // Initialize empty state so later writes don't crash.
+      state = {} as UpdateCheckState;
+    } else if (error instanceof SyntaxError) {
+      // Corrupted cache file; reset and continue.
+      console.warn(
+        chalk.yellow("Update check cache is corrupted. Resetting."),
+      );
+      state = {} as UpdateCheckState;
     } else if (error instanceof Error) {
       const suffix = code ? ` (${code})` : "";
       console.warn(
@@ -173,7 +182,6 @@ export async function checkForUpdates(): Promise<string | undefined> {
       );
     }
   }
-
   // Bail out if we checked less than the configured frequency ago
   if (
     state?.lastUpdateCheck &&
