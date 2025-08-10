@@ -15,6 +15,7 @@ import {
   type Stream,
 } from "@microsoft/dev-tunnels-ssh";
 import { PortForwardingService } from "@microsoft/dev-tunnels-ssh-tcp";
+import { NobleECDH521, NobleECDSA521 } from "@/lib/ssh/p521-adapter.ts";
 import { BAS_INTERNAL_PROXY_PORT, PROXY_LOCAL_PORT } from "@/utils/consts.ts";
 import { clearTerminal, onExit } from "@/utils/terminal.ts";
 import { RenderSessionHeader } from "./SessionHeader.tsx";
@@ -60,17 +61,22 @@ async function spawnProcess(
   const runtime = navigator.userAgent;
 
   if (runtime.startsWith("Bun")) {
-    console.log(command);
-    console.log(args);
-    // Bun support is not yet implemented
-    // const sshBunCommand = Bun.spawn({
-    //   cmd: args
-    // });
-    // await sshBunCommand.exited; // resolves when process exit
-    // if (sshBunCommand.killed) {
-    //   options.onExit?.(sshBunCommand.exitCode, sshBunCommand.signalCode ?? null);
-    // }
-    // return sshBunCommand
+    const sshBunCommand = Bun.spawn({
+      cmd: [command, ...args],
+      stdio: ["inherit", "inherit", "inherit"],
+    });
+    void sshBunCommand.exited.then(() => {
+      options.onExit?.(
+        sshBunCommand.exitCode,
+        sshBunCommand.signalCode ?? null,
+      );
+    }).catch(() => {
+      options.onExit?.(
+        sshBunCommand.exitCode,
+        sshBunCommand.signalCode ?? null,
+      );
+    });
+    return sshBunCommand;
   } else if (runtime.startsWith("Deno")) {
     const sshDenoCommand = new Deno.Command(command, {
       args: args,
@@ -196,6 +202,51 @@ export async function ssh(
   await isContinue;
 
   const config = new SshSessionConfiguration();
+  try {
+    const useWebCrypto = typeof globalThis === "object" &&
+      !!(globalThis.crypto && globalThis.crypto.subtle);
+    if (useWebCrypto) {
+      SshAlgorithms.keyExchange.ecdhNistp521Sha512 = new NobleECDH521(
+        "ecdh-sha2-nistp521",
+        521,
+        "SHA2-512",
+      );
+      SshAlgorithms.publicKey.ecdsaSha2Nistp521 = new NobleECDSA521(
+        "ecdsa-sha2-nistp521",
+        "SHA2-512",
+      );
+    }
+  } catch (err: unknown) {
+    const reason = err instanceof Error ? err.message : String(err);
+    console.warn(
+      `[ssh] Failed to enable P-521 algorithms with WebCrypto. Falling back. Reason: ${reason}`,
+    );
+
+    // Ensure slots are populated to avoid null assertions later.
+    // Prefer existing values; otherwise fall back to broadly supported algorithms.
+    SshAlgorithms.keyExchange.ecdhNistp521Sha512 =
+      SshAlgorithms.keyExchange.ecdhNistp521Sha512 ??
+        SshAlgorithms.keyExchange.ecdhNistp256Sha256 ??
+        SshAlgorithms.keyExchange.curve25519Sha256 ??
+        null;
+
+    SshAlgorithms.publicKey.ecdsaSha2Nistp521 =
+      SshAlgorithms.publicKey.ecdsaSha2Nistp521 ??
+        SshAlgorithms.publicKey.ecdsaSha2Nistp256 ??
+        SshAlgorithms.publicKey.rsa2048 ??
+        null;
+
+    if (!SshAlgorithms.keyExchange.ecdhNistp521Sha512) {
+      console.warn(
+        "[ssh] No suitable key exchange algorithm available; connection may fail.",
+      );
+    }
+    if (!SshAlgorithms.publicKey.ecdsaSha2Nistp521) {
+      console.warn(
+        "[ssh] No suitable ECDSA algorithm available; relying on RSA if configured.",
+      );
+    }
+  }
   config.keyExchangeAlgorithms.push(
     SshAlgorithms.keyExchange.ecdhNistp521Sha512!,
   );
