@@ -9,28 +9,42 @@
  * Any flags you pass into this script become `Deno.args` and get
  * forwarded into your real CLI below.
  */
+import { debounce } from "jsr:@std/async/debounce";
 import { dirname, fromFileUrl, join } from "jsr:@std/path";
 const __dirname: string = dirname(dirname(fromFileUrl(import.meta.url)));
 const __cliDirectory: string = join(__dirname, "packages", "cli");
-const entryPoint: string = join(__cliDirectory, "dist", "bin", "index.js");
+const __denoJSON: string = join(__cliDirectory, "deno.json");
+const entryPoint: string = join(
+  __cliDirectory,
+  "dist",
+  "bin",
+  `ds-${Deno.build.target}`,
+);
 
-const run = async (cmd: string[]): Promise<void> => {
+function run(cmd: string[]): Deno.ChildProcess {
   const [command, ...args] = cmd;
-  const proc = new Deno.Command(command, {
+  const process = new Deno.Command(command, {
     args,
     cwd: __dirname,
     stdout: "inherit",
     stderr: "inherit",
-  });
-  const { code } = await proc.output();
-  if (code !== 0) {
-    console.error(`Command failed with exit code ${code}`);
-    // Don't exit on build failures, just continue watching
-  }
-};
+  }).spawn();
+  return process;
+}
 
-const buildAndRun = async (): Promise<void> => {
-  await run(["deno", "run", "-A", "scripts/build.mts"]);
+const buildAndRun = async (): Promise<Deno.ChildProcess> => {
+  const buildProcess: Deno.ChildProcess = run([
+    "deno",
+    "task",
+    "-c",
+    __denoJSON,
+    `compile:deno:${Deno.build.target}`,
+  ]);
+  const status = await buildProcess.status;
+  if (!status.success) {
+    console.error(`Build failed (exit ${status.code}). Not launching.`);
+    throw new Error("Build failed");
+  }
   const verbose = Deno.env.get("DEBUG") === "1" ||
     Deno.env.get("VERBOSE") === "1" ||
     Deno.args.includes("--verbose") ||
@@ -76,18 +90,32 @@ const buildAndRun = async (): Promise<void> => {
     return out;
   })();
   if (verbose) console.log("Running:", [entryPoint, ...redacted]);
-  await run([entryPoint, ...Deno.args]);
+  return run([entryPoint, ...Deno.args]);
 };
 
+const debouncedRebuild = debounce(async () => {
+  try {
+    currentBuild.kill();
+  } catch (_) {
+    // process may have already exited
+  }
+  currentBuild = await buildAndRun();
+}, 300);
+
 // Initial build and run
-await buildAndRun();
+let currentBuild: Deno.ChildProcess = await buildAndRun();
 
 // Watch for changes
 const watchPath: string = join(__cliDirectory, "src");
 
+const log = debounce((event: Deno.FsEvent) => {
+  console.log("[%s] %s", event.kind, event.paths[0]);
+}, 200);
+
 const watcher = Deno.watchFs(watchPath);
 
 for await (const event of watcher) {
+  log(event);
   // Only rebuild on modify/create events for TypeScript files
   if (event.kind === "modify" || event.kind === "create") {
     const hasTypeScriptFiles = event.paths.some((path: string) =>
@@ -95,7 +123,7 @@ for await (const event of watcher) {
     );
 
     if (hasTypeScriptFiles) {
-      await buildAndRun();
+      debouncedRebuild();
     }
   }
 }
