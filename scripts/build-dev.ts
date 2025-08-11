@@ -14,7 +14,18 @@ import { dirname, fromFileUrl, join } from "jsr:@std/path";
 const __dirname: string = dirname(dirname(fromFileUrl(import.meta.url)));
 const __cliDirectory: string = join(__dirname, "packages", "cli");
 const __denoJSON: string = join(__cliDirectory, "deno.json");
-const entryPoint: string = join(
+const index: string = join(
+  __cliDirectory,
+  "src",
+  "index.tsx",
+);
+const __entryPoint: string = join(
+  __cliDirectory,
+  "dist",
+  "bin",
+  "index.js",
+);
+const executable: string = join(
   __cliDirectory,
   "dist",
   "bin",
@@ -33,18 +44,48 @@ function run(cmd: string[]): Deno.ChildProcess {
 }
 
 const buildAndRun = async (): Promise<Deno.ChildProcess> => {
-  const buildProcess: Deno.ChildProcess = run([
+  // const buildProcess: Deno.ChildProcess = run([
+  //   "deno",
+  //   "run",
+  //   "-A",
+  //   "scripts/build.mts",
+  // ]);
+
+  // const buildProcessStatus = await buildProcess.status;
+  // if (!buildProcessStatus.success) {
+  //   console.error(
+  //     `Build failed (exit ${buildProcessStatus.code}). Not launching.`,
+  //   );
+  //   throw new Error("Build failed");
+  // }
+
+  const compileProcess: Deno.ChildProcess = run([
     "deno",
-    "task",
-    "-c",
+    "compile",
+    "--config",
     __denoJSON,
-    `compile:deno:${Deno.build.target}`,
+    "--output",
+    executable,
+    "--allow-env",
+    "--allow-ffi",
+    "--allow-net",
+    "--allow-read",
+    "--allow-run",
+    "--allow-sys",
+    "--allow-write",
+    "--target",
+    Deno.build.target,
+    index,
   ]);
-  const status = await buildProcess.status;
-  if (!status.success) {
-    console.error(`Build failed (exit ${status.code}). Not launching.`);
-    throw new Error("Build failed");
+
+  const compileProcessStatus = await compileProcess.status;
+  if (!compileProcessStatus.success) {
+    console.error(
+      `Compile failed (exit ${compileProcessStatus.code}). Not launching.`,
+    );
+    throw new Error("Compile failed");
   }
+
   const verbose = Deno.env.get("DEBUG") === "1" ||
     Deno.env.get("VERBOSE") === "1" ||
     Deno.args.includes("--verbose") ||
@@ -89,8 +130,8 @@ const buildAndRun = async (): Promise<Deno.ChildProcess> => {
     }
     return out;
   })();
-  if (verbose) console.log("Running:", [entryPoint, ...redacted]);
-  return run([entryPoint, ...Deno.args]);
+  if (verbose) console.log("Running:", [executable, ...redacted]);
+  return run([executable, ...Deno.args]);
 };
 
 const debouncedRebuild = debounce(async () => {

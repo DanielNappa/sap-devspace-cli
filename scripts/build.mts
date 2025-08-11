@@ -78,7 +78,7 @@ function postBuild() {
 }
 
 if (runtime.startsWith("Bun")) {
-  const { build } = await import("bun");
+  const { $, build } = await import("bun");
   type BunPlugin = import("bun").BunPlugin;
   type OnResolveArgs = import("bun").OnResolveArgs;
   type PluginBuilder = import("bun").PluginBuilder;
@@ -117,6 +117,15 @@ if (runtime.startsWith("Bun")) {
     const bundle = Bun.file(join(__distBinDirectory, "index.js"));
     const contents = await bundle.text();
 
+    const platformTargets: string[][] = [
+      ["windows", "x64"],
+      ["linux", "arm64"],
+      ["linux", "x64"],
+      ["linux", "x64-baseline"],
+      ["darwin", "x64"],
+      ["darwin", "x64-baseline"],
+      ["darwin", "arm64"],
+    ];
     // Replace the shebang line
     const updated = contents.replace(
       /^#!.*\n/,
@@ -125,6 +134,13 @@ if (runtime.startsWith("Bun")) {
 
     // Write back the modified file
     await Bun.write(bundle, updated);
+
+    for (const [os, arch] of platformTargets) {
+      console.log(`building ${os}-${arch}`);
+      const name: string = `ds-${os}-${arch}`;
+      await $`mkdir -p dist/${name}/bin`;
+      await $`bun build --compile --target=bun-${os}-${arch} --outfile=dist/${name}/bin/${name} ${bundle}`;
+    }
   })
     .catch(() => process.exit(1));
 } else {

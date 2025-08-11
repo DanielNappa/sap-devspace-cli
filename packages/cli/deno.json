@@ -16,12 +16,5 @@
     "@/": "./src/",
     "react": "npm:react@19.1.1",
     "file:///jsx-runtime": "npm:react@19.1.1/jsx-runtime"
-  },
-  "tasks": {
-    "compile:deno:aarch64-apple-darwin": "deno compile --config deno.json --output dist/bin/ds-aarch64-apple-darwin --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target aarch64-apple-darwin  src/index.tsx",
-    "compile:deno:x86_64-apple-darwin": "deno compile --config deno.json --output dist/bin/ds-x86_64-apple-darwin --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target x86_64-apple-darwin  src/index.tsx",
-    "compile:deno:x86_64-unknown-linux-gnu": "deno compile --config deno.json --output dist/bin/ds-x86_64-unknown-linux-gnu --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target x86_64-unknown-linux-gnu  src/index.tsx",
-    "compile:deno:aarch64-unknown-linux-gnu": "deno compile --config deno.json --output dist/bin/ds-aarch64-unknown-linux-gnu --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target aarch64-unknown-linux-gnu  src/index.tsx",
-    "compile:deno:x86_64-pc-windows-msvc": "deno compile --config deno.json --output dist/bin/ds-x86_64-pc-windows-msvc --allow-env --allow-ffi --allow-net --allow-read --allow-run --allow-sys --allow-write --target x86_64-pc-windows-msvc  src/index.tsx"
   }
 }
