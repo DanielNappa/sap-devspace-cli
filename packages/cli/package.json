@@ -27,6 +27,7 @@
     "@microsoft/dev-tunnels-ssh-tcp": "^3.12.5",
     "@noble/curves": "^1.9.6",
     "@sap/bas-sdk": "^3.11.6",
+    "@std/ulid": "npm:@jsr/std__ulid@^1.0.0-rc.4",
     "chalk": "^5.5.0",
     "fast-npm-meta": "^0.4.6",
     "fs-extra": "^11.3.1",
@@ -54,6 +55,9 @@
     "dev:deno:watch": "deno run -A --watch src/index.tsx",
     "test": "npm run build && dist/bin/index.js",
     "test:bun": "bun run build:bun && dist/bin/index.js"
+  },
+  "optionalDependencies": {
+    "posthog-node": "^5.6.0"
   },
   "files": [
     "bin",

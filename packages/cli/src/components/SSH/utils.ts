@@ -112,13 +112,17 @@ export function updateSSHConfig(
     // push to the ssh config object with the new configuration
     config.remove({ Host: newHostAlias });
     // keep the existing indentation of the next block
+    // Set entrypoint based on if Deno is running within self contained executable
+    const entrypoint: string =
+      (navigator.userAgent.startsWith("Deno") && Deno.build.standalone)
+        ? process.argv[0]
+        : process.argv[1];
+
     config.push(
       sshConfig.parse(
         `Host ${newHostAlias}
   User user
-  ProxyCommand ${
-          process.argv[1]
-        } ssh --landscape ${devSpace.landscapeURL} --devspace ${devSpace.wsName}
+  ProxyCommand ${entrypoint} ssh --landscape ${devSpace.landscapeURL} --devspace ${devSpace.wsName}
   UserKnownHostsFile=/dev/null
   StrictHostKeyChecking no
   NoHostAuthenticationForLocalhost yes

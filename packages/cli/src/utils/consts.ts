@@ -63,6 +63,11 @@ export const DEVSPACE_SETTINGS_PATH: string = join(
   "devspaces.json",
 );
 
+export const USER_PATH: string = join(
+  USER_DATA_FOLDER,
+  "user.json",
+);
+
 export const devspaceMessages = {
   info_devspace_creating: (name: string) => `Creating Dev Space ${name}`,
   info_devspace_created: (name: string) =>
