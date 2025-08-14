@@ -63,8 +63,7 @@ function makeWrapper(original, proto) {
     } else {
       // http.request(options, cb)
       opts = input || {};
-      const protocol = opts.protocol ||
-        (proto === "https" ? "https:" : "http:");
+      const protocol = opts.protocol || `${proto}:`;
       const host = opts.hostname || opts.host || "localhost";
       const port = opts.port ? `:${opts.port}` : "";
       const path = opts.path || "/";
@@ -90,9 +89,13 @@ function makeWrapper(original, proto) {
         const buffer = Buffer.isBuffer(chunk)
           ? chunk
           : Buffer.from(chunk, encoding);
-        if (totalSize + buffer.length <= MAX_BUFFER_SIZE) {
-          chunks.push(buffer);
-          totalSize += buffer.length;
+        if (totalSize < MAX_BUFFER_SIZE) {
+          const remainingSpace = MAX_BUFFER_SIZE - totalSize;
+          const chunkToCapture = buffer.length > remainingSpace
+            ? buffer.subarray(0, remainingSpace)
+            : buffer;
+          chunks.push(chunkToCapture);
+          totalSize += chunkToCapture.length;
         }
       }
       return oldWrite.call(this, chunk, encoding, cb);
@@ -240,5 +243,53 @@ if (typeof globalThis.fetch === "function") {
       );
     } catch {}
     return res;
+  };
+}
+
+if (typeof globalThis.WebSocket === "function") {
+  const origWebSocket = globalThis.WebSocket;
+  globalThis.WebSocket = class PatchedWebSocket extends origWebSocket {
+    constructor(url, protocols) {
+      try {
+        console.error(`[ws-spy] WebSocket connection to: ${formatUrl(url)}`);
+        console.error(`[ws-spy] Protocols: ${JSON.stringify(protocols || [])}`);
+      } catch (_) {
+        // Don't let logging break WebSocket creation
+      }
+
+      super(url, protocols);
+
+      // Log connection events
+      this.addEventListener("open", (event) => {
+        console.error(`[ws-spy] WebSocket opened: ${formatUrl(url)}`);
+      });
+
+      this.addEventListener("message", (event) => {
+        let dataSize = "unknown";
+        try {
+          if (typeof event.data === "string") {
+            dataSize = `${event.data.length} chars`;
+          } else if (event.data instanceof ArrayBuffer) {
+            dataSize = `${event.data.byteLength} bytes`;
+          } else if (event.data instanceof Blob) {
+            dataSize = `${event.data.size} bytes`;
+          }
+        } catch {}
+        console.error(`[ws-spy] WebSocket message received: ${dataSize}`);
+      });
+
+      this.addEventListener("close", (event) => {
+        console.error(
+          `[ws-spy] WebSocket closed: ${event.code} ${event.reason}`,
+        );
+      });
+
+      this.addEventListener("error", (event) => {
+        console.error(
+          `[ws-spy] WebSocket error: ${event.type}`,
+          event.error || event.message || "Unknown error",
+        );
+      });
+    }
   };
 }
