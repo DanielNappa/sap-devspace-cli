@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run -A  --
+#!/usr/bin/env -S deno run -A
 
 /**
  * Each time Deno starts or restarts this file (on initial run +
@@ -14,11 +14,7 @@ import { dirname, fromFileUrl, join } from "jsr:@std/path";
 const __dirname: string = dirname(dirname(fromFileUrl(import.meta.url)));
 const __cliDirectory: string = join(__dirname, "packages", "cli");
 const __denoJSON: string = join(__cliDirectory, "deno.json");
-const index: string = join(
-  __cliDirectory,
-  "src",
-  "index.tsx",
-);
+
 const __entryPoint: string = join(
   __cliDirectory,
   "dist",
@@ -44,26 +40,30 @@ function run(cmd: string[]): Deno.ChildProcess {
 }
 
 const buildAndRun = async (): Promise<Deno.ChildProcess> => {
-  // const buildProcess: Deno.ChildProcess = run([
-  //   "deno",
-  //   "run",
-  //   "-A",
-  //   "scripts/build.mts",
-  // ]);
+  const buildProcess: Deno.ChildProcess = run([
+    "deno",
+    "run",
+    "-A",
+    "scripts/build.mts",
+  ]);
 
-  // const buildProcessStatus = await buildProcess.status;
-  // if (!buildProcessStatus.success) {
-  //   console.error(
-  //     `Build failed (exit ${buildProcessStatus.code}). Not launching.`,
-  //   );
-  //   throw new Error("Build failed");
-  // }
+  const buildProcessStatus = await buildProcess.status;
+  if (!buildProcessStatus.success) {
+    console.error(
+      `Build failed (exit ${buildProcessStatus.code}). Not launching.`,
+    );
+    throw new Error("Build failed");
+  }
 
   const compileProcess: Deno.ChildProcess = run([
     "deno",
     "compile",
     "--config",
     __denoJSON,
+    "--exclude",
+    "package.json",
+    "--exclude",
+    "node_modules/",
     "--exclude",
     "packages/cli/dist/",
     "--exclude",
@@ -91,7 +91,7 @@ const buildAndRun = async (): Promise<Deno.ChildProcess> => {
     "--allow-write",
     "--target",
     Deno.build.target,
-    index,
+    __entryPoint,
   ]);
 
   const compileProcessStatus = await compileProcess.status;
@@ -101,62 +101,27 @@ const buildAndRun = async (): Promise<Deno.ChildProcess> => {
     );
     throw new Error("Compile failed");
   }
-
-  const verbose = Deno.env.get("DEBUG") === "1" ||
-    Deno.env.get("VERBOSE") === "1" ||
-    Deno.args.includes("--verbose") ||
-    Deno.args.includes("-v");
-  // Redact common sensitive flags
-  const redacted = (() => {
-    const out: string[] = [];
-    const redactLong = new Set(["--token", "--password", "--secret", "--key"]);
-    for (let i = 0; i < Deno.args.length; i++) {
-      const a = Deno.args[i];
-      // Long form: --flag=value
-      if (/^--(?:token|password|secret|key)=/i.test(a)) {
-        out.push(a.replace(/=.*/, "=****"));
-        continue;
-      }
-      // Long form: --flag <value>
-      if (redactLong.has(a.toLowerCase())) {
-        out.push(a);
-        const next = Deno.args[i + 1];
-        if (next && !next.startsWith("-")) {
-          out.push("****");
-          i++;
-        }
-        continue;
-      }
-      // Short form: -k=value
-      if (/^-[tpsk]=/i.test(a)) {
-        out.push(a.replace(/=.*/, "=****"));
-        continue;
-      }
-      // Short form: -k <value>
-      if (/^-[tpsk]$/i.test(a)) {
-        out.push(a);
-        const next = Deno.args[i + 1];
-        if (next && !next.startsWith("-")) {
-          out.push("****");
-          i++;
-        }
-        continue;
-      }
-      out.push(a);
-    }
-    return out;
-  })();
-  if (verbose) console.log("Running:", [executable, ...redacted]);
   return run([executable, ...Deno.args]);
 };
 
+let rebuildInProgress = false;
 const debouncedRebuild = debounce(async () => {
+  if (rebuildInProgress) return;
+  rebuildInProgress = true;
   try {
-    currentBuild.kill();
-  } catch (_) {
-    // process may have already exited
+    const oldBuild = currentBuild;
+    if (oldBuild) {
+      try {
+        oldBuild.kill();
+        await oldBuild.status; // Wait for process to actually exit
+      } catch (_) {
+        // process may have already exited
+      }
+    }
+    currentBuild = await buildAndRun();
+  } finally {
+    rebuildInProgress = false;
   }
-  currentBuild = await buildAndRun();
 }, 300);
 
 // Initial build and run
