@@ -4,7 +4,7 @@
  * Each time Deno starts or restarts this file (on initial run +
  * whenever a *.ts(x) changes), we:
  *   1) run `deno run -A scripts/build.mts`
- *   2) run `node bin/index.js […whatever flags passed]`
+ *   2) compile and run the Deno executable with […whatever flags passed]
  *
  * Any flags you pass into this script become `Deno.args` and get
  * forwarded into your real CLI below.
@@ -136,16 +136,22 @@ const log = debounce((event: Deno.FsEvent) => {
 
 const watcher = Deno.watchFs(watchPath);
 
-for await (const event of watcher) {
-  log(event);
-  // Only rebuild on modify/create events for TypeScript files
-  if (event.kind === "modify" || event.kind === "create") {
-    const hasTypeScriptFiles = event.paths.some((path: string) =>
-      path.endsWith(".ts") || path.endsWith(".tsx")
-    );
+try {
+  for await (const event of watcher) {
+    log(event);
+    // Only rebuild on modify/create events for TypeScript files
+    if (event.kind === "modify" || event.kind === "create") {
+      const hasTypeScriptFiles = event.paths.some((path: string) =>
+        path.endsWith(".ts") || path.endsWith(".tsx")
+      );
 
-    if (hasTypeScriptFiles) {
-      debouncedRebuild();
+      if (hasTypeScriptFiles) {
+        debouncedRebuild();
+      }
     }
   }
+} catch (error) {
+  console.error("File watcher error:", error);
+  // Optionally restart the watcher or exit
+  Deno.exit(1);
 }
