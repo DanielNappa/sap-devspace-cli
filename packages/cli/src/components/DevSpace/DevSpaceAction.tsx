@@ -32,7 +32,7 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
 }): JSX.Element {
   const { navigate, goBack } = useNavigation();
   const { setOverlay, useDefaultOverlay } = useHelp();
-  const [loading, setLoading] = useState<boolean>(true);
+  // const [loading, setLoading] = useState<boolean>(true);
   const [hasBeenPrompted, setHasBeenPrompted] = useState<boolean>(false);
   const [component, setComponent] = useState<JSX.Element>();
   const [message, setMessage] = useState<string>("Select an option:");
@@ -43,7 +43,9 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
   const [selectedOption, setSelectedOption] = useState<string | undefined>(
     undefined,
   );
-  const [devSpaceStatus, setDevSpaceStatus] = useState<string>("");
+  const [devSpaceStatus, _setDevSpaceStatus] = useState<string>(
+    devSpaceNode.status,
+  );
   const [sshAliasStep, setSSHAliasStep] = useState<SSHAliasStep>(
     SSHAliasStep.NONE,
   );
@@ -55,19 +57,12 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
 
   const fetchStatus = useCallback(async () => {
     setOverlay("esc to cancel and return to main menu");
-    setLoading(true);
-    const info = await devspace.getDevspaceInfo({
-      landscapeUrl: devSpaceNode.landscapeURL,
-      jwt: jwt,
-      wsId: devSpaceNode.id,
-    });
-    setDevSpaceStatus(info.status);
+
     const devSpaceSettings: DevSpaceSettings = await getDevSpaceSettings();
     setHasBeenPrompted(
       !!devSpaceSettings[devSpaceNode.landscapeURL]?.[devSpaceKey],
     );
-    setLoading(false);
-    (info.status === devspace.DevSpaceStatus.RUNNING)
+    (devSpaceNode.status === devspace.DevSpaceStatus.RUNNING)
       ? setOverlay(
         "enter to confirm · o to open BAS in a browser · esc to return to main menu",
       )
@@ -143,7 +138,6 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
   });
 
   const options: Option[] = useMemo(() => {
-    if (loading) return [];
     const isReady = devSpaceStatus === devspace.DevSpaceStatus.RUNNING;
     return [
       isReady
@@ -166,7 +160,7 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
         label: "Delete Dev Space",
       },
     ];
-  }, [devSpaceStatus, loading]);
+  }, [devSpaceStatus]);
 
   useEffect(() => {
     if (sshAliasStep !== SSHAliasStep.NONE) {
@@ -283,72 +277,74 @@ function DevSpaceAction({ devSpaceNode, jwt }: {
 
   return (
     <>
-      {loading
-        ? <Loading type="bouncingBar" />
-        : component || (
-          <Box flexDirection="row" marginTop={1}>
-            <Box justifyContent="center" flexDirection="column">
-              <Box flexDirection="row">
-                <Text color={showErrorMessage ? "red" : "null"}>{message}</Text>
-              </Box>
-              {sshAliasStep === SSHAliasStep.NONE && (
-                <Select
-                  options={options}
-                  onChange={(value: string) => {
-                    setSelectedOption(value);
-                  }}
-                />
-              )}
-              {sshAliasStep === SSHAliasStep.CONFIRM && (
-                <ConfirmInput
-                  onConfirm={() => {
-                    setMessage("Enter SSH Alias:");
-                    setSSHAliasStep(SSHAliasStep.INPUT);
-                    updateDevSpaceSettings(devSpaceNode, true);
-                    setHasBeenPrompted(true);
-                  }}
-                  onCancel={() => {
-                    setSSHAliasStep(SSHAliasStep.NONE);
-                    updateDevSpaceSettings(devSpaceNode, true);
-                    setHasBeenPrompted(true);
-                    navigate(<SSH devSpaceNode={devSpaceNode} jwt={jwt} />);
-                  }}
-                />
-              )}
-              {sshAliasStep === SSHAliasStep.INPUT && (
-                <TextInput
-                  value={sshAlias}
-                  onChange={setSSHAlias}
-                  onSubmit={(input: string) => {
-                    try {
-                      if (!(/^!?(?:[A-Za-z0-9._-]|\?|\*)+$/.test(input))) {
-                        setMessage(devspaceMessages.err_invalid_alias_name);
-                        setShowErrorMessage(true);
-                      } else {
-                        if (input) {
-                          if (showErrorMessage) setShowErrorMessage(false);
-                          setSSHAlias(input);
-                          setSSHAliasStep(SSHAliasStep.NONE);
-                          navigate(
-                            <SSH
-                              devSpaceNode={devSpaceNode}
-                              jwt={jwt}
-                              newHostAlias={input}
-                            />,
-                          );
-                        }
-                      }
-                    } catch {
+      {
+        /* {loading
+        ? <Loading type="bouncingBar" /> */
+      }
+      {component || (
+        <Box flexDirection="row" marginTop={1}>
+          <Box justifyContent="center" flexDirection="column">
+            <Box flexDirection="row">
+              <Text color={showErrorMessage ? "red" : "null"}>{message}</Text>
+            </Box>
+            {sshAliasStep === SSHAliasStep.NONE && (
+              <Select
+                options={options}
+                onChange={(value: string) => {
+                  setSelectedOption(value);
+                }}
+              />
+            )}
+            {sshAliasStep === SSHAliasStep.CONFIRM && (
+              <ConfirmInput
+                onConfirm={() => {
+                  setMessage("Enter SSH Alias:");
+                  setSSHAliasStep(SSHAliasStep.INPUT);
+                  updateDevSpaceSettings(devSpaceNode, true);
+                  setHasBeenPrompted(true);
+                }}
+                onCancel={() => {
+                  setSSHAliasStep(SSHAliasStep.NONE);
+                  updateDevSpaceSettings(devSpaceNode, true);
+                  setHasBeenPrompted(true);
+                  navigate(<SSH devSpaceNode={devSpaceNode} jwt={jwt} />);
+                }}
+              />
+            )}
+            {sshAliasStep === SSHAliasStep.INPUT && (
+              <TextInput
+                value={sshAlias}
+                onChange={setSSHAlias}
+                onSubmit={(input: string) => {
+                  try {
+                    if (!(/^!?(?:[A-Za-z0-9._-]|\?|\*)+$/.test(input))) {
                       setMessage(devspaceMessages.err_invalid_alias_name);
                       setShowErrorMessage(true);
+                    } else {
+                      if (input) {
+                        if (showErrorMessage) setShowErrorMessage(false);
+                        setSSHAlias(input);
+                        setSSHAliasStep(SSHAliasStep.NONE);
+                        navigate(
+                          <SSH
+                            devSpaceNode={devSpaceNode}
+                            jwt={jwt}
+                            newHostAlias={input}
+                          />,
+                        );
+                      }
                     }
-                  }}
-                  placeholder={`${devSpaceNode.wsName}.devspace`}
-                />
-              )}
-            </Box>
+                  } catch {
+                    setMessage(devspaceMessages.err_invalid_alias_name);
+                    setShowErrorMessage(true);
+                  }
+                }}
+                placeholder={`${devSpaceNode.wsName}.devspace`}
+              />
+            )}
           </Box>
-        )}
+        </Box>
+      )}
     </>
   );
 }
