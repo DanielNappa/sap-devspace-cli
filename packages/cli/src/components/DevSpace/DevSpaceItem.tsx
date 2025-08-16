@@ -1,7 +1,7 @@
 import { type FunctionComponent } from "react";
 import { Box, Text } from "ink";
-import type { ItemProperties } from "@/components/UI/EnhancedSelect.tsx"; // Use the real path to the type
 import { devspace } from "@sap/bas-sdk";
+import type { ItemProperties } from "@/components/UI/EnhancedSelect.tsx";
 
 const StatusColor: Record<string, string> = {
   RUNNING: "green",
