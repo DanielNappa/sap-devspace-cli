@@ -45,7 +45,9 @@ function normalizeFetchHeaders(h) {
     if (h && typeof h.entries === "function") {
       return Object.fromEntries(h.entries());
     }
-  } catch {}
+  } catch {
+    // Ignore errors when trying to access originalFetch
+  }
   return h || {};
 }
 
@@ -139,7 +141,9 @@ function makeWrapper(original, proto) {
             try {
               const json = JSON.parse(text);
               text = JSON.stringify(json, null, 2);
-            } catch {}
+            } catch {
+              // Ignore JSON parsing errors
+            }
             if (text.length > MAX_BODY_PREVIEW) {
               text = text.slice(0, MAX_BODY_PREVIEW) +
                 `…(truncated ${text.length - MAX_BODY_PREVIEW} chars)`;
@@ -149,7 +153,7 @@ function makeWrapper(original, proto) {
             );
           }
         }
-      } catch (e) {
+      } catch (_e) {
         // don't let logging break the request
       }
 
@@ -171,7 +175,9 @@ function makeWrapper(original, proto) {
             )
           }`,
         );
-      } catch (e) {}
+      } catch (_e) {
+        // Ignore logging errors
+      }
     });
 
     return req;
@@ -226,7 +232,9 @@ if (typeof globalThis.fetch === "function") {
           )
         }`,
       );
-    } catch {}
+    } catch {
+      // Ignore logging errors
+    }
     const res = await origFetch(input, init);
     try {
       const respUrl = formatUrl(res.url);
@@ -241,7 +249,9 @@ if (typeof globalThis.fetch === "function") {
           )
         }`,
       );
-    } catch {}
+    } catch {
+      // Ignore logging errors
+    }
     return res;
   };
 }
@@ -260,7 +270,7 @@ if (typeof globalThis.WebSocket === "function") {
       super(url, protocols);
 
       // Log connection events
-      this.addEventListener("open", (event) => {
+      this.addEventListener("open", (_event) => {
         console.error(`[ws-spy] WebSocket opened: ${formatUrl(url)}`);
       });
 
@@ -274,7 +284,9 @@ if (typeof globalThis.WebSocket === "function") {
           } else if (event.data instanceof Blob) {
             dataSize = `${event.data.size} bytes`;
           }
-        } catch {}
+        } catch {
+          // Ignore data size calculation errors
+        }
         console.error(`[ws-spy] WebSocket message received: ${dataSize}`);
       });
 

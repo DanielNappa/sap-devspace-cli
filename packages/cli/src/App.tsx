@@ -1,5 +1,6 @@
+import process from "node:process";
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
-import { Box, useApp, useInput } from "ink";
+import { Box, Text, useApp, useInput } from "ink";
 import LandscapeMenu from "@/components/Landscape/LandscapeMenu.tsx";
 import Header from "@/components/UI/Header.tsx";
 import HelpOverlay from "@/components/UI/HelpOverlay.tsx";
@@ -18,6 +19,7 @@ export default function App({ updateMessage }: Props): JSX.Element {
     JSX.Element | null
   >(null);
   const [overlay, setOverlay] = useState<string | null>(null);
+  const [shouldThrowError, setShouldThrowError] = useState<string | null>(null);
 
   const navigate = useMemo(() => (newComponent: JSX.Element) => {
     setPreviousComponent(component);
@@ -32,11 +34,31 @@ export default function App({ updateMessage }: Props): JSX.Element {
     }
   }, [previousComponent]);
 
-  useInput((_, key) => {
+  useInput((input, key) => {
     if (key.escape && previousComponent) {
       goBack();
     }
+
+    // Development mode error testing
+    if (process.env.NODE_ENV === "development") {
+      if (input === "E") {
+        // Trigger a test error in the main app
+        setShouldThrowError("Development test: Main App error");
+      } else if (input === "A") {
+        // Trigger an async error
+        setTimeout(() => {
+          Promise.reject(
+            new Error("Development test: Async error from main app"),
+          );
+        }, 100);
+      }
+    }
   });
+
+  // Throw error during render so ErrorBoundary can catch it
+  if (shouldThrowError) {
+    throw new Error(shouldThrowError);
+  }
 
   const useDefaultOverlay = useCallback(() => {
     setOverlay("enter to confirm · esc to return to main menu");
@@ -63,6 +85,13 @@ export default function App({ updateMessage }: Props): JSX.Element {
         ])}
       >
         <Header updateMessage={updateMessage} />
+        {process.env.NODE_ENV === "development" && (
+          <Box paddingX={1}>
+            <Text color="red">
+              Dev Mode: E for sync error · A for async error
+            </Text>
+          </Box>
+        )}
         <Box paddingX={1}>
           {component}
         </Box>

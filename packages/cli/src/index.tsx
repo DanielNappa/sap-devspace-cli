@@ -8,6 +8,8 @@ import {
   handleSubcommandDelete,
   handleSubcommandUpdate,
 } from "@/lib/devspace/core.ts";
+import { ErrorBoundary } from "@/components/UI/ErrorBoundary.tsx";
+import { captureException } from "@/utils/errors.ts";
 import { setInkRenderer } from "@/utils/terminal.ts";
 import { SubcommandType } from "@/utils/types.ts";
 import { createMeowSubcommand } from "@/utils/utils.ts";
@@ -50,61 +52,96 @@ const stop = createMeowSubcommand(SubcommandType.STOP);
 const deleteDevSpace = createMeowSubcommand(SubcommandType.DELETE);
 
 if (cli.input[0] != null) {
-  switch (cli.input[0]) {
-    case SubcommandType.CREATE: {
-      await handleSubcommandCreate(cli.flags);
-      break;
-    }
-    case SubcommandType.SSH: {
-      if (ssh.flags.help || (!ssh.flags.devspace || !ssh.flags.landscape)) {
-        ssh.showHelp();
-        process.exit(0);
-      } else {
-        await handleSubcommandSSH(ssh.flags);
+  try {
+    switch (cli.input[0]) {
+      case SubcommandType.CREATE: {
+        await handleSubcommandCreate(cli.flags);
+        break;
       }
-      break;
-    }
-    case SubcommandType.START: {
-      if (
-        start.flags.help || (!start.flags.devspace || !start.flags.landscape)
-      ) {
-        start.showHelp();
-        process.exit(0);
-      } else {
-        await handleSubcommandUpdate(start.flags, false);
+      case SubcommandType.SSH: {
+        if (ssh.flags.help || (!ssh.flags.devspace || !ssh.flags.landscape)) {
+          ssh.showHelp();
+          process.exit(0);
+        } else {
+          await handleSubcommandSSH(ssh.flags);
+        }
+        break;
       }
-      break;
-    }
-    case SubcommandType.STOP: {
-      if (stop.flags.help || (!stop.flags.devspace || !stop.flags.landscape)) {
-        stop.showHelp();
-        process.exit(0);
-      } else {
-        await handleSubcommandUpdate(stop.flags, true);
+      case SubcommandType.START: {
+        if (
+          start.flags.help || (!start.flags.devspace || !start.flags.landscape)
+        ) {
+          start.showHelp();
+          process.exit(0);
+        } else {
+          await handleSubcommandUpdate(start.flags, false);
+        }
+        break;
       }
-      break;
-    }
-    case SubcommandType.DELETE: {
-      if (
-        deleteDevSpace.flags.help ||
-        (!deleteDevSpace.flags.devspace || !deleteDevSpace.flags.landscape)
-      ) {
-        deleteDevSpace.showHelp();
-        process.exit(0);
-      } else {
-        await handleSubcommandDelete(deleteDevSpace.flags);
+      case SubcommandType.STOP: {
+        if (
+          stop.flags.help || (!stop.flags.devspace || !stop.flags.landscape)
+        ) {
+          stop.showHelp();
+          process.exit(0);
+        } else {
+          await handleSubcommandUpdate(stop.flags, true);
+        }
+        break;
       }
-      break;
+      case SubcommandType.DELETE: {
+        if (
+          deleteDevSpace.flags.help ||
+          (!deleteDevSpace.flags.devspace || !deleteDevSpace.flags.landscape)
+        ) {
+          deleteDevSpace.showHelp();
+          process.exit(0);
+        } else {
+          await handleSubcommandDelete(deleteDevSpace.flags);
+        }
+        break;
+      }
+      default: {
+        cli.showHelp();
+        process.exit(0);
+      }
     }
-    default: {
-      cli.showHelp();
-      process.exit(0);
-    }
+  } catch (error) {
+    captureException(error, {
+      component: "cli",
+      action: "subcommand",
+      subcommand: cli.input[0],
+    });
+    console.error("Command failed:", error);
+    process.exit(1);
   }
 } else {
-  const updateMessage = await checkForUpdates().catch(() => "") as string;
-  const instance: Instance = render(
-    <App updateMessage={updateMessage} />,
-  );
-  setInkRenderer(instance);
+  try {
+    const updateMessage = await checkForUpdates().catch((error: unknown) => {
+      captureException(error, {
+        component: "cli",
+        action: "checkForUpdates",
+      });
+      return "";
+    }) as string;
+
+    const instance: Instance = render(
+      <ErrorBoundary
+        context={{
+          component: "App",
+          hasUpdateMessage: !!updateMessage,
+        }}
+      >
+        <App updateMessage={updateMessage} />
+      </ErrorBoundary>,
+    );
+    setInkRenderer(instance);
+  } catch (error) {
+    captureException(error, {
+      component: "cli",
+      action: "renderApp",
+    });
+    console.error("Failed to start application:", error);
+    process.exit(1);
+  }
 }

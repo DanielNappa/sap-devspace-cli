@@ -53,8 +53,25 @@
     "dev:watch": "npx tsx --watch src/index.tsx",
     "dev:bun:watch": "bun --watch src/index.tsx",
     "dev:deno:watch": "deno run -A --watch src/index.tsx",
+    "dev:test": "NODE_ENV=development npx tsx src/index.tsx",
+    "dev:deno:test": "NODE_ENV=development deno run -A src/index.tsx",
     "test": "npm run build && dist/bin/index.js",
-    "test:bun": "bun run build:bun && dist/bin/index.js"
+    "test:bun": "bun run build:bun && dist/bin/index.js",
+    "test:errors": "NODE_ENV=development npx tsx src/test/testSuite.tsx",
+    "test:error-boundaries": "NODE_ENV=development npx tsx src/test/errorBoundaryTests.tsx",
+    "test:error-scenarios": "NODE_ENV=development npx tsx src/test/runErrorScenarios.tsx",
+    "test:posthog": "NODE_ENV=development npx tsx src/test/runPostHogTest.tsx",
+    "test:quick": "NODE_ENV=development npx tsx src/test/quickTest.tsx",
+    "test:bun:errors": "NODE_ENV=development bun src/test/testSuite.tsx",
+    "test:bun:error-boundaries": "NODE_ENV=development bun src/test/errorBoundaryTests.tsx",
+    "test:bun:error-scenarios": "NODE_ENV=development bun src/test/runErrorScenarios.tsx",
+    "test:bun:posthog": "NODE_ENV=development bun src/test/runPostHogTest.tsx",
+    "test:bun:quick": "NODE_ENV=development bun src/test/quickTest.tsx",
+    "test:deno:errors": "NODE_ENV=development deno run -A src/test/testSuite.tsx",
+    "test:deno:error-boundaries": "NODE_ENV=development deno run -A src/test/errorBoundaryTests.tsx",
+    "test:deno:error-scenarios": "NODE_ENV=development deno run -A src/test/runErrorScenarios.tsx",
+    "test:deno:posthog": "NODE_ENV=development deno run -A src/test/runPostHogTest.tsx",
+    "test:deno:quick": "NODE_ENV=development deno run -A src/test/quickTest.tsx"
   },
   "optionalDependencies": {
     "posthog-node": "^5.6.0"

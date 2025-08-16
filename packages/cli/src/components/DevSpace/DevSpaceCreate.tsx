@@ -1,6 +1,7 @@
+import process from "node:process";
 import { type JSX, useEffect, useState } from "react";
 import chalk from "chalk";
-import { Box, Text } from "ink";
+import { Box, Text, useInput } from "ink";
 import { MultiSelect, type Option, Select } from "@inkjs/ui";
 import Spinner from "ink-spinner";
 import {
@@ -14,8 +15,14 @@ import type {
   DevSpaceSpec,
 } from "@sap/bas-sdk/dist/src/utils/devspace-utils";
 import { TextInput } from "@/components/UI/TextInput.tsx";
+import { ErrorBoundary } from "@/components/UI/ErrorBoundary.tsx";
 import { useHelp } from "@/hooks/HelpContext.ts";
 import { devspaceMessages } from "@/utils/consts.ts";
+import {
+  AuthenticationError,
+  captureException,
+  DevSpaceError,
+} from "@/utils/errors.ts";
 import type { PackMetadata } from "@/utils/types.ts";
 import { pickByStringIndex } from "@/utils/utils.ts";
 import { organizePackExtensions } from "./utils.ts";
@@ -44,6 +51,7 @@ function DevSpaceCreate(
   const [devSpaceName, setDevSpaceName] = useState<string>("");
   const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [testError, setTestError] = useState<string>("none");
   const [packOptions, setPackOptions] = useState<Option[]>([]);
   const [devSpacesSpec, setDevSpacesSpec] = useState<DevSpaceSpec>();
   const [devSpacesSpecPacks, setDevSpacesSpecPacks] = useState<
@@ -60,6 +68,63 @@ function DevSpaceCreate(
   useEffect(() => {
     useDefaultOverlay();
   }, []);
+
+  // Development mode error testing
+  useInput((input) => {
+    if (process.env.NODE_ENV === "development") {
+      if (input === "t") {
+        // Cycle through different error test scenarios
+        const scenarios = ["none", "sync", "async", "devspace", "auth"];
+        const currentIndex = scenarios.indexOf(testError);
+        const nextIndex = (currentIndex + 1) % scenarios.length;
+        setTestError(scenarios[nextIndex]);
+
+        if (scenarios[nextIndex] !== "none") {
+          setMessage(`Test Mode: ${scenarios[nextIndex]} error will be thrown`);
+          setShowErrorMessage(true);
+        } else {
+          setMessage("Enter Dev Space name:");
+          setShowErrorMessage(false);
+        }
+      }
+    }
+  });
+
+  // Trigger test errors in development mode
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development" && testError !== "none") {
+      const triggerError = () => {
+        switch (testError) {
+          case "sync":
+            throw new Error(
+              "Development test: Synchronous error in DevSpaceCreate",
+            );
+          case "async":
+            setTimeout(() => {
+              Promise.reject(
+                new Error("Development test: Async error in DevSpaceCreate"),
+              );
+            }, 100);
+            break;
+          case "devspace":
+            throw new DevSpaceError(
+              "Development test: DevSpace error",
+              "test-id",
+              landscapeURL,
+            );
+          case "auth":
+            throw new AuthenticationError(
+              "Development test: Auth error",
+              landscapeURL,
+            );
+        }
+      };
+
+      // Small delay to show the message first
+      const timer = setTimeout(triggerError, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [testError, landscapeURL]);
 
   useEffect(() => {
     switch (currentStep) {
@@ -80,6 +145,17 @@ function DevSpaceCreate(
               })),
             );
           }
+        }).catch((error) => {
+          captureException(error, {
+            component: "DevSpaceCreate",
+            action: "getDevSpacesSpec",
+            landscapeURL,
+            step: "NAME",
+          });
+          setMessage(
+            "Failed to load DevSpace specifications. Please try again.",
+          );
+          setShowErrorMessage(true);
         });
         break;
       case DevSpaceCreateStep.PACKOPTIONS:
@@ -179,15 +255,31 @@ function DevSpaceCreate(
               setLoading(false);
               onFinish();
             }).catch((error) => {
-              if (error instanceof Error) {
-                const message = devspaceMessages.err_devspace_creation(
-                  devSpaceName,
-                  error.toString(),
-                );
-                console.error(chalk.red(message));
-                setLoading(false);
-                onFinish();
-              }
+              const devSpaceError = new DevSpaceError(
+                `Failed to create DevSpace: ${devSpaceName}`,
+                undefined,
+                landscapeURL,
+              );
+
+              captureException(devSpaceError, {
+                component: "DevSpaceCreate",
+                action: "createDevSpace",
+                devSpaceName,
+                landscapeURL,
+                selectedPack: selectedPack?.name,
+                extensionCount: allExtensions.length,
+                originalError: error instanceof Error
+                  ? error.message
+                  : String(error),
+              });
+
+              const message = devspaceMessages.err_devspace_creation(
+                devSpaceName,
+                error instanceof Error ? error.message : String(error),
+              );
+              console.error(chalk.red(message));
+              setLoading(false);
+              onFinish();
             });
           }
         }
@@ -198,90 +290,108 @@ function DevSpaceCreate(
   }, [currentStep]);
 
   return (
-    <Box flexDirection="column" marginTop={1}>
-      {currentStep !== DevSpaceCreateStep.CREATE && (
-        <Text color={showErrorMessage ? "red" : "null"}>{message}</Text>
+    <ErrorBoundary
+      context={{
+        component: "DevSpaceCreate",
+        landscapeURL,
+        currentStep: DevSpaceCreateStep[currentStep],
+        devSpaceName,
+      }}
+      fallback={(error, _retry) => (
+        <Box flexDirection="column" padding={1}>
+          <Text color="red">Failed to create DevSpace:</Text>
+          <Text color="red">{error.message}</Text>
+          <Text dimColor>Press 'r' to retry or 'esc' to go back</Text>
+        </Box>
       )}
-      {currentStep === DevSpaceCreateStep.NAME && (
-        <TextInput
-          value={devSpaceName}
-          onChange={setDevSpaceName}
-          onSubmit={(input: string) => {
-            try {
-              if (!(/^[a-zA-Z0-9][a-zA-Z0-9_]{0,39}$/.test(input))) {
+    >
+      <Box flexDirection="column" marginTop={1}>
+        {process.env.NODE_ENV === "development" && (
+          <Box flexDirection="column" marginBottom={1}>
+            <Text dimColor>
+              Development Mode: Press 't' to cycle through error tests
+            </Text>
+            <Text dimColor>Current test: {testError}</Text>
+          </Box>
+        )}
+        {currentStep !== DevSpaceCreateStep.CREATE && (
+          <Text color={showErrorMessage ? "red" : "null"}>{message}</Text>
+        )}
+        {currentStep === DevSpaceCreateStep.NAME && (
+          <TextInput
+            value={devSpaceName}
+            onChange={setDevSpaceName}
+            onSubmit={(input: string) => {
+              try {
+                if (!(/^[a-zA-Z0-9][a-zA-Z0-9_]{0,39}$/.test(input))) {
+                  setMessage(devspaceMessages.err_invalid_devspace_name);
+                  setShowErrorMessage(true);
+                } else {
+                  if (input) {
+                    if (showErrorMessage) setShowErrorMessage(false);
+                    setDevSpaceName(input);
+                    setCurrentStep(DevSpaceCreateStep.PACKOPTIONS);
+                  }
+                }
+              } catch (error) {
+                captureException(error, {
+                  component: "DevSpaceCreate",
+                  action: "validateDevSpaceName",
+                  input,
+                });
                 setMessage(devspaceMessages.err_invalid_devspace_name);
                 setShowErrorMessage(true);
-              } else {
-                if (input) {
-                  if (showErrorMessage) setShowErrorMessage(false);
-                  setDevSpaceName(input);
-                  setCurrentStep(DevSpaceCreateStep.PACKOPTIONS);
-                }
-              }
-            } catch {
-              setMessage(devspaceMessages.err_invalid_devspace_name);
-              setShowErrorMessage(true);
-            }
-          }}
-          placeholder="..."
-        />
-      )}
-      {currentStep === DevSpaceCreateStep.PACKOPTIONS && (
-        <Select
-          options={packOptions}
-          onChange={(value: string) => {
-            const index: number = parseInt(value);
-            setSelectedPack(devSpacesSpecPacks[index]);
-            setCurrentStep(DevSpaceCreateStep.EXTENSIONS);
-          }}
-          visibleOptionCount={packOptions.length}
-        />
-      )}
-      {currentStep === DevSpaceCreateStep.EXTENSIONS && (
-        <Box flexDirection="column" gap={1}>
-          <MultiSelect
-            options={additionalExtensionOptions}
-            // onChange={(indices: string[]) => {
-            //   if (organizedData?.additional.extensions != null) {
-            //     const selectedAdditionalExtensionsLocal = pickByStringIndex(
-            //       organizedData.additional.extensions,
-            //       indices,
-            //     ) as DevSpaceExtension[];
-            //     setSelectedAdditionalExtensions(
-            //       selectedAdditionalExtensionsLocal,
-            //     );
-            //   }
-            // }}
-            onSubmit={(indices: string[]) => {
-              if (organizedData?.additional.extensions != null) {
-                const selectedAdditionalExtensionsLocal = pickByStringIndex(
-                  organizedData.additional.extensions,
-                  indices,
-                ) as DevSpaceExtension[];
-                setSelectedAdditionalExtensions(
-                  selectedAdditionalExtensionsLocal,
-                );
-                setCurrentStep(DevSpaceCreateStep.CREATE);
               }
             }}
-            visibleOptionCount={additionalExtensionOptions.length}
+            placeholder="..."
           />
-        </Box>
-      )}
-      {currentStep === DevSpaceCreateStep.CREATE && (
-        <Box flexDirection="row" marginTop={1}>
-          <Box justifyContent="center" flexDirection="column">
-            <Text>
-              {loading && (
-                <Text>
-                  <Spinner type="bouncingBall" />
-                </Text>
-              )} {message}
-            </Text>
+        )}
+        {currentStep === DevSpaceCreateStep.PACKOPTIONS && (
+          <Select
+            options={packOptions}
+            onChange={(value: string) => {
+              const index: number = parseInt(value);
+              setSelectedPack(devSpacesSpecPacks[index]);
+              setCurrentStep(DevSpaceCreateStep.EXTENSIONS);
+            }}
+            visibleOptionCount={packOptions.length}
+          />
+        )}
+        {currentStep === DevSpaceCreateStep.EXTENSIONS && (
+          <Box flexDirection="column" gap={1}>
+            <MultiSelect
+              options={additionalExtensionOptions}
+              onSubmit={(indices: string[]) => {
+                if (organizedData?.additional.extensions != null) {
+                  const selectedAdditionalExtensionsLocal = pickByStringIndex(
+                    organizedData.additional.extensions,
+                    indices,
+                  ) as DevSpaceExtension[];
+                  setSelectedAdditionalExtensions(
+                    selectedAdditionalExtensionsLocal,
+                  );
+                  setCurrentStep(DevSpaceCreateStep.CREATE);
+                }
+              }}
+              visibleOptionCount={additionalExtensionOptions.length}
+            />
           </Box>
-        </Box>
-      )}
-    </Box>
+        )}
+        {currentStep === DevSpaceCreateStep.CREATE && (
+          <Box flexDirection="row" marginTop={1}>
+            <Box justifyContent="center" flexDirection="column">
+              <Text>
+                {loading && (
+                  <Text>
+                    <Spinner type="bouncingBall" />
+                  </Text>
+                )} {message}
+              </Text>
+            </Box>
+          </Box>
+        )}
+      </Box>
+    </ErrorBoundary>
   );
 }
 
