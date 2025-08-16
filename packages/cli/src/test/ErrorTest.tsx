@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { render } from "ink";
 import process from "node:process";
-import { ErrorBoundary } from "../components/UI/ErrorBoundary.tsx";
-import { ErrorDisplay } from "../components/UI/ErrorDisplay.tsx";
+import { ErrorBoundary } from "@/components/UI/ErrorBoundary.tsx";
+import { ErrorDisplay } from "@/components/UI/ErrorDisplay.tsx";
 
 // Component that throws different types of errors
 function ErrorThrowingComponent({ errorType }: { errorType: string }) {

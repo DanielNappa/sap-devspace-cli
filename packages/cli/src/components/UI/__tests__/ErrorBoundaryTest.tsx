@@ -1,7 +1,7 @@
+import process from "node:process";
 import { useEffect, useState } from "react";
 import { Box, Text, useInput } from "ink";
-import process from "node:process";
-import { ErrorBoundary } from "../ErrorBoundary.tsx";
+import { ErrorBoundary } from "@/components/UI/ErrorBoundary.tsx";
 
 // Component that throws an error on command
 function ErrorThrowingComponent({ shouldThrow }: { shouldThrow: boolean }) {

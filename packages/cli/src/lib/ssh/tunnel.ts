@@ -1,13 +1,10 @@
 import { Buffer } from "node:buffer";
-import net from "node:net";
 import process from "node:process";
 import WebSocket from "ws";
 import type { Dispatch, SetStateAction } from "react";
 import {
   BaseStream,
-  KeyExchangeAlgorithm,
   ObjectDisposedError,
-  PublicKeyAlgorithm,
   SshAlgorithms,
   SshClientSession,
   SshDisconnectReason,
@@ -100,6 +97,7 @@ export async function sshProxyCommand(
     pkFilePath: string;
   },
 ): Promise<void> {
+  const runtime = navigator.userAgent;
   const serverURI = `wss://${opts.host.url}:${opts.host.port}`;
   // close the opened session if exists
   const isContinue = new Promise((res) => {
@@ -116,7 +114,14 @@ export async function sshProxyCommand(
 
   const config = new SshSessionConfiguration();
   try {
-    const useWebCrypto = !!globalThis?.crypto?.subtle;
+    const useWebCrypto: boolean = (() => {
+      try {
+        return typeof globalThis === "object" &&
+          !!(globalThis.crypto?.subtle?.importKey);
+      } catch {
+        return false;
+      }
+    })();
     if (useWebCrypto) {
       const { NobleECDH521, NobleECDSA521 } = await import("./p521-adapter.ts");
       SshAlgorithms.keyExchange.ecdhNistp521Sha512 = new NobleECDH521(
@@ -160,31 +165,11 @@ export async function sshProxyCommand(
       );
     }
   }
-  const kexCandidates = [
-    SshAlgorithms.keyExchange.ecdhNistp521Sha512,
-    SshAlgorithms.keyExchange.ecdhNistp256Sha256,
-    SshAlgorithms.keyExchange.curve25519Sha256,
-  ].filter(Boolean);
-
-  if (kexCandidates.length === 0) {
-    throw new Error("[ssh] No suitable key exchange algorithm available.");
-  }
   config.keyExchangeAlgorithms.push(
-    ...kexCandidates as (KeyExchangeAlgorithm | null)[],
+    SshAlgorithms.keyExchange.ecdhNistp521Sha512!,
   );
-
-  const pkCandidates = [
-    SshAlgorithms.publicKey.ecdsaSha2Nistp521,
-    SshAlgorithms.publicKey.ecdsaSha2Nistp256,
-    SshAlgorithms.publicKey.rsa2048,
-  ].filter(Boolean);
-
-  if (pkCandidates.length === 0) {
-    throw new Error("[ssh] No suitable public key algorithm available.");
-  }
-  config.publicKeyAlgorithms.push(
-    ...pkCandidates as (PublicKeyAlgorithm | null)[],
-  );
+  config.publicKeyAlgorithms.push(SshAlgorithms.publicKey.ecdsaSha2Nistp521!);
+  config.publicKeyAlgorithms.push(SshAlgorithms.publicKey.rsa2048!);
   config.encryptionAlgorithms.push(SshAlgorithms.encryption.aes256Gcm!);
   config.protocolExtensions.push(SshProtocolExtensionNames.sessionReconnect);
   config.protocolExtensions.push(SshProtocolExtensionNames.sessionLatency);
@@ -232,23 +217,56 @@ export async function sshProxyCommand(
       2222, // remote port (the dev-space’s SSHD)
     );
     sessionMap.set(serverURI, session);
-    const socket = net.connect(localPort, "127.0.0.1", () => {
-      // Pipe SSH client ↔ socket
-      process.stdin.pipe(socket);
-      socket.pipe(process.stdout);
-    });
+    if (runtime.startsWith("Deno")) {
+      const socket: Deno.TcpConn = await Deno.connect({
+        port: localPort,
+        hostname: "127.0.0.1",
+      });
 
-    // When the remote side closes, exit cleanly
-    socket.on("close", () => {
-      void session.close(SshDisconnectReason.byApplication)
-        .catch((err) => console.error("Error closing SSH session:", err));
+      try {
+        // Set up bidirectional piping
+        await Promise.all([
+          Deno.stdin.readable.pipeTo(socket.writable),
+          socket.readable.pipeTo(Deno.stdout.writable),
+        ]);
+      } catch (error) {
+        console.error("ProxyCommand connection error:", error);
+        await session.close(SshDisconnectReason.byApplication).catch((err) =>
+          console.error("Error closing SSH session:", err)
+        );
+        sessionMap.delete(serverURI);
+        socket.close();
+        Deno.exit(1);
+      }
+
+      // Clean exit after streams complete
+      await session.close(SshDisconnectReason.byApplication)
+        .catch((error: unknown) =>
+          console.error("Error closing SSH session:", error)
+        );
       sessionMap.delete(serverURI);
-      process.exit(0);
-    });
-    socket.on("error", (error) => {
-      console.error("ProxyCommand socket error:", error);
-      process.exit(1);
-    });
+      socket.close();
+      Deno.exit(0);
+    } else {
+      const net = await import("node:net");
+      const socket = net.connect(localPort, "127.0.0.1", () => {
+        // Pipe SSH client ↔ socket
+        process.stdin.pipe(socket);
+        socket.pipe(process.stdout);
+      });
+
+      // When the remote side closes, exit cleanly
+      socket.on("close", () => {
+        void session.close(SshDisconnectReason.byApplication)
+          .catch((err) => console.error("Error closing SSH session:", err));
+        sessionMap.delete(serverURI);
+        process.exit(0);
+      });
+      socket.on("error", (error) => {
+        console.error("ProxyCommand socket error:", error);
+        process.exit(1);
+      });
+    }
   } catch (error) {
     if (error instanceof Error) {
       console.log(`SSH session dropped : ${error?.message}`);

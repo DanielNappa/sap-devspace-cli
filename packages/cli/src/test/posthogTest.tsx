@@ -5,8 +5,8 @@ import {
   AuthenticationError,
   captureException,
   DevSpaceError,
-} from "../utils/errors.ts";
-import { getPostHog } from "../utils/utils.ts";
+} from "@/utils/errors.ts";
+import { getPostHog } from "@/utils/utils.ts";
 
 interface TestResult {
   test: string;

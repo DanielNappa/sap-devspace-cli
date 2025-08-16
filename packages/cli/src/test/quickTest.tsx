@@ -6,8 +6,8 @@ import {
   captureException,
   DevSpaceError,
   NetworkError as _NetworkError,
-} from "../utils/errors.ts";
-import { ErrorBoundary } from "../components/UI/ErrorBoundary.tsx";
+} from "@/utils/errors.ts";
+import { ErrorBoundary } from "@/components/UI/ErrorBoundary.tsx";
 
 function QuickErrorTest() {
   const [testResult, setTestResult] = useState<string>("");
@@ -18,6 +18,7 @@ function QuickErrorTest() {
   if (shouldThrow) {
     throw new Error("Quick sync error test");
   }
+
   useInput(async (input) => {
     if (isRunning) return;
 
