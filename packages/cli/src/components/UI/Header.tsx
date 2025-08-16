@@ -24,7 +24,7 @@ export default function Header({ updateMessage }: Props): JSX.Element {
     const home: string | undefined = process.env.HOME;
     if (!home) return USER_DATA_FOLDER;
     const relativePath: string = relative(home, USER_DATA_FOLDER);
-    return relativePath ? `~/${relativePath}${sep}` : "~";
+    return relativePath ? `~/${relativePath}` : "~";
   }, []);
   return (
     <Box flexDirection="column">

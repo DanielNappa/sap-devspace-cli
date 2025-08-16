@@ -1,5 +1,5 @@
 /**
- * Taken from https://github.com/openai/codex/blob/main/codex-cli/src/components/vendor/ink-text-input.tsx
+ * Adopted from https://github.com/openai/codex/blob/main/codex-cli/src/components/vendor/ink-text-input.tsx
  */
 
 import { useEffect, useState } from "react";
