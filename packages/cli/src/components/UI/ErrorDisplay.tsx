@@ -1,4 +1,4 @@
-import React from "react";
+import { ReactNode } from "react";
 import { Box, Text } from "ink";
 
 const MAX_RENDERED_LINES = 10;
@@ -92,7 +92,7 @@ export function ErrorDisplay({
   verbose = false,
   showType = false,
   context,
-}: ErrorDisplayProps): React.ReactNode {
+}: ErrorDisplayProps): ReactNode {
   // Get the appropriate content based on verbose mode
   const errorContent = verbose
     ? formatLongError(getFullErrorContent(error))
@@ -136,7 +136,7 @@ export function ErrorBoundaryFallback({
   retry: _retry,
   verbose = false,
   context = "Something went wrong",
-}: ErrorBoundaryFallbackProps): React.ReactNode {
+}: ErrorBoundaryFallbackProps): ReactNode {
   return (
     <Box
       flexDirection="column"

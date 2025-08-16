@@ -1,8 +1,6 @@
-#!/usr/bin/env -S node --no-warnings --use-system-ca --enable-source-maps
-import React from "react";
 import process from "node:process";
-import { Box, Text, useInput } from "ink";
-import { render } from "ink";
+import { useState } from "react";
+import { Box, render, Text, useInput } from "ink";
 import {
   AuthenticationError as _AuthenticationError,
   captureException,
@@ -12,9 +10,9 @@ import {
 import { ErrorBoundary } from "../components/UI/ErrorBoundary.tsx";
 
 function QuickErrorTest() {
-  const [testResult, setTestResult] = React.useState<string>("");
-  const [isRunning, setIsRunning] = React.useState(false);
-  const [shouldThrow, setShouldThrow] = React.useState(false);
+  const [testResult, setTestResult] = useState<string>("");
+  const [isRunning, setIsRunning] = useState(false);
+  const [shouldThrow, setShouldThrow] = useState(false);
 
   // Throw during render to exercise ErrorBoundary
   if (shouldThrow) {
@@ -56,7 +54,7 @@ function QuickErrorTest() {
         case "3":
           // Test sync error boundary by throwing during render on next tick
           setShouldThrow(true);
-          return;
+          break;
         case "4":
           // Test async error (global handler)
           Promise.reject(new Error("Quick async error test"));

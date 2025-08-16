@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Text, useInput } from "ink";
 import process from "node:process";
 import { ErrorBoundary } from "../ErrorBoundary.tsx";
@@ -13,7 +13,7 @@ function ErrorThrowingComponent({ shouldThrow }: { shouldThrow: boolean }) {
 
 // Component that throws async errors
 function AsyncErrorComponent({ shouldThrow }: { shouldThrow: boolean }) {
-  React.useEffect(() => {
+  useEffect(() => {
     if (shouldThrow) {
       // This will trigger unhandledRejection
       Promise.reject(new Error("Async test error"));
@@ -25,7 +25,7 @@ function AsyncErrorComponent({ shouldThrow }: { shouldThrow: boolean }) {
 
 // Component that throws errors in useEffect
 function UseEffectErrorComponent({ shouldThrow }: { shouldThrow: boolean }) {
-  React.useEffect(() => {
+  useEffect(() => {
     if (shouldThrow) {
       throw new Error("Error thrown in useEffect");
     }
@@ -51,7 +51,7 @@ function InteractiveErrorComponent() {
   return (
     <Box flexDirection="column">
       <Text>Interactive Error Component</Text>
-      <Text dimColor>Press 'x' to throw an error</Text>
+      <Text dimColor>x to throw an error</Text>
     </Box>
   );
 }
@@ -93,9 +93,9 @@ export function ErrorBoundaryTest() {
     <Box flexDirection="column" padding={1}>
       <Text bold>Error Boundary Test Suite</Text>
       <Text>
-        Press '1' for sync error, '2' for async error, '3' for useEffect error
+        1 for sync error, 2 for async error, 3 for useEffect error
       </Text>
-      <Text>Press '4' for interactive error, 'r' to reset, 'q' to quit</Text>
+      <Text>4 for interactive error, r to reset, q to quit</Text>
       <Text>---</Text>
 
       <Box flexDirection="column" marginTop={1}>
@@ -105,7 +105,7 @@ export function ErrorBoundaryTest() {
           fallback={(error, _retry) => (
             <Box flexDirection="column">
               <Text color="red">✅ Sync Error Caught: {error.message}</Text>
-              <Text dimColor>Press 'r' to retry</Text>
+              <Text dimColor>r to retry</Text>
             </Box>
           )}
         >
@@ -120,7 +120,7 @@ export function ErrorBoundaryTest() {
           fallback={(error, _retry) => (
             <Box flexDirection="column">
               <Text color="red">✅ Async Error Caught: {error.message}</Text>
-              <Text dimColor>Press 'r' to retry</Text>
+              <Text dimColor>r to retry</Text>
             </Box>
           )}
         >
@@ -137,7 +137,7 @@ export function ErrorBoundaryTest() {
               <Text color="red">
                 ✅ UseEffect Error Caught: {error.message}
               </Text>
-              <Text dimColor>Press 'r' to retry</Text>
+              <Text dimColor>r to retry</Text>
             </Box>
           )}
         >
@@ -158,7 +158,7 @@ export function ErrorBoundaryTest() {
                 <Text color="red">
                   ✅ Interactive Error Caught: {error.message}
                 </Text>
-                <Text dimColor>Press 'r' to retry</Text>
+                <Text dimColor>r to retry</Text>
               </Box>
             )}
           >

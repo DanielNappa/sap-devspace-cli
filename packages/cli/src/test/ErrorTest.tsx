@@ -1,4 +1,3 @@
-#!/usr/bin/env -S node --no-warnings --use-system-ca --enable-source-maps
 import { useState } from "react";
 import { Box, Text, useInput } from "ink";
 import { render } from "ink";

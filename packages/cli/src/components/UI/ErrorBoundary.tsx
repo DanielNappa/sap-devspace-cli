@@ -1,4 +1,4 @@
-import React, { Component, type ReactNode } from "react";
+import { Component, ComponentType, ErrorInfo, type ReactNode } from "react";
 import { useInput } from "ink";
 import { captureException } from "@/utils/errors.ts";
 import { ErrorBoundaryFallback } from "./ErrorDisplay.tsx";
@@ -41,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Capture the error with context (full stack trace goes to logging)
     captureException(error, {
       component: "ErrorBoundary",
@@ -119,7 +119,7 @@ function ErrorBoundaryFallbackWithInput({
 
 // Higher-order component for easier usage
 export function withErrorBoundary<P extends object>(
-  Component: React.ComponentType<P>,
+  Component: ComponentType<P>,
   context?: Record<string, unknown>,
   defaultVerbose?: boolean,
 ) {

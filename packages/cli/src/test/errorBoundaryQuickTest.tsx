@@ -1,4 +1,3 @@
-#!/usr/bin/env -S node --no-warnings --use-system-ca --enable-source-maps
 import { render } from "ink";
 import App from "../App.tsx";
 import process from "node:process";
