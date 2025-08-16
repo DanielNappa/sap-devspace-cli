@@ -4,7 +4,9 @@ import WebSocket from "ws";
 import type { Dispatch, SetStateAction } from "react";
 import {
   BaseStream,
+  KeyExchangeAlgorithm,
   ObjectDisposedError,
+  PublicKeyAlgorithm,
   SshAlgorithms,
   SshClientSession,
   SshDisconnectReason,
@@ -165,10 +167,31 @@ export async function sshProxyCommand(
       );
     }
   }
+  const kexCandidates = [
+    SshAlgorithms.keyExchange.ecdhNistp521Sha512,
+    SshAlgorithms.keyExchange.ecdhNistp256Sha256,
+    SshAlgorithms.keyExchange.curve25519Sha256,
+  ].filter(Boolean);
+
+  if (kexCandidates.length === 0) {
+    throw new Error("[ssh] No suitable key exchange algorithm available.");
+  }
   config.keyExchangeAlgorithms.push(
-    SshAlgorithms.keyExchange.ecdhNistp521Sha512!,
+    ...kexCandidates as (KeyExchangeAlgorithm | null)[],
   );
-  config.publicKeyAlgorithms.push(SshAlgorithms.publicKey.ecdsaSha2Nistp521!);
+
+  const publicKeyCandidates = [
+    SshAlgorithms.publicKey.ecdsaSha2Nistp521,
+    SshAlgorithms.publicKey.ecdsaSha2Nistp256,
+    SshAlgorithms.publicKey.rsa2048,
+  ].filter(Boolean);
+
+  if (publicKeyCandidates.length === 0) {
+    throw new Error("[ssh] No suitable public key algorithm available.");
+  }
+  config.publicKeyAlgorithms.push(
+    ...publicKeyCandidates as (PublicKeyAlgorithm | null)[],
+  );
   config.publicKeyAlgorithms.push(SshAlgorithms.publicKey.rsa2048!);
   config.encryptionAlgorithms.push(SshAlgorithms.encryption.aes256Gcm!);
   config.protocolExtensions.push(SshProtocolExtensionNames.sessionReconnect);
