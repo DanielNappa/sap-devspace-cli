@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Box, Text } from "ink";
 
 const MAX_RENDERED_LINES = 10;

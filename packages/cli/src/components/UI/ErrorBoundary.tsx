@@ -1,4 +1,9 @@
-import { Component, ComponentType, ErrorInfo, type ReactNode } from "react";
+import {
+  Component,
+  type ComponentType,
+  type ErrorInfo,
+  type ReactNode,
+} from "react";
 import { useInput } from "ink";
 import { captureException } from "@/utils/errors.ts";
 import { ErrorBoundaryFallback } from "./ErrorDisplay.tsx";
